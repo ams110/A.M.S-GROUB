@@ -20,6 +20,7 @@ export type Product = {
   sort: number;
   sku: string | null;
   price: number;
+  price_contractor: number;
   currency: string;
   stock: number;
   reorder_point: number;
@@ -28,6 +29,7 @@ export type Product = {
 };
 
 export type CustomerType = "dealer" | "contractor";
+export type PaymentTerms = "immediate" | "net30" | "net60";
 
 export type Profile = {
   id: string;
@@ -39,6 +41,16 @@ export type Profile = {
   company: string | null;
   city: string | null;
   address: string | null;
+  credit_limit: number;
+  payment_terms: PaymentTerms;
+  created_at: string;
+};
+
+export type CustomerPrice = {
+  id: string;
+  profile_id: string;
+  product_id: string;
+  price: number;
   created_at: string;
 };
 
@@ -68,6 +80,7 @@ export type Order = {
   ship_city: string | null;
   ship_address: string | null;
   notes: string | null;
+  po_number: string | null;
   created_at: string;
 };
 

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useProfile } from "@/lib/auth";
+import { applyEffectivePrices } from "@/lib/pricing";
 import { asset } from "@/lib/config";
 import AddToCart from "@/components/AddToCart";
 import { formatPrice } from "@/lib/format";
@@ -31,7 +32,8 @@ function ProductDetail() {
         .eq("slug", slug)
         .is("deleted_at", null)
         .single();
-      setProduct((data as Product) ?? null);
+      const prod = (data as Product) ?? null;
+      setProduct(prod ? (await applyEffectivePrices(supabase, [prod]))[0] : null);
       setLoading(false);
     })();
   }, [slug]);

@@ -42,6 +42,12 @@ export const CUSTOMER_TYPE_HE: Record<string, string> = {
   contractor: "קבלן",
 };
 
+export const PAYMENT_TERMS_HE: Record<string, string> = {
+  immediate: "מיידי",
+  net30: "שוטף +30",
+  net60: "שוטף +60",
+};
+
 export const STOCK_REASON_HE: Record<string, string> = {
   purchase: "קליטת רכש",
   sale: "מכירה",

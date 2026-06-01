@@ -21,6 +21,7 @@ const EMPTY = {
   datasheet_url: "",
   sku: "",
   price: 0,
+  price_contractor: 0,
   currency: "ILS",
   stock: 0,
   reorder_point: 0,
@@ -71,6 +72,7 @@ function ProductForm() {
             datasheet_url: p.datasheet_url ?? "",
             sku: p.sku ?? "",
             price: p.price,
+            price_contractor: p.price_contractor,
             currency: p.currency,
             stock: p.stock,
             reorder_point: p.reorder_point,
@@ -271,7 +273,7 @@ function ProductForm() {
         {/* Pricing & stock */}
         <div className="card grid gap-4 p-5 sm:grid-cols-3">
           <div>
-            <label className="label">מחיר</label>
+            <label className="label">מחיר לסוחר</label>
             <input
               type="number"
               step="0.01"
@@ -279,6 +281,17 @@ function ProductForm() {
               value={form.price}
               onChange={(e) => set({ price: Number(e.target.value) })}
             />
+          </div>
+          <div>
+            <label className="label">מחיר לקבלן</label>
+            <input
+              type="number"
+              step="0.01"
+              className="input"
+              value={form.price_contractor}
+              onChange={(e) => set({ price_contractor: Number(e.target.value) })}
+            />
+            <p className="mt-1 text-xs text-slate-400">אם 0 — יחול מחיר הסוחר.</p>
           </div>
           <div>
             <label className="label">מטבע</label>

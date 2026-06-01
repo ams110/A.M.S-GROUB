@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useProfile } from "@/lib/auth";
+import { applyEffectivePrices } from "@/lib/pricing";
 import ProductCard from "@/components/ProductCard";
 import type { Category, Product } from "@/lib/types";
 
@@ -48,7 +49,7 @@ export default function HomePage() {
           .limit(8);
         featuredList = (data as Product[]) ?? [];
       }
-      setFeatured(featuredList);
+      setFeatured(await applyEffectivePrices(supabase, featuredList));
     })();
   }, []);
 

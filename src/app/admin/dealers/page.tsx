@@ -1,9 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { CUSTOMER_TYPE_HE, PROFILE_STATUS_HE } from "@/lib/format";
-import type { CustomerType, Profile } from "@/lib/types";
+import {
+  CUSTOMER_TYPE_HE,
+  PAYMENT_TERMS_HE,
+  PROFILE_STATUS_HE,
+  formatPrice,
+} from "@/lib/format";
+import type { CustomerType, PaymentTerms, Profile } from "@/lib/types";
 
 const EMPTY_NEW = {
   email: "",
@@ -17,6 +23,7 @@ const EMPTY_NEW = {
 export default function AdminCustomersPage() {
   const supabase = createClient();
   const [rows, setRows] = useState<Profile[]>([]);
+  const [balances, setBalances] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
 
   // Create-account form.
@@ -26,11 +33,24 @@ export default function AdminCustomersPage() {
   const [createOk, setCreateOk] = useState<string | null>(null);
 
   const load = async () => {
-    const { data } = await supabase
-      .from("profiles")
-      .select("*")
-      .order("created_at", { ascending: false });
+    const [{ data }, { data: orders }] = await Promise.all([
+      supabase.from("profiles").select("*").order("created_at", { ascending: false }),
+      supabase.from("orders").select("dealer_id,total,payment_status"),
+    ]);
     setRows((data as Profile[]) ?? []);
+
+    // Outstanding balance = sum of unpaid order totals per customer.
+    const bal: Record<string, number> = {};
+    for (const o of (orders ?? []) as {
+      dealer_id: string;
+      total: number;
+      payment_status: string;
+    }[]) {
+      if (o.payment_status !== "paid") {
+        bal[o.dealer_id] = (bal[o.dealer_id] ?? 0) + Number(o.total);
+      }
+    }
+    setBalances(bal);
     setLoading(false);
   };
 
@@ -47,6 +67,19 @@ export default function AdminCustomersPage() {
   const setType = async (id: string, customer_type: CustomerType) => {
     setRows((r) => r.map((p) => (p.id === id ? { ...p, customer_type } : p)));
     await supabase.from("profiles").update({ customer_type }).eq("id", id);
+  };
+
+  // Local edit; persist on blur (credit limit) or change (terms).
+  const patchLocal = (id: string, p: Partial<Profile>) =>
+    setRows((r) => r.map((x) => (x.id === id ? { ...x, ...p } : x)));
+
+  const saveCredit = async (id: string, credit_limit: number) => {
+    await supabase.from("profiles").update({ credit_limit }).eq("id", id);
+  };
+
+  const setTerms = async (id: string, payment_terms: PaymentTerms) => {
+    patchLocal(id, { payment_terms });
+    await supabase.from("profiles").update({ payment_terms }).eq("id", id);
   };
 
   const createCustomer = async (e: React.FormEvent) => {
@@ -167,6 +200,9 @@ export default function AdminCustomersPage() {
                 <th className="p-3">חברה</th>
                 <th className="p-3">טלפון</th>
                 <th className="p-3">סוג</th>
+                <th className="p-3">מסגרת אשראי</th>
+                <th className="p-3">תנאי תשלום</th>
+                <th className="p-3">חוב פתוח</th>
                 <th className="p-3">סטטוס</th>
                 <th className="p-3">פעולות</th>
               </tr>
@@ -190,6 +226,45 @@ export default function AdminCustomersPage() {
                         <option value="contractor">{CUSTOMER_TYPE_HE.contractor}</option>
                       </select>
                     )}
+                  </td>
+                  <td className="p-3">
+                    {p.role !== "admin" && (
+                      <input
+                        type="number"
+                        className="input w-28 py-1"
+                        value={p.credit_limit}
+                        onChange={(e) =>
+                          patchLocal(p.id, { credit_limit: Number(e.target.value) })
+                        }
+                        onBlur={(e) => saveCredit(p.id, Number(e.target.value))}
+                      />
+                    )}
+                  </td>
+                  <td className="p-3">
+                    {p.role !== "admin" && (
+                      <select
+                        className="input w-28 py-1"
+                        value={p.payment_terms}
+                        onChange={(e) => setTerms(p.id, e.target.value as PaymentTerms)}
+                      >
+                        <option value="immediate">{PAYMENT_TERMS_HE.immediate}</option>
+                        <option value="net30">{PAYMENT_TERMS_HE.net30}</option>
+                        <option value="net60">{PAYMENT_TERMS_HE.net60}</option>
+                      </select>
+                    )}
+                  </td>
+                  <td className="p-3">
+                    {p.role !== "admin" &&
+                      (() => {
+                        const bal = balances[p.id] ?? 0;
+                        const over = p.credit_limit > 0 && bal > p.credit_limit;
+                        return (
+                          <span className={over ? "font-bold text-rose-600" : ""}>
+                            {formatPrice(bal)}
+                            {over && " ⚠"}
+                          </span>
+                        );
+                      })()}
                   </td>
                   <td className="p-3">
                     <span
@@ -223,6 +298,12 @@ export default function AdminCustomersPage() {
                             דחייה
                           </button>
                         )}
+                        <Link
+                          href={`/admin/customer-prices?customer=${p.id}`}
+                          className="text-brand hover:underline"
+                        >
+                          מחירים
+                        </Link>
                       </div>
                     )}
                   </td>
@@ -230,7 +311,7 @@ export default function AdminCustomersPage() {
               ))}
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="p-6 text-center text-slate-400">
+                  <td colSpan={9} className="p-6 text-center text-slate-400">
                     אין לקוחות עדיין.
                   </td>
                 </tr>

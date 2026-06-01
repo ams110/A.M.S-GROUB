@@ -101,6 +101,9 @@ function OrderDetail() {
             {o.ship_address}
             {o.ship_city ? `, ${o.ship_city}` : ""}
           </p>
+          {o.po_number && (
+            <p className="mt-2 text-slate-500">מס׳ הזמנת רכש: {o.po_number}</p>
+          )}
           {o.notes && <p className="mt-2 text-slate-500">הערה: {o.notes}</p>}
         </div>
         <div className="card p-4 text-sm">
