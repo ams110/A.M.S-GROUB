@@ -22,6 +22,7 @@ export type Product = {
   price: number;
   currency: string;
   stock: number;
+  reorder_point: number;
   min_order_qty: number;
   is_orderable: boolean;
 };
@@ -79,4 +80,53 @@ export type OrderItem = {
   unit_price: number;
   qty: number;
   line_total: number;
+};
+
+// ---- Warehouse module ----
+
+export type StockReason = "purchase" | "sale" | "adjustment" | "return" | "initial";
+
+export type StockMovement = {
+  id: string;
+  product_id: string;
+  warehouse_id: string | null;
+  delta: number;
+  reason: StockReason;
+  note: string | null;
+  reference: string | null;
+  unit_cost: number | null;
+  balance_after: number | null;
+  created_by: string | null;
+  created_at: string;
+};
+
+export type Supplier = {
+  id: string;
+  name: string;
+  contact: string | null;
+  phone: string | null;
+  email: string | null;
+  notes: string | null;
+  created_at: string;
+};
+
+export type PurchaseOrderStatus = "draft" | "ordered" | "received" | "cancelled";
+
+export type PurchaseOrder = {
+  id: string;
+  po_number: string | null;
+  supplier_id: string | null;
+  status: PurchaseOrderStatus;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  received_at: string | null;
+};
+
+export type PurchaseOrderItem = {
+  id: string;
+  po_id: string;
+  product_id: string;
+  qty: number;
+  unit_cost: number;
 };

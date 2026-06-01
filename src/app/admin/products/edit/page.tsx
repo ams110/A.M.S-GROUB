@@ -23,6 +23,7 @@ const EMPTY = {
   price: 0,
   currency: "ILS",
   stock: 0,
+  reorder_point: 0,
   min_order_qty: 1,
   is_orderable: true,
   is_featured: false,
@@ -72,6 +73,7 @@ function ProductForm() {
             price: p.price,
             currency: p.currency,
             stock: p.stock,
+            reorder_point: p.reorder_point,
             min_order_qty: p.min_order_qty,
             is_orderable: p.is_orderable,
             is_featured: p.is_featured,
@@ -306,6 +308,15 @@ function ProductForm() {
               className="input"
               value={form.min_order_qty}
               onChange={(e) => set({ min_order_qty: Number(e.target.value) })}
+            />
+          </div>
+          <div>
+            <label className="label">נקודת הזמנה (התראת מלאי)</label>
+            <input
+              type="number"
+              className="input"
+              value={form.reorder_point}
+              onChange={(e) => set({ reorder_point: Number(e.target.value) })}
             />
           </div>
           <div>
