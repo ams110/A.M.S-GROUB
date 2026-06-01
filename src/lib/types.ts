@@ -26,9 +26,12 @@ export type Product = {
   is_orderable: boolean;
 };
 
+export type CustomerType = "dealer" | "contractor";
+
 export type Profile = {
   id: string;
   role: "dealer" | "admin";
+  customer_type: CustomerType;
   status: "pending" | "approved" | "rejected";
   full_name: string | null;
   phone: string | null;
