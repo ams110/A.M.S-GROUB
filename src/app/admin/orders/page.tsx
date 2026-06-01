@@ -107,12 +107,20 @@ export default function AdminOrdersPage() {
                   </select>
                 </td>
                 <td className="p-3">
-                  <Link
-                    href={`/account/order?id=${o.id}`}
-                    className="text-brand hover:underline"
-                  >
-                    פרטים
-                  </Link>
+                  <div className="flex gap-3">
+                    <Link
+                      href={`/account/order?id=${o.id}`}
+                      className="text-brand hover:underline"
+                    >
+                      פרטים
+                    </Link>
+                    <Link
+                      href={`/invoice?order=${o.id}`}
+                      className="text-brand hover:underline"
+                    >
+                      חשבונית
+                    </Link>
+                  </div>
                 </td>
               </tr>
             ))}
