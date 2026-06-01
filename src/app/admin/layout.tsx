@@ -40,7 +40,7 @@ export default function AdminLayout({
             הזמנות
           </Link>
           <Link href="/admin/dealers" className="rounded-lg px-3 py-1.5 hover:bg-slate-100">
-            סוחרים
+            לקוחות
           </Link>
           <Link href="/admin/products" className="rounded-lg px-3 py-1.5 hover:bg-slate-100">
             מוצרים ומחירים

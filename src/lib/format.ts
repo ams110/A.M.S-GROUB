@@ -36,3 +36,8 @@ export const PROFILE_STATUS_HE: Record<string, string> = {
   approved: "מאושר",
   rejected: "נדחה",
 };
+
+export const CUSTOMER_TYPE_HE: Record<string, string> = {
+  dealer: "סוחר",
+  contractor: "קבלן",
+};
