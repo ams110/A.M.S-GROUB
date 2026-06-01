@@ -45,6 +45,12 @@ export default function AdminLayout({
           <Link href="/admin/products" className="rounded-lg px-3 py-1.5 hover:bg-slate-100">
             מוצרים ומחירים
           </Link>
+          <Link href="/admin/categories" className="rounded-lg px-3 py-1.5 hover:bg-slate-100">
+            קטגוריות
+          </Link>
+          <Link href="/admin/settings" className="rounded-lg px-3 py-1.5 hover:bg-slate-100">
+            הגדרות
+          </Link>
         </nav>
       </div>
       {children}
