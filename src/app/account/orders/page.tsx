@@ -1,6 +1,10 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
-import { getSessionContext } from "@/lib/auth";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { useProfile } from "@/lib/auth";
 import {
   formatPrice,
   ORDER_STATUS_HE,
@@ -9,18 +13,34 @@ import {
 } from "@/lib/format";
 import type { Order } from "@/lib/types";
 
-export const dynamic = "force-dynamic";
+export default function MyOrdersPage() {
+  const router = useRouter();
+  const { profile, ready, userId } = useProfile();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
 
-export default async function MyOrdersPage() {
-  const supabase = await createClient();
-  const { profile } = await getSessionContext();
+  // Redirect guests to login (RLS already blocks data; this is UX only).
+  useEffect(() => {
+    if (ready && !userId) {
+      router.replace("/login?redirect=/account/orders");
+    }
+  }, [ready, userId, router]);
 
-  const { data: orders } = await supabase
-    .from("orders")
-    .select("*")
-    .order("created_at", { ascending: false });
+  useEffect(() => {
+    if (!userId) return;
+    const supabase = createClient();
+    (async () => {
+      setLoading(true);
+      const { data } = await supabase
+        .from("orders")
+        .select("*")
+        .order("created_at", { ascending: false });
+      setOrders((data as Order[]) ?? []);
+      setLoading(false);
+    })();
+  }, [userId]);
 
-  const list = (orders as Order[] | null) ?? [];
+  const list = orders;
 
   return (
     <div className="container-app py-10">
@@ -32,7 +52,9 @@ export default async function MyOrdersPage() {
         </p>
       )}
 
-      {list.length === 0 ? (
+      {loading ? (
+        <div className="card p-10 text-center text-slate-500">טוען…</div>
+      ) : list.length === 0 ? (
         <div className="card p-10 text-center text-slate-500">
           עדיין אין הזמנות.{" "}
           <Link href="/products" className="font-semibold text-brand hover:underline">
@@ -69,7 +91,7 @@ export default async function MyOrdersPage() {
                     {formatPrice(o.total, o.currency)}
                   </td>
                   <td className="p-3">
-                    <Link href={`/account/orders/${o.id}`} className="text-brand hover:underline">
+                    <Link href={`/account/order?id=${o.id}`} className="text-brand hover:underline">
                       פרטים
                     </Link>
                   </td>

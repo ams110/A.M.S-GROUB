@@ -1,38 +1,44 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/client";
 import { formatPrice } from "@/lib/format";
 
-export const dynamic = "force-dynamic";
+export default function AdminDashboard() {
+  const [cards, setCards] = useState<{ label: string; value: string | number; href: string }[]>([]);
 
-async function count(table: string, filter?: (q: any) => any) {
-  const supabase = await createClient();
-  let q = supabase.from(table).select("*", { count: "exact", head: true });
-  if (filter) q = filter(q);
-  const { count } = await q;
-  return count ?? 0;
-}
+  useEffect(() => {
+    const supabase = createClient();
 
-export default async function AdminDashboard() {
-  const supabase = await createClient();
+    const count = async (table: string, filter?: (q: any) => any) => {
+      let q = supabase.from(table).select("*", { count: "exact", head: true });
+      if (filter) q = filter(q);
+      const { count } = await q;
+      return count ?? 0;
+    };
 
-  const [pendingDealers, pendingOrders, totalOrders] = await Promise.all([
-    count("profiles", (q) => q.eq("status", "pending")),
-    count("orders", (q) => q.eq("status", "pending")),
-    count("orders"),
-  ]);
+    (async () => {
+      const [pendingDealers, pendingOrders, totalOrders] = await Promise.all([
+        count("profiles", (q) => q.eq("status", "pending")),
+        count("orders", (q) => q.eq("status", "pending")),
+        count("orders"),
+      ]);
 
-  const { data: revenueRows } = await supabase
-    .from("orders")
-    .select("total")
-    .eq("payment_status", "paid");
-  const revenue = (revenueRows ?? []).reduce((s, r) => s + Number(r.total), 0);
+      const { data: revenueRows } = await supabase
+        .from("orders")
+        .select("total")
+        .eq("payment_status", "paid");
+      const revenue = (revenueRows ?? []).reduce((s, r) => s + Number(r.total), 0);
 
-  const cards = [
-    { label: "סוחרים לאישור", value: pendingDealers, href: "/admin/dealers" },
-    { label: "הזמנות ממתינות", value: pendingOrders, href: "/admin/orders" },
-    { label: "סה״כ הזמנות", value: totalOrders, href: "/admin/orders" },
-    { label: "הכנסות (ששולמו)", value: formatPrice(revenue), href: "/admin/orders" },
-  ];
+      setCards([
+        { label: "סוחרים לאישור", value: pendingDealers, href: "/admin/dealers" },
+        { label: "הזמנות ממתינות", value: pendingOrders, href: "/admin/orders" },
+        { label: "סה״כ הזמנות", value: totalOrders, href: "/admin/orders" },
+        { label: "הכנסות (ששולמו)", value: formatPrice(revenue), href: "/admin/orders" },
+      ]);
+    })();
+  }, []);
 
   return (
     <div>

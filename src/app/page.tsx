@@ -1,43 +1,58 @@
+"use client";
+
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
-import { getSessionContext, canSeePrices } from "@/lib/auth";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { useProfile } from "@/lib/auth";
 import ProductCard from "@/components/ProductCard";
 import type { Category, Product } from "@/lib/types";
 
-export const dynamic = "force-dynamic";
+export default function HomePage() {
+  const { profile, showPrice } = useProfile();
 
-export default async function HomePage() {
-  const supabase = await createClient();
-  const { profile } = await getSessionContext();
-  const showPrice = canSeePrices(profile);
+  const [settings, setSettings] = useState<Record<string, string>>({});
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [featured, setFeatured] = useState<Product[]>([]);
 
-  const [{ data: settings }, { data: categories }, { data: featured }] =
-    await Promise.all([
-      supabase.from("settings").select("key,value"),
-      supabase.from("categories").select("*").order("sort"),
-      supabase
-        .from("products")
-        .select("*")
-        .is("deleted_at", null)
-        .eq("is_featured", true)
-        .order("sort")
-        .limit(8),
-    ]);
+  useEffect(() => {
+    const supabase = createClient();
 
-  const s = Object.fromEntries(
-    (settings ?? []).map((r) => [r.key, r.value])
-  ) as Record<string, string>;
+    (async () => {
+      const [{ data: settingsRows }, { data: cats }, { data: feat }] =
+        await Promise.all([
+          supabase.from("settings").select("key,value"),
+          supabase.from("categories").select("*").order("sort"),
+          supabase
+            .from("products")
+            .select("*")
+            .is("deleted_at", null)
+            .eq("is_featured", true)
+            .order("sort")
+            .limit(8),
+        ]);
 
-  let featuredList = (featured as Product[]) ?? [];
-  if (featuredList.length === 0) {
-    const { data } = await supabase
-      .from("products")
-      .select("*")
-      .is("deleted_at", null)
-      .order("sort")
-      .limit(8);
-    featuredList = (data as Product[]) ?? [];
-  }
+      setSettings(
+        Object.fromEntries(
+          (settingsRows ?? []).map((r) => [r.key, r.value])
+        ) as Record<string, string>
+      );
+      setCategories((cats as Category[]) ?? []);
+
+      let featuredList = (feat as Product[]) ?? [];
+      if (featuredList.length === 0) {
+        const { data } = await supabase
+          .from("products")
+          .select("*")
+          .is("deleted_at", null)
+          .order("sort")
+          .limit(8);
+        featuredList = (data as Product[]) ?? [];
+      }
+      setFeatured(featuredList);
+    })();
+  }, []);
+
+  const s = settings;
 
   return (
     <div>
@@ -79,7 +94,7 @@ export default async function HomePage() {
       <section className="container-app py-12">
         <h2 className="mb-6 text-xl font-bold">קטגוריות</h2>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {(categories as Category[] | null)?.map((c) => (
+          {categories.map((c) => (
             <Link
               key={c.id}
               href={`/products?category=${c.slug}`}
@@ -108,7 +123,7 @@ export default async function HomePage() {
           </Link>
         </div>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {featuredList.map((p) => (
+          {featured.map((p) => (
             <ProductCard key={p.id} product={p} showPrice={showPrice} />
           ))}
         </div>

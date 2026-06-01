@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCart } from "@/components/CartProvider";
 import { formatPrice } from "@/lib/format";
+import { asset } from "@/lib/config";
 
 export default function CartPage() {
   const { lines, subtotal, setQty, remove, count } = useCart();
@@ -28,12 +29,12 @@ export default function CartPage() {
             <div key={l.product_id} className="card flex items-center gap-4 p-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={l.image_url ?? "/placeholder.svg"}
+                src={l.image_url ?? asset("/placeholder.svg")}
                 alt={l.name_he}
                 className="h-20 w-20 rounded-lg object-cover"
               />
               <div className="flex-1">
-                <Link href={`/products/${l.slug}`} className="text-sm font-semibold hover:text-brand">
+                <Link href={`/product?slug=${l.slug}`} className="text-sm font-semibold hover:text-brand">
                   {l.name_he}
                 </Link>
                 <p className="text-sm text-slate-500">{formatPrice(l.price)} ליחידה</p>

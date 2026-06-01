@@ -1,6 +1,9 @@
+"use client";
+
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { useSearchParams } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import {
   formatPrice,
   ORDER_STATUS_HE,
@@ -9,40 +12,63 @@ import {
 } from "@/lib/format";
 import type { Order, OrderItem } from "@/lib/types";
 
-export const dynamic = "force-dynamic";
+function OrderDetail() {
+  const params = useSearchParams();
+  const id = params.get("id") ?? "";
+  const isNew = params.get("new") === "1";
 
-export default async function OrderDetailPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ id: string }>;
-  searchParams: Promise<{ new?: string }>;
-}) {
-  const { id } = await params;
-  const { new: isNew } = await searchParams;
-  const supabase = await createClient();
+  const [order, setOrder] = useState<Order | null>(null);
+  const [lines, setLines] = useState<OrderItem[]>([]);
+  const [bank, setBank] = useState<string | undefined>();
+  const [loading, setLoading] = useState(true);
 
-  const { data: order } = await supabase
-    .from("orders")
-    .select("*")
-    .eq("id", id)
-    .single();
+  useEffect(() => {
+    if (!id) {
+      setLoading(false);
+      return;
+    }
+    const supabase = createClient();
+    (async () => {
+      setLoading(true);
+      const { data: o } = await supabase
+        .from("orders")
+        .select("*")
+        .eq("id", id)
+        .single();
 
-  if (!order) notFound();
-  const o = order as Order;
+      if (!o) {
+        setOrder(null);
+        setLoading(false);
+        return;
+      }
+      setOrder(o as Order);
 
-  const { data: items } = await supabase
-    .from("order_items")
-    .select("*")
-    .eq("order_id", id);
+      const [{ data: items }, { data: settings }] = await Promise.all([
+        supabase.from("order_items").select("*").eq("order_id", id),
+        supabase.from("settings").select("key,value").in("key", ["bank_details"]),
+      ]);
+      setLines((items as OrderItem[]) ?? []);
+      setBank(settings?.find((s) => s.key === "bank_details")?.value);
+      setLoading(false);
+    })();
+  }, [id]);
 
-  const lines = (items as OrderItem[] | null) ?? [];
+  if (loading) {
+    return <div className="container-app py-16 text-center text-slate-500">טוען…</div>;
+  }
 
-  const { data: settings } = await supabase
-    .from("settings")
-    .select("key,value")
-    .in("key", ["bank_details"]);
-  const bank = settings?.find((s) => s.key === "bank_details")?.value;
+  if (!order) {
+    return (
+      <div className="container-app py-20 text-center">
+        <h1 className="text-2xl font-bold">ההזמנה לא נמצאה</h1>
+        <Link href="/account/orders" className="btn-primary mt-6 inline-flex">
+          לכל ההזמנות
+        </Link>
+      </div>
+    );
+  }
+
+  const o = order;
 
   return (
     <div className="container-app max-w-3xl py-10">
@@ -123,5 +149,13 @@ export default async function OrderDetailPage({
         </table>
       </div>
     </div>
+  );
+}
+
+export default function OrderDetailPage() {
+  return (
+    <Suspense fallback={<div className="container-app py-16 text-center text-slate-500">טוען…</div>}>
+      <OrderDetail />
+    </Suspense>
   );
 }

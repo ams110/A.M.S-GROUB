@@ -108,7 +108,7 @@ export default function AdminOrdersPage() {
                 </td>
                 <td className="p-3">
                   <Link
-                    href={`/account/orders/${o.id}`}
+                    href={`/account/order?id=${o.id}`}
                     className="text-brand hover:underline"
                   >
                     פרטים
