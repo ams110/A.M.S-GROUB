@@ -32,6 +32,10 @@ body {
 .label {
   @apply mb-1 block text-sm font-medium text-slate-700;
 }
+/* Left-aligned input for LTR values (slugs, URLs) inside the RTL layout. */
+.ltr-input {
+  @apply text-left;
+}
 .badge {
   @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
 }
