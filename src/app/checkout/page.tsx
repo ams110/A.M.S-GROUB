@@ -19,12 +19,14 @@ export default function CheckoutPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [method, setMethod] = useState<PaymentMethod>("bank_transfer");
+  const [outstanding, setOutstanding] = useState(0);
   const [form, setForm] = useState({
     ship_name: "",
     ship_phone: "",
     ship_city: "",
     ship_address: "",
     notes: "",
+    po_number: "",
   });
 
   useEffect(() => {
@@ -52,6 +54,16 @@ export default function CheckoutPage() {
           ship_address: p.address ?? "",
         }));
       }
+
+      // Current outstanding balance (sum of this customer's unpaid orders).
+      const { data: orders } = await supabase
+        .from("orders")
+        .select("total,payment_status");
+      setOutstanding(
+        ((orders ?? []) as { total: number; payment_status: string }[])
+          .filter((o) => o.payment_status !== "paid")
+          .reduce((s, o) => s + Number(o.total), 0)
+      );
       setLoading(false);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -78,6 +90,7 @@ export default function CheckoutPage() {
       p_ship_city: form.ship_city,
       p_ship_address: form.ship_address,
       p_notes: form.notes || null,
+      p_po_number: form.po_number || null,
     });
     setSubmitting(false);
 
@@ -154,6 +167,15 @@ export default function CheckoutPage() {
                   onChange={(e) => setForm({ ...form, ship_address: e.target.value })}
                 />
               </div>
+              <div>
+                <label className="label">מספר הזמנת רכש (PO)</label>
+                <input
+                  className="input"
+                  placeholder="לשימושכם הפנימי"
+                  value={form.po_number}
+                  onChange={(e) => setForm({ ...form, po_number: e.target.value })}
+                />
+              </div>
               <div className="sm:col-span-2">
                 <label className="label">הערות להזמנה</label>
                 <textarea
@@ -222,6 +244,24 @@ export default function CheckoutPage() {
             <span>סה״כ</span>
             <span className="text-brand-dark">{formatPrice(subtotal)}</span>
           </div>
+
+          {profile && profile.credit_limit > 0 && (
+            <div
+              className={`rounded-lg px-3 py-2 text-xs ${
+                outstanding + subtotal > profile.credit_limit
+                  ? "bg-rose-50 text-rose-700"
+                  : "bg-slate-50 text-slate-600"
+              }`}
+            >
+              חוב נוכחי: {formatPrice(outstanding)} · מסגרת אשראי:{" "}
+              {formatPrice(profile.credit_limit)}
+              {outstanding + subtotal > profile.credit_limit && (
+                <div className="mt-1 font-bold">
+                  ⚠ ההזמנה חורגת ממסגרת האשראי. ייתכן שתידרש אישור היבואן.
+                </div>
+              )}
+            </div>
+          )}
 
           {error && (
             <p className="rounded bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>

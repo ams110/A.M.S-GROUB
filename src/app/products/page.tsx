@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useProfile } from "@/lib/auth";
+import { applyEffectivePrices } from "@/lib/pricing";
 import ProductCard from "@/components/ProductCard";
 import type { Category, Product } from "@/lib/types";
 
@@ -44,7 +45,7 @@ function Catalog() {
       if (q) query = query.ilike("name_he", `%${q}%`);
 
       const { data } = await query;
-      setProducts((data as Product[]) ?? []);
+      setProducts(await applyEffectivePrices(supabase, (data as Product[]) ?? []));
       setLoading(false);
     })();
   }, [category, q]);
