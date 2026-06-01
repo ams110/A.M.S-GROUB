@@ -54,6 +54,19 @@ export type CustomerPrice = {
   created_at: string;
 };
 
+export type Invoice = {
+  id: string;
+  invoice_number: string;
+  order_id: string;
+  customer_id: string | null;
+  vat_rate: number;
+  subtotal: number;
+  vat: number;
+  total: number;
+  issued_at: string;
+  created_by: string | null;
+};
+
 export type OrderStatus =
   | "pending"
   | "confirmed"

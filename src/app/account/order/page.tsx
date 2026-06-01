@@ -84,9 +84,14 @@ function OrderDetail() {
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-2xl font-bold">הזמנה {o.order_number}</h1>
-        <span className="badge bg-brand-light text-brand-dark">
-          {ORDER_STATUS_HE[o.status]}
-        </span>
+        <div className="flex items-center gap-3">
+          <Link href={`/invoice?order=${o.id}`} className="text-sm text-brand hover:underline">
+            חשבונית מס
+          </Link>
+          <span className="badge bg-brand-light text-brand-dark">
+            {ORDER_STATUS_HE[o.status]}
+          </span>
+        </div>
       </div>
       <p className="mt-1 text-sm text-slate-500">
         {new Date(o.created_at).toLocaleString("he-IL")}

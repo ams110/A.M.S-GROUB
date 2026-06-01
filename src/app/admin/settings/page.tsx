@@ -6,7 +6,18 @@ import { uploadImage } from "@/lib/storage";
 import { asset } from "@/lib/config";
 
 // Curated keys shown as friendly fields. Any other keys appear under "advanced".
-const KNOWN = ["hero_title", "hero_subtitle", "hero_image_url", "bank_details"];
+const KNOWN = [
+  "hero_title",
+  "hero_subtitle",
+  "hero_image_url",
+  "bank_details",
+  "vat_rate",
+  "business_name",
+  "business_tax_id",
+  "business_address",
+  "business_phone",
+  "business_email",
+];
 
 export default function AdminSettingsPage() {
   const supabase = createClient();
@@ -131,6 +142,64 @@ export default function AdminSettingsPage() {
             מוצג ללקוח בעמוד ההזמנה כשנבחרה העברה בנקאית.
           </p>
         </div>
+      </div>
+
+      <div className="card space-y-4 p-5">
+        <h3 className="font-bold">חשבוניות ופרטי העסק</h3>
+        <div>
+          <label className="label">שיעור מע״מ (%)</label>
+          <input
+            type="number"
+            step="0.1"
+            className="input max-w-[120px]"
+            value={values.vat_rate ?? ""}
+            onChange={(e) => set("vat_rate", e.target.value)}
+          />
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="label">שם העסק</label>
+            <input
+              className="input"
+              value={values.business_name ?? ""}
+              onChange={(e) => set("business_name", e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="label">ח.פ / עוסק מורשה</label>
+            <input
+              className="input"
+              value={values.business_tax_id ?? ""}
+              onChange={(e) => set("business_tax_id", e.target.value)}
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="label">כתובת העסק</label>
+            <input
+              className="input"
+              value={values.business_address ?? ""}
+              onChange={(e) => set("business_address", e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="label">טלפון</label>
+            <input
+              className="input"
+              value={values.business_phone ?? ""}
+              onChange={(e) => set("business_phone", e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="label">אימייל</label>
+            <input
+              className="input ltr-input"
+              dir="ltr"
+              value={values.business_email ?? ""}
+              onChange={(e) => set("business_email", e.target.value)}
+            />
+          </div>
+        </div>
+        <p className="text-xs text-slate-400">פרטים אלה מופיעים בראש חשבונית המס.</p>
       </div>
 
       {extraKeys.length > 0 && (
