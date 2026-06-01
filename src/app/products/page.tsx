@@ -17,7 +17,7 @@ export default async function ProductsPage({
   const showPrice = canSeePrices(profile);
 
   const { data: categories } = await supabase
-    .from("tiandy_il_categories")
+    .from("categories")
     .select("*")
     .order("sort");
 
@@ -29,7 +29,7 @@ export default async function ProductsPage({
   }
 
   let query = supabase
-    .from("tiandy_il_products")
+    .from("products")
     .select("*")
     .is("deleted_at", null)
     .order("sort");

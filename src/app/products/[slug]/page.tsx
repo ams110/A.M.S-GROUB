@@ -19,7 +19,7 @@ export default async function ProductPage({
   const showPrice = canSeePrices(profile);
 
   const { data } = await supabase
-    .from("tiandy_il_products")
+    .from("products")
     .select("*")
     .eq("slug", slug)
     .is("deleted_at", null)

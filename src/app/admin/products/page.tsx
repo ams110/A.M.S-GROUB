@@ -16,7 +16,7 @@ export default function AdminProductsPage() {
 
   const load = async () => {
     const { data } = await supabase
-      .from("tiandy_il_products")
+      .from("products")
       .select("*")
       .is("deleted_at", null)
       .order("sort");
@@ -35,7 +35,7 @@ export default function AdminProductsPage() {
   const save = async (p: Product) => {
     setSavingId(p.id);
     await supabase
-      .from("tiandy_il_products")
+      .from("products")
       .update({
         price: p.price,
         stock: p.stock,

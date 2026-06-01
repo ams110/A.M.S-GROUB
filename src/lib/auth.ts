@@ -10,7 +10,7 @@ export async function getSessionContext() {
   if (!user) return { user: null, profile: null as Profile | null };
 
   const { data: profile } = await supabase
-    .from("tiandy_il_profiles")
+    .from("profiles")
     .select("*")
     .eq("id", user.id)
     .single();

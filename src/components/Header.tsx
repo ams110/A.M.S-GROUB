@@ -21,7 +21,7 @@ export default function Header() {
       setEmail(user?.email ?? null);
       if (user) {
         const { data } = await supabase
-          .from("tiandy_il_profiles")
+          .from("profiles")
           .select("role")
           .eq("id", user.id)
           .single();

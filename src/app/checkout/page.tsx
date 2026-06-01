@@ -37,7 +37,7 @@ export default function CheckoutPage() {
         return;
       }
       const { data } = await supabase
-        .from("tiandy_il_profiles")
+        .from("profiles")
         .select("*")
         .eq("id", user.id)
         .single();
@@ -70,7 +70,7 @@ export default function CheckoutPage() {
       return;
     }
     setSubmitting(true);
-    const { data, error } = await supabase.rpc("tiandy_il_place_order", {
+    const { data, error } = await supabase.rpc("place_order", {
       p_items: lines.map((l) => ({ product_id: l.product_id, qty: l.qty })),
       p_payment_method: method,
       p_ship_name: form.ship_name,

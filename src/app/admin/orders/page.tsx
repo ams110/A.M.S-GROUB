@@ -28,7 +28,7 @@ export default function AdminOrdersPage() {
 
   const load = async () => {
     const { data } = await supabase
-      .from("tiandy_il_orders")
+      .from("orders")
       .select("*")
       .order("created_at", { ascending: false });
     setRows((data as Order[]) ?? []);
@@ -42,7 +42,7 @@ export default function AdminOrdersPage() {
 
   const update = async (id: string, patch: Partial<Order>) => {
     setRows((r) => r.map((o) => (o.id === id ? { ...o, ...patch } : o)));
-    await supabase.from("tiandy_il_orders").update(patch).eq("id", id);
+    await supabase.from("orders").update(patch).eq("id", id);
   };
 
   if (loading) return <p className="text-slate-500">טוען…</p>;

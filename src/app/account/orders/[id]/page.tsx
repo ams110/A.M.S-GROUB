@@ -23,7 +23,7 @@ export default async function OrderDetailPage({
   const supabase = await createClient();
 
   const { data: order } = await supabase
-    .from("tiandy_il_orders")
+    .from("orders")
     .select("*")
     .eq("id", id)
     .single();
@@ -32,14 +32,14 @@ export default async function OrderDetailPage({
   const o = order as Order;
 
   const { data: items } = await supabase
-    .from("tiandy_il_order_items")
+    .from("order_items")
     .select("*")
     .eq("order_id", id);
 
   const lines = (items as OrderItem[] | null) ?? [];
 
   const { data: settings } = await supabase
-    .from("tiandy_il_settings")
+    .from("settings")
     .select("key,value")
     .in("key", ["bank_details"]);
   const bank = settings?.find((s) => s.key === "bank_details")?.value;

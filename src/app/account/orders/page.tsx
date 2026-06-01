@@ -16,7 +16,7 @@ export default async function MyOrdersPage() {
   const { profile } = await getSessionContext();
 
   const { data: orders } = await supabase
-    .from("tiandy_il_orders")
+    .from("orders")
     .select("*")
     .order("created_at", { ascending: false });
 

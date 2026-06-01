@@ -12,7 +12,7 @@ export default function AdminDealersPage() {
 
   const load = async () => {
     const { data } = await supabase
-      .from("tiandy_il_profiles")
+      .from("profiles")
       .select("*")
       .order("created_at", { ascending: false });
     setRows((data as Profile[]) ?? []);
@@ -26,7 +26,7 @@ export default function AdminDealersPage() {
 
   const setStatus = async (id: string, status: Profile["status"]) => {
     setRows((r) => r.map((p) => (p.id === id ? { ...p, status } : p)));
-    await supabase.from("tiandy_il_profiles").update({ status }).eq("id", id);
+    await supabase.from("profiles").update({ status }).eq("id", id);
   };
 
   if (loading) return <p className="text-slate-500">טוען…</p>;

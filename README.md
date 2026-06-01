@@ -30,13 +30,24 @@ products, pricing, stock, dealers, and orders from an admin panel.
   items atomically — the client never sets prices.
 - RLS: dealers see only their own orders/profile; catalog writes are admin-only.
 
-## Database objects (Supabase project `Tiandy`)
+## Database — isolated `store` schema (Supabase project `Tiandy`)
 
-Added on top of the existing catalog:
-- `tiandy_il_products` — new columns: `sku, price, currency, stock, min_order_qty, is_orderable`
-- `tiandy_il_profiles` — dealer/admin accounts (auto-created on signup, `pending` by default)
-- `tiandy_il_orders`, `tiandy_il_order_items`
-- Functions: `tiandy_il_place_order`, `tiandy_il_is_admin`, `tiandy_il_is_approved_dealer`
+The store lives entirely in its **own Postgres schema `store`**, completely
+separate from the website's `public.tiandy_il_*` tables. The website's tables
+and policies are untouched; the store keeps its **own copy** of the catalog.
+
+`store` schema objects:
+- `store.categories`, `store.products` (with `sku, price, currency, stock,
+  min_order_qty, is_orderable`), `store.settings`, `store.banners` — seeded from
+  the website catalog
+- `store.profiles` — dealer/admin accounts (auto-created `pending` on signup)
+- `store.orders`, `store.order_items`
+- Functions: `store.place_order`, `store.is_admin`, `store.is_approved_dealer`
+
+The `store` schema is exposed to the API (PostgREST `db_schemas` includes
+`store`), and the app's Supabase clients default to it via `db: { schema: "store" }`.
+If you ever recreate the project, add `store` under **Settings → API → Exposed
+schemas** in the Supabase dashboard.
 
 ## Local development
 
@@ -51,7 +62,7 @@ npm run dev                  # http://localhost:3000
 After signing up once, promote your account in the Supabase SQL editor:
 
 ```sql
-update public.tiandy_il_profiles
+update store.profiles
 set role = 'admin', status = 'approved'
 where id = (select id from auth.users where email = 'YOUR_EMAIL');
 ```

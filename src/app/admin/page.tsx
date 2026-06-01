@@ -16,13 +16,13 @@ export default async function AdminDashboard() {
   const supabase = await createClient();
 
   const [pendingDealers, pendingOrders, totalOrders] = await Promise.all([
-    count("tiandy_il_profiles", (q) => q.eq("status", "pending")),
-    count("tiandy_il_orders", (q) => q.eq("status", "pending")),
-    count("tiandy_il_orders"),
+    count("profiles", (q) => q.eq("status", "pending")),
+    count("orders", (q) => q.eq("status", "pending")),
+    count("orders"),
   ]);
 
   const { data: revenueRows } = await supabase
-    .from("tiandy_il_orders")
+    .from("orders")
     .select("total")
     .eq("payment_status", "paid");
   const revenue = (revenueRows ?? []).reduce((s, r) => s + Number(r.total), 0);

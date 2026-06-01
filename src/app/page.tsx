@@ -13,10 +13,10 @@ export default async function HomePage() {
 
   const [{ data: settings }, { data: categories }, { data: featured }] =
     await Promise.all([
-      supabase.from("tiandy_il_settings").select("key,value"),
-      supabase.from("tiandy_il_categories").select("*").order("sort"),
+      supabase.from("settings").select("key,value"),
+      supabase.from("categories").select("*").order("sort"),
       supabase
-        .from("tiandy_il_products")
+        .from("products")
         .select("*")
         .is("deleted_at", null)
         .eq("is_featured", true)
@@ -31,7 +31,7 @@ export default async function HomePage() {
   let featuredList = (featured as Product[]) ?? [];
   if (featuredList.length === 0) {
     const { data } = await supabase
-      .from("tiandy_il_products")
+      .from("products")
       .select("*")
       .is("deleted_at", null)
       .order("sort")
