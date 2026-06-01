@@ -1,47 +1,54 @@
+"use client";
+
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
-import { getSessionContext, canSeePrices } from "@/lib/auth";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { useSession, canSeePrices } from "@/lib/useSession";
 import ProductCard from "@/components/ProductCard";
 import type { Category, Product } from "@/lib/types";
 
-export const dynamic = "force-dynamic";
-
-export default async function HomePage() {
-  const supabase = await createClient();
-  const { profile } = await getSessionContext();
+export default function HomePage() {
+  const { profile } = useSession();
   const showPrice = canSeePrices(profile);
 
-  const [{ data: settings }, { data: categories }, { data: featured }] =
-    await Promise.all([
-      supabase.from("settings").select("key,value"),
-      supabase.from("categories").select("*").order("sort"),
-      supabase
-        .from("products")
-        .select("*")
-        .is("deleted_at", null)
-        .eq("is_featured", true)
-        .order("sort")
-        .limit(8),
-    ]);
+  const [settings, setSettings] = useState<Record<string, string>>({});
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [featured, setFeatured] = useState<Product[]>([]);
 
-  const s = Object.fromEntries(
-    (settings ?? []).map((r) => [r.key, r.value])
-  ) as Record<string, string>;
+  useEffect(() => {
+    const supabase = createClient();
+    (async () => {
+      const [{ data: s }, { data: cats }, { data: feat }] = await Promise.all([
+        supabase.from("settings").select("key,value"),
+        supabase.from("categories").select("*").order("sort"),
+        supabase
+          .from("products")
+          .select("*")
+          .is("deleted_at", null)
+          .eq("is_featured", true)
+          .order("sort")
+          .limit(8),
+      ]);
+      setSettings(Object.fromEntries((s ?? []).map((r) => [r.key, r.value])));
+      setCategories((cats as Category[]) ?? []);
+      let list = (feat as Product[]) ?? [];
+      if (list.length === 0) {
+        const { data } = await supabase
+          .from("products")
+          .select("*")
+          .is("deleted_at", null)
+          .order("sort")
+          .limit(8);
+        list = (data as Product[]) ?? [];
+      }
+      setFeatured(list);
+    })();
+  }, []);
 
-  let featuredList = (featured as Product[]) ?? [];
-  if (featuredList.length === 0) {
-    const { data } = await supabase
-      .from("products")
-      .select("*")
-      .is("deleted_at", null)
-      .order("sort")
-      .limit(8);
-    featuredList = (data as Product[]) ?? [];
-  }
+  const s = settings;
 
   return (
     <div>
-      {/* Hero */}
       <section className="relative overflow-hidden bg-brand-dark text-white">
         {s.hero_image_url && (
           // eslint-disable-next-line @next/next/no-img-element
@@ -75,11 +82,10 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Categories */}
       <section className="container-app py-12">
         <h2 className="mb-6 text-xl font-bold">קטגוריות</h2>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {(categories as Category[] | null)?.map((c) => (
+          {categories.map((c) => (
             <Link
               key={c.id}
               href={`/products?category=${c.slug}`}
@@ -99,7 +105,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Featured */}
       <section className="container-app pb-16">
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-xl font-bold">מוצרים נבחרים</h2>
@@ -108,7 +113,7 @@ export default async function HomePage() {
           </Link>
         </div>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {featuredList.map((p) => (
+          {featured.map((p) => (
             <ProductCard key={p.id} product={p} showPrice={showPrice} />
           ))}
         </div>

@@ -71,8 +71,26 @@ Then the **ניהול** (admin) menu appears in the header.
 
 ## Routes
 
-- `/` home · `/products` catalog · `/products/[slug]` product
+- `/` home · `/products` catalog · `/product?slug=…` product
 - `/cart` · `/checkout`
 - `/login` · `/register`
-- `/account/orders` · `/account/orders/[id]`
+- `/account/orders` · `/account/order?id=…`
 - `/admin` · `/admin/orders` · `/admin/dealers` · `/admin/products`
+
+## Hosting — static export on GitHub Pages
+
+The app is configured as a **static SPA** (`output: "export"` in
+`next.config.mjs`, `basePath: "/Tiandy-store"`). Every page runs in the browser
+and talks to Supabase directly; Row Level Security enforces all data access, so
+there is no server to host.
+
+- `.github/workflows/nextjs.yml` builds the static export and deploys `out/` to
+  GitHub Pages on every push to `main`.
+- One-time setup: repo **Settings → Pages → Build and deployment → Source =
+  GitHub Actions**.
+- Live URL: `https://<user>.github.io/Tiandy-store/`
+
+> Trade-off vs. a server deploy (e.g. Vercel): no SSR and route protection is
+> client-side only (data is still protected by Supabase RLS). For SSR/custom
+> domain, deploy the same code to Vercel instead — just drop the `output`/
+> `basePath` lines.

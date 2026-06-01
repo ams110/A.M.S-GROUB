@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import {
   formatPrice,
   ORDER_STATUS_HE,
@@ -9,40 +12,49 @@ import {
 } from "@/lib/format";
 import type { Order, OrderItem } from "@/lib/types";
 
-export const dynamic = "force-dynamic";
+function OrderView() {
+  const params = useSearchParams();
+  const id = params.get("id") ?? "";
+  const isNew = params.get("new") === "1";
 
-export default async function OrderDetailPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ id: string }>;
-  searchParams: Promise<{ new?: string }>;
-}) {
-  const { id } = await params;
-  const { new: isNew } = await searchParams;
-  const supabase = await createClient();
+  const [o, setO] = useState<Order | null>(null);
+  const [lines, setLines] = useState<OrderItem[]>([]);
+  const [bank, setBank] = useState<string | undefined>();
+  const [loading, setLoading] = useState(true);
 
-  const { data: order } = await supabase
-    .from("orders")
-    .select("*")
-    .eq("id", id)
-    .single();
+  useEffect(() => {
+    const supabase = createClient();
+    (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        window.location.href = "/login";
+        return;
+      }
+      const [{ data: order }, { data: items }, { data: settings }] = await Promise.all([
+        supabase.from("orders").select("*").eq("id", id).single(),
+        supabase.from("order_items").select("*").eq("order_id", id),
+        supabase.from("settings").select("key,value").in("key", ["bank_details"]),
+      ]);
+      setO((order as Order) ?? null);
+      setLines((items as OrderItem[]) ?? []);
+      setBank(settings?.find((s) => s.key === "bank_details")?.value);
+      setLoading(false);
+    })();
+  }, [id]);
 
-  if (!order) notFound();
-  const o = order as Order;
-
-  const { data: items } = await supabase
-    .from("order_items")
-    .select("*")
-    .eq("order_id", id);
-
-  const lines = (items as OrderItem[] | null) ?? [];
-
-  const { data: settings } = await supabase
-    .from("settings")
-    .select("key,value")
-    .in("key", ["bank_details"]);
-  const bank = settings?.find((s) => s.key === "bank_details")?.value;
+  if (loading) {
+    return <div className="container-app py-16 text-center text-slate-500">טוען…</div>;
+  }
+  if (!o) {
+    return (
+      <div className="container-app py-16 text-center">
+        <h1 className="text-xl font-bold">ההזמנה לא נמצאה</h1>
+        <Link href="/account/orders" className="btn-primary mt-6 inline-flex">להזמנות שלי</Link>
+      </div>
+    );
+  }
 
   return (
     <div className="container-app max-w-3xl py-10">
@@ -58,23 +70,16 @@ export default async function OrderDetailPage({
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-2xl font-bold">הזמנה {o.order_number}</h1>
-        <span className="badge bg-brand-light text-brand-dark">
-          {ORDER_STATUS_HE[o.status]}
-        </span>
+        <span className="badge bg-brand-light text-brand-dark">{ORDER_STATUS_HE[o.status]}</span>
       </div>
-      <p className="mt-1 text-sm text-slate-500">
-        {new Date(o.created_at).toLocaleString("he-IL")}
-      </p>
+      <p className="mt-1 text-sm text-slate-500">{new Date(o.created_at).toLocaleString("he-IL")}</p>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <div className="card p-4 text-sm">
           <h2 className="mb-2 font-bold">פרטי משלוח</h2>
           <p>{o.ship_name}</p>
           <p>{o.ship_phone}</p>
-          <p>
-            {o.ship_address}
-            {o.ship_city ? `, ${o.ship_city}` : ""}
-          </p>
+          <p>{o.ship_address}{o.ship_city ? `, ${o.ship_city}` : ""}</p>
           {o.notes && <p className="mt-2 text-slate-500">הערה: {o.notes}</p>}
         </div>
         <div className="card p-4 text-sm">
@@ -114,14 +119,20 @@ export default async function OrderDetailPage({
           </tbody>
           <tfoot>
             <tr className="text-lg font-bold">
-              <td className="p-3" colSpan={3}>
-                סה״כ
-              </td>
+              <td className="p-3" colSpan={3}>סה״כ</td>
               <td className="p-3 text-brand-dark">{formatPrice(o.total, o.currency)}</td>
             </tr>
           </tfoot>
         </table>
       </div>
     </div>
+  );
+}
+
+export default function OrderDetailPage() {
+  return (
+    <Suspense fallback={<div className="container-app py-16 text-center">טוען…</div>}>
+      <OrderView />
+    </Suspense>
   );
 }

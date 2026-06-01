@@ -87,7 +87,7 @@ export default function CheckoutPage() {
       return;
     }
     clear();
-    router.push(`/account/orders/${data.id}?new=1`);
+    router.push(`/account/order?id=${data.id}&new=1`);
   };
 
   if (loading) {

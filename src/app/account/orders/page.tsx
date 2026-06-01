@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
-import { getSessionContext } from "@/lib/auth";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { useSession } from "@/lib/useSession";
 import {
   formatPrice,
   ORDER_STATUS_HE,
@@ -9,30 +12,43 @@ import {
 } from "@/lib/format";
 import type { Order } from "@/lib/types";
 
-export const dynamic = "force-dynamic";
+export default function MyOrdersPage() {
+  const { profile, loading: sessionLoading } = useSession();
+  const [list, setList] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
 
-export default async function MyOrdersPage() {
-  const supabase = await createClient();
-  const { profile } = await getSessionContext();
-
-  const { data: orders } = await supabase
-    .from("orders")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  const list = (orders as Order[] | null) ?? [];
+  useEffect(() => {
+    const supabase = createClient();
+    (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        window.location.href = "/login?redirect=/account/orders";
+        return;
+      }
+      const { data } = await supabase
+        .from("orders")
+        .select("*")
+        .order("created_at", { ascending: false });
+      setList((data as Order[]) ?? []);
+      setLoading(false);
+    })();
+  }, []);
 
   return (
     <div className="container-app py-10">
       <h1 className="mb-2 text-2xl font-bold">ההזמנות שלי</h1>
-      {profile && profile.status !== "approved" && (
+      {!sessionLoading && profile && profile.status !== "approved" && (
         <p className="mb-6 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800">
           סטטוס חשבון: <strong>{PROFILE_STATUS_HE[profile.status]}</strong>. ניתן יהיה
           לבצע הזמנות לאחר אישור היבואן.
         </p>
       )}
 
-      {list.length === 0 ? (
+      {loading ? (
+        <p className="text-slate-500">טוען…</p>
+      ) : list.length === 0 ? (
         <div className="card p-10 text-center text-slate-500">
           עדיין אין הזמנות.{" "}
           <Link href="/products" className="font-semibold text-brand hover:underline">
@@ -56,9 +72,7 @@ export default async function MyOrdersPage() {
               {list.map((o) => (
                 <tr key={o.id} className="border-b border-slate-100">
                   <td className="p-3 font-mono">{o.order_number}</td>
-                  <td className="p-3">
-                    {new Date(o.created_at).toLocaleDateString("he-IL")}
-                  </td>
+                  <td className="p-3">{new Date(o.created_at).toLocaleDateString("he-IL")}</td>
                   <td className="p-3">
                     <span className="badge bg-slate-100 text-slate-700">
                       {ORDER_STATUS_HE[o.status]}
@@ -69,7 +83,7 @@ export default async function MyOrdersPage() {
                     {formatPrice(o.total, o.currency)}
                   </td>
                   <td className="p-3">
-                    <Link href={`/account/orders/${o.id}`} className="text-brand hover:underline">
+                    <Link href={`/account/order?id=${o.id}`} className="text-brand hover:underline">
                       פרטים
                     </Link>
                   </td>
