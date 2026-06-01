@@ -1,43 +1,53 @@
+"use client";
+
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
-import { getSessionContext, canSeePrices } from "@/lib/auth";
+import { useSearchParams } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { useProfile } from "@/lib/auth";
 import ProductCard from "@/components/ProductCard";
 import type { Category, Product } from "@/lib/types";
 
-export const dynamic = "force-dynamic";
+function Catalog() {
+  const params = useSearchParams();
+  const category = params.get("category") ?? undefined;
+  const q = params.get("q") ?? undefined;
 
-export default async function ProductsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ category?: string; q?: string }>;
-}) {
-  const { category, q } = await searchParams;
-  const supabase = await createClient();
-  const { profile } = await getSessionContext();
-  const showPrice = canSeePrices(profile);
+  const { showPrice } = useProfile();
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const { data: categories } = await supabase
-    .from("categories")
-    .select("*")
-    .order("sort");
+  useEffect(() => {
+    const supabase = createClient();
 
-  let categoryId: string | null = null;
-  if (category) {
-    categoryId =
-      (categories as Category[] | null)?.find((c) => c.slug === category)?.id ??
-      null;
-  }
+    (async () => {
+      setLoading(true);
+      const { data: cats } = await supabase
+        .from("categories")
+        .select("*")
+        .order("sort");
+      const categoryList = (cats as Category[]) ?? [];
+      setCategories(categoryList);
 
-  let query = supabase
-    .from("products")
-    .select("*")
-    .is("deleted_at", null)
-    .order("sort");
+      const categoryId = category
+        ? categoryList.find((c) => c.slug === category)?.id ?? null
+        : null;
 
-  if (categoryId) query = query.eq("category_id", categoryId);
-  if (q) query = query.ilike("name_he", `%${q}%`);
+      let query = supabase
+        .from("products")
+        .select("*")
+        .is("deleted_at", null)
+        .order("sort");
 
-  const { data: products } = await query;
+      if (categoryId) query = query.eq("category_id", categoryId);
+      if (q) query = query.ilike("name_he", `%${q}%`);
+
+      const { data } = await query;
+      setProducts((data as Product[]) ?? []);
+      setLoading(false);
+    })();
+  }, [category, q]);
 
   return (
     <div className="container-app py-10">
@@ -75,7 +85,7 @@ export default async function ProductsPage({
           >
             כל הקטגוריות
           </Link>
-          {(categories as Category[] | null)?.map((c) => (
+          {categories.map((c) => (
             <Link
               key={c.id}
               href={`/products?category=${c.slug}`}
@@ -91,15 +101,23 @@ export default async function ProductsPage({
         {/* Grid */}
         <div>
           <p className="mb-4 text-sm text-slate-500">
-            {(products as Product[] | null)?.length ?? 0} מוצרים
+            {loading ? "טוען…" : `${products.length} מוצרים`}
           </p>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {(products as Product[] | null)?.map((p) => (
+            {products.map((p) => (
               <ProductCard key={p.id} product={p} showPrice={showPrice} />
             ))}
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={<div className="container-app py-16 text-center text-slate-500">טוען…</div>}>
+      <Catalog />
+    </Suspense>
   );
 }

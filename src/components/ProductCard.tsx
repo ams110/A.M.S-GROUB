@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Product } from "@/lib/types";
 import { formatPrice } from "@/lib/format";
+import { asset } from "@/lib/config";
 
 export default function ProductCard({
   product,
@@ -11,13 +12,13 @@ export default function ProductCard({
 }) {
   return (
     <Link
-      href={`/products/${product.slug}`}
+      href={`/product?slug=${product.slug}`}
       className="card group overflow-hidden transition hover:shadow-md"
     >
       <div className="aspect-square overflow-hidden bg-slate-100">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={product.image_url ?? "/placeholder.svg"}
+          src={product.image_url ?? asset("/placeholder.svg")}
           alt={product.name_he}
           className="h-full w-full object-cover transition group-hover:scale-105"
         />

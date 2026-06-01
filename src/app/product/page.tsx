@@ -1,32 +1,56 @@
+"use client";
+
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { getSessionContext, canSeePrices } from "@/lib/auth";
+import { useSearchParams } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { useProfile } from "@/lib/auth";
+import { asset } from "@/lib/config";
 import AddToCart from "@/components/AddToCart";
 import { formatPrice } from "@/lib/format";
 import type { Product } from "@/lib/types";
 
-export const dynamic = "force-dynamic";
+function ProductDetail() {
+  const slug = useSearchParams().get("slug") ?? "";
+  const { showPrice } = useProfile();
 
-export default async function ProductPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
-  const { slug } = await params;
-  const supabase = await createClient();
-  const { profile } = await getSessionContext();
-  const showPrice = canSeePrices(profile);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const { data } = await supabase
-    .from("products")
-    .select("*")
-    .eq("slug", slug)
-    .is("deleted_at", null)
-    .single();
+  useEffect(() => {
+    if (!slug) {
+      setLoading(false);
+      return;
+    }
+    const supabase = createClient();
+    (async () => {
+      setLoading(true);
+      const { data } = await supabase
+        .from("products")
+        .select("*")
+        .eq("slug", slug)
+        .is("deleted_at", null)
+        .single();
+      setProduct((data as Product) ?? null);
+      setLoading(false);
+    })();
+  }, [slug]);
 
-  if (!data) notFound();
-  const product = data as Product;
+  if (loading) {
+    return <div className="container-app py-16 text-center text-slate-500">טוען…</div>;
+  }
+
+  if (!product) {
+    return (
+      <div className="container-app py-20 text-center">
+        <h1 className="text-2xl font-bold">המוצר לא נמצא</h1>
+        <Link href="/products" className="btn-primary mt-6 inline-flex">
+          חזרה לקטלוג
+        </Link>
+      </div>
+    );
+  }
+
   const specs = Object.entries(product.specs ?? {});
 
   return (
@@ -40,7 +64,7 @@ export default async function ProductPage({
           <div className="aspect-square bg-slate-100">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={product.image_url ?? "/placeholder.svg"}
+              src={product.image_url ?? asset("/placeholder.svg")}
               alt={product.name_he}
               className="h-full w-full object-cover"
             />
@@ -124,5 +148,13 @@ export default async function ProductPage({
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ProductPage() {
+  return (
+    <Suspense fallback={<div className="container-app py-16 text-center text-slate-500">טוען…</div>}>
+      <ProductDetail />
+    </Suspense>
   );
 }

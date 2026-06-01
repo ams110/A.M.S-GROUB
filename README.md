@@ -12,6 +12,9 @@ products, pricing, stock, dealers, and orders from an admin panel.
 
 - **Next.js 15** (App Router, TypeScript) + **Tailwind CSS**
 - **Supabase** — Postgres, Auth, Row Level Security
+- **Static export** (`output: "export"`) — the whole app renders in the
+  browser and talks to Supabase directly, so it can be hosted as plain static
+  files on **GitHub Pages**.
 
 ## How it works
 
@@ -49,13 +52,38 @@ The `store` schema is exposed to the API (PostgREST `db_schemas` includes
 If you ever recreate the project, add `store` under **Settings → API → Exposed
 schemas** in the Supabase dashboard.
 
+## Connection keys
+
+The Supabase URL and **publishable (anon) key** live in
+[`src/lib/config.ts`](src/lib/config.ts) — committed on purpose so the site
+builds and runs with **no server secrets**. This is safe: those keys are meant
+to ship in the browser, and all access is enforced by Postgres Row Level
+Security. (Never put the `service_role` key here.) To point at a different
+project, set `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` in
+`.env.local`, which override the file.
+
 ## Local development
 
 ```bash
-cp .env.example .env.local   # already filled for this project
 npm install
 npm run dev                  # http://localhost:3000
 ```
+
+## Deploying to GitHub Pages
+
+A workflow ([`.github/workflows/nextjs.yml`](.github/workflows/nextjs.yml))
+builds the static export and publishes it on every push to `main`:
+
+1. In the repo, go to **Settings → Pages** and set **Source = GitHub Actions**.
+2. Push to `main` (or run the workflow manually from the **Actions** tab).
+3. The site appears at `https://<user>.github.io/<repo>/`.
+
+The workflow injects the correct sub-path (`basePath`) automatically, so it
+works whether served from a project sub-path or a custom domain. No secrets are
+required because the Supabase keys are in `src/lib/config.ts`.
+
+> Because there is no server, pages fetch their data in the browser. Catalog
+> changes made in the admin panel are reflected immediately — no rebuild needed.
 
 ## Making yourself an admin
 
@@ -71,8 +99,12 @@ Then the **ניהול** (admin) menu appears in the header.
 
 ## Routes
 
-- `/` home · `/products` catalog · `/products/[slug]` product
+- `/` home · `/products` catalog · `/product?slug=…` product
 - `/cart` · `/checkout`
 - `/login` · `/register`
-- `/account/orders` · `/account/orders/[id]`
+- `/account/orders` · `/account/order?id=…`
 - `/admin` · `/admin/orders` · `/admin/dealers` · `/admin/products`
+
+> Product and order detail use query strings (`?slug=`, `?id=`) instead of path
+> segments so a single static page can serve any item — required for static
+> hosting, where arbitrary runtime IDs can't be pre-rendered as files.

@@ -1,14 +1,20 @@
+"use client";
+
 import Link from "next/link";
-import { getSessionContext } from "@/lib/auth";
+import { useProfile } from "@/lib/auth";
 
-export const dynamic = "force-dynamic";
-
-export default async function AdminLayout({
+export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { profile } = await getSessionContext();
+  const { profile, ready } = useProfile();
+
+  // Wait for the auth check before deciding what to show (avoids a flash of
+  // "no access" for admins while the session loads).
+  if (!ready) {
+    return <div className="container-app py-20 text-center text-slate-500">טוען…</div>;
+  }
 
   if (!profile || profile.role !== "admin") {
     return (
