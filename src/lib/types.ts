@@ -54,6 +54,37 @@ export type CustomerPrice = {
   created_at: string;
 };
 
+export type QuoteStatus =
+  | "draft"
+  | "sent"
+  | "accepted"
+  | "rejected"
+  | "expired"
+  | "converted";
+
+export type Quote = {
+  id: string;
+  quote_number: string;
+  customer_id: string | null;
+  status: QuoteStatus;
+  notes: string | null;
+  valid_until: string | null;
+  order_id: string | null;
+  created_by: string | null;
+  created_at: string;
+};
+
+export type QuoteItem = {
+  id: string;
+  quote_id: string;
+  product_id: string | null;
+  name_he: string;
+  sku: string | null;
+  unit_price: number;
+  qty: number;
+  line_total: number;
+};
+
 export type Invoice = {
   id: string;
   invoice_number: string;
