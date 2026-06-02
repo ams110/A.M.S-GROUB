@@ -61,6 +61,11 @@ export default function Header() {
               ההזמנות שלי
             </Link>
           )}
+          {email && (
+            <Link href="/account/quotes" className="hover:text-brand">
+              הצעות מחיר
+            </Link>
+          )}
           {role === "admin" && (
             <Link href="/admin" className="hover:text-brand">
               ניהול

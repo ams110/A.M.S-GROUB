@@ -62,3 +62,12 @@ export const PO_STATUS_HE: Record<string, string> = {
   received: "נקלט",
   cancelled: "בוטל",
 };
+
+export const QUOTE_STATUS_HE: Record<string, string> = {
+  draft: "טיוטה",
+  sent: "נשלחה",
+  accepted: "אושרה",
+  rejected: "נדחתה",
+  expired: "פגה",
+  converted: "הומרה להזמנה",
+};

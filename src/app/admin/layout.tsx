@@ -39,8 +39,14 @@ export default function AdminLayout({
           <Link href="/admin/orders" className="rounded-lg px-3 py-1.5 hover:bg-slate-100">
             הזמנות
           </Link>
+          <Link href="/admin/quotes" className="rounded-lg px-3 py-1.5 hover:bg-slate-100">
+            הצעות מחיר
+          </Link>
           <Link href="/admin/dealers" className="rounded-lg px-3 py-1.5 hover:bg-slate-100">
             לקוחות
+          </Link>
+          <Link href="/admin/customer-prices" className="rounded-lg px-3 py-1.5 hover:bg-slate-100">
+            מחירי לקוח
           </Link>
           <Link href="/admin/products" className="rounded-lg px-3 py-1.5 hover:bg-slate-100">
             מוצרים ומחירים
