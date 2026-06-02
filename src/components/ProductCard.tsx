@@ -20,6 +20,8 @@ export default function ProductCard({
         <img
           src={product.image_url ?? asset("/placeholder.svg")}
           alt={product.name_he}
+          loading="lazy"
+          decoding="async"
           className="h-full w-full object-cover transition group-hover:scale-105"
         />
       </div>

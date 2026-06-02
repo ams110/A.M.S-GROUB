@@ -17,8 +17,9 @@ export default function Header() {
     const supabase = createClient();
     const load = async () => {
       const {
-        data: { user },
-      } = await supabase.auth.getUser();
+        data: { session },
+      } = await supabase.auth.getSession();
+      const user = session?.user ?? null;
       setEmail(user?.email ?? null);
       if (user) {
         const { data } = await supabase
