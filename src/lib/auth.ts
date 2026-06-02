@@ -41,9 +41,13 @@ export function useProfile(): SessionState {
     const supabase = createClient();
 
     const load = async () => {
+      // getSession() reads the cached session locally (instant) instead of a
+      // round-trip to the auth server on every page. This is UI-only; data
+      // access is still enforced server-side by RLS.
       const {
-        data: { user },
-      } = await supabase.auth.getUser();
+        data: { session },
+      } = await supabase.auth.getSession();
+      const user = session?.user ?? null;
 
       if (!user) {
         setState({
