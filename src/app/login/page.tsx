@@ -20,14 +20,45 @@ function LoginForm() {
     e.preventDefault();
     setError(null);
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
-    if (error) {
-      setError("אימייל או סיסמה שגויים.");
-      return;
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+      if (error) {
+        setError(
+          /invalid login|credentials/i.test(error.message)
+            ? "אימייל או סיסמה שגויים."
+            : /confirm/i.test(error.message)
+            ? "החשבון טרם אומת. פנו למנהל המערכת."
+            : `שגיאת התחברות: ${error.message}`
+        );
+        return;
+      }
+
+      // Admins land in the management area; others go to the requested page.
+      let dest = redirect;
+      const uid = data.user?.id;
+      if (uid && redirect === "/") {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", uid)
+          .single();
+        if (prof?.role === "admin") dest = "/admin";
+      }
+      router.push(dest);
+      router.refresh();
+    } catch (err) {
+      // Network / CORS / unexpected — surface it instead of hanging.
+      setError(
+        `לא ניתן להתחבר כעת. בדקו את החיבור לאינטרנט ונסו שוב. (${
+          err instanceof Error ? err.message : String(err)
+        })`
+      );
+    } finally {
+      setLoading(false);
     }
-    router.push(redirect);
-    router.refresh();
   };
 
   return (
@@ -41,7 +72,9 @@ function LoginForm() {
             <input
               type="email"
               required
-              className="input"
+              autoComplete="email"
+              className="input ltr-input"
+              dir="ltr"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -51,7 +84,9 @@ function LoginForm() {
             <input
               type="password"
               required
-              className="input"
+              autoComplete="current-password"
+              className="input ltr-input"
+              dir="ltr"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
