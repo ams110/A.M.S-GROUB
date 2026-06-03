@@ -19,7 +19,7 @@ export default function WelcomePage() {
   const { profile, email, ready } = useProfile();
   const [phase, setPhase] = useState<"enter" | "show" | "exit">("enter");
 
-  const dest = profile?.role === "admin" ? "/admin" : "/products";
+  const dest = profile?.role === "admin" || profile?.role === "super_admin" ? "/admin" : "/products";
   const displayName =
     profile?.company || profile?.full_name || email?.split("@")[0] || "";
 
@@ -51,7 +51,7 @@ export default function WelcomePage() {
         alignItems: "center",
         justifyContent: "center",
         overflow: "hidden",
-        background: "linear-gradient(135deg, #051e3e 0%, #0b5cad 50%, #073f78 100%)",
+        background: "linear-gradient(135deg, #0D1B36 0%, #1B2D5B 60%, #0D1B36 100%)",
         opacity: phase === "exit" ? 0 : 1,
         transition: phase === "exit" ? "opacity 0.5s ease-in" : "none",
       }}
@@ -158,7 +158,7 @@ export default function WelcomePage() {
                 width: "100%",
                 height: "100%",
                 borderRadius: "24px",
-                boxShadow: "0 20px 60px rgba(0,0,0,0.4), 0 0 40px rgba(11,92,173,0.6)",
+                boxShadow: "0 20px 60px rgba(0,0,0,0.5), 0 0 50px rgba(201,162,39,0.35)",
                 animation: "logoBounce 0.8s cubic-bezier(0.34,1.56,0.64,1)",
               }}
             />

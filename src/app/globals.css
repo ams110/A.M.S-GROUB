@@ -14,25 +14,35 @@ body {
   @apply mx-auto w-full max-w-6xl px-4;
 }
 
+/* ── Buttons ─────────────────────────────────────────────────────── */
 .btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50;
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 active:scale-[0.97];
 }
 .btn-primary {
-  @apply btn bg-brand text-white hover:bg-brand-dark;
+  @apply btn bg-navy text-white hover:bg-navy-mid shadow-sm hover:shadow-md;
+}
+.btn-gold {
+  @apply btn bg-gold text-navy-dark hover:bg-gold-dark shadow-sm hover:shadow-gold;
 }
 .btn-outline {
-  @apply btn border border-slate-300 bg-white text-slate-700 hover:bg-slate-100;
+  @apply btn border border-navy/20 bg-white text-navy hover:bg-navy-50 hover:border-navy/30;
 }
+
+/* ── Cards ───────────────────────────────────────────────────────── */
 .card {
-  @apply rounded-xl border border-slate-200 bg-white shadow-sm;
+  @apply rounded-2xl border border-slate-100 bg-white shadow-sm;
 }
+
+/* ── Form elements ───────────────────────────────────────────────── */
 .input {
-  @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20;
+  @apply w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm outline-none
+    transition-all duration-150
+    hover:border-slate-300
+    focus:border-navy focus:ring-2 focus:ring-navy/15;
 }
 .label {
-  @apply mb-1 block text-sm font-medium text-slate-700;
+  @apply mb-1.5 block text-sm font-medium text-slate-700;
 }
-/* Left-aligned input for LTR values (slugs, URLs) inside the RTL layout. */
 .ltr-input {
   @apply text-left;
 }
@@ -40,10 +50,36 @@ body {
   @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
 }
 
+/* ── Animations ──────────────────────────────────────────────────── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 @keyframes toast-in {
   from { opacity: 0; transform: translateY(-10px) scale(0.95); }
   to   { opacity: 1; transform: translateY(0)    scale(1); }
 }
-.toast-enter {
-  animation: toast-in 0.2s ease-out;
+@keyframes shimmer {
+  from { background-position: 200% center; }
+  to   { background-position: -200% center; }
 }
+
+.animate-fade-up   { animation: fade-up   0.45s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-fade-in   { animation: fade-in   0.3s ease-out both; }
+.animate-slide-down { animation: slide-down 0.25s ease-out both; }
+.toast-enter       { animation: toast-in  0.2s ease-out; }
+
+/* Stagger helpers */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.10s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.20s; }
+.stagger-5 { animation-delay: 0.25s; }

@@ -84,14 +84,14 @@ function BottomNavItem({
   return (
     <Link
       href={href}
-      className={`flex flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors ${
-        active ? "text-brand" : "text-slate-400 hover:text-slate-600"
+      className={`flex flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors duration-150 ${
+        active ? "text-gold" : "text-white/40 hover:text-white/70"
       }`}
     >
       <span className="relative">
         {icon}
         {badge != null && badge > 0 && (
-          <span className="absolute -top-1 -right-2 grid h-4 min-w-4 place-items-center rounded-full bg-brand px-0.5 text-[10px] font-bold text-white">
+          <span className="absolute -top-1 -right-2 grid h-4 min-w-4 place-items-center rounded-full bg-gold px-0.5 text-[10px] font-bold text-navy-dark">
             {badge > 99 ? "99+" : badge}
           </span>
         )}
@@ -116,53 +116,65 @@ export default function Header() {
     router.refresh();
   };
 
-  // The 4th slot in the bottom nav changes by role.
+  const navLinkClass = (active: boolean) =>
+    `text-sm font-medium transition-colors duration-150 px-3 py-1.5 rounded-lg ${
+      active
+        ? "text-gold bg-white/10"
+        : "text-white/70 hover:text-white hover:bg-white/8"
+    }`;
+
   const fourthTab = isAdmin
     ? { href: "/admin", label: "ניהול", active: pathname.startsWith("/admin"), icon: <SettingsIcon /> }
     : email
     ? { href: "/account/orders", label: "הזמנות", active: pathname.startsWith("/account"), icon: <PackageIcon /> }
-    : { href: "/login", label: "כניסה", active: pathname === "/login", icon: <UserIcon /> };
+    : { href: "/", label: "כניסה", active: pathname === "/", icon: <UserIcon /> };
 
   return (
     <>
-      {/* ── Top bar ────────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur print:hidden">
+      {/* ── Top bar ────────────────────────────────────────────────── */}
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-navy-dark shadow-navy print:hidden">
         <div className="container-app flex h-16 items-center justify-between gap-4">
 
           {/* Logo */}
-          <Link href="/" className="flex shrink-0 items-center gap-2">
+          <Link href="/" className="flex shrink-0 items-center gap-2.5 group">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/logo.svg`}
               alt="A.M.S GROUP"
-              className="h-9 w-9 rounded-lg"
+              className="h-9 w-9 rounded-xl shadow-sm transition-transform duration-200 group-hover:scale-105"
             />
-            <span className="text-lg font-bold text-brand-dark">Â.M.Ŝ GROUP</span>
+            <span className="text-lg font-bold text-white tracking-wide">Â.M.Ŝ GROUP</span>
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden items-center gap-6 text-sm font-medium text-slate-600 md:flex">
+          <nav className="hidden items-center gap-1 md:flex">
             <Link
               href="/products"
-              className={`hover:text-brand ${pathname.startsWith("/products") || pathname.startsWith("/product") ? "text-brand" : ""}`}
+              className={navLinkClass(pathname.startsWith("/products") || pathname.startsWith("/product"))}
             >
               קטלוג
             </Link>
             {email && (
               <Link
                 href="/account/orders"
-                className={`hover:text-brand ${pathname.startsWith("/account") ? "text-brand" : ""}`}
+                className={navLinkClass(pathname.startsWith("/account"))}
               >
                 ההזמנות שלי
               </Link>
             )}
             {email && (
-              <Link href="/account/quotes" className="hover:text-brand">
+              <Link
+                href="/account/quotes"
+                className={navLinkClass(pathname === "/account/quotes")}
+              >
                 הצעות מחיר
               </Link>
             )}
             {isAdmin && (
-              <Link href="/admin" className="font-semibold text-brand">
+              <Link
+                href="/admin"
+                className={navLinkClass(pathname.startsWith("/admin"))}
+              >
                 ניהול
               </Link>
             )}
@@ -170,46 +182,64 @@ export default function Header() {
 
           {/* Desktop actions */}
           <div className="hidden items-center gap-3 md:flex">
-            <Link href="/cart" className="relative btn-outline">
+            <Link href="/cart" className="relative rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-white/15 hover:border-white/30">
               עגלה
               {count > 0 && (
-                <span className="absolute -top-2 -left-2 grid h-5 min-w-5 place-items-center rounded-full bg-brand px-1 text-xs font-bold text-white">
+                <span className="absolute -top-2 -left-2 grid h-5 min-w-5 place-items-center rounded-full bg-gold px-1 text-xs font-bold text-navy-dark">
                   {count}
                 </span>
               )}
             </Link>
             {ready && (
               email ? (
-                <button onClick={signOut} className="btn-outline">יציאה</button>
+                <button
+                  onClick={signOut}
+                  className="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white/80 transition-all hover:bg-white/15 hover:text-white"
+                >
+                  יציאה
+                </button>
               ) : (
-                <Link href="/login" className="btn-primary">כניסת סוחרים</Link>
+                <Link href="/" className="btn-gold">כניסת סוחרים</Link>
               )
             )}
           </div>
 
-          {/* Mobile: sign-out / login shortcut in the top bar */}
+          {/* Mobile: sign-out / login in top bar */}
           <div className="flex items-center md:hidden">
             {ready && (
               email ? (
-                <button onClick={signOut} className="btn-outline text-xs px-3 py-1.5">יציאה</button>
+                <button
+                  onClick={signOut}
+                  className="rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white/80"
+                >
+                  יציאה
+                </button>
               ) : (
-                <Link href="/login" className="btn-primary text-xs px-3 py-1.5">כניסה</Link>
+                <Link href="/" className="rounded-lg bg-gold px-3 py-1.5 text-xs font-bold text-navy-dark">
+                  כניסה
+                </Link>
               )
             )}
           </div>
         </div>
       </header>
 
-      {/* ── Mobile bottom nav ──────────────────────────────────────────── */}
+      {/* ── Mobile bottom nav ──────────────────────────────────────── */}
       <nav
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white md:hidden print:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-navy-dark md:hidden print:hidden"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         <div className="grid h-16 grid-cols-4">
           <BottomNavItem
             href={isAdmin ? "/admin" : email ? "/products" : "/"}
             label="ראשי"
-            active={pathname === "/" || pathname === "/admin" && isAdmin}
+            active={
+              isAdmin
+                ? pathname === "/admin"
+                : email
+                ? pathname === "/products"
+                : pathname === "/"
+            }
             icon={<HomeIcon />}
           />
           <BottomNavItem
