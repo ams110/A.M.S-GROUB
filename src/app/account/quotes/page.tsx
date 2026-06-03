@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useProfile } from "@/lib/auth";
 import { formatPrice, QUOTE_STATUS_HE } from "@/lib/format";
-import type { Quote, QuoteItem } from "@/lib/types";
+import type { Quote } from "@/lib/types";
 
 export default function MyQuotesPage() {
   const router = useRouter();

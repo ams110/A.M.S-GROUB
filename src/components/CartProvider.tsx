@@ -34,22 +34,19 @@ const CartContext = createContext<CartContextValue | null>(null);
 const STORAGE_KEY = "tiandy_cart_v1";
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [lines, setLines] = useState<CartLine[]>([]);
-  const [hydrated, setHydrated] = useState(false);
-
-  useEffect(() => {
+  const [lines, setLines] = useState<CartLine[]>(() => {
+    if (typeof window === "undefined") return [];
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setLines(JSON.parse(raw));
+      return raw ? (JSON.parse(raw) as CartLine[]) : [];
     } catch {
-      /* ignore */
+      return [];
     }
-    setHydrated(true);
-  }, []);
+  });
 
   useEffect(() => {
-    if (hydrated) localStorage.setItem(STORAGE_KEY, JSON.stringify(lines));
-  }, [lines, hydrated]);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(lines));
+  }, [lines]);
 
   const value = useMemo<CartContextValue>(() => {
     const clamp = (l: CartLine, qty: number) =>

@@ -4,6 +4,16 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useProfile } from "@/lib/auth";
 
+// Pre-computed at module load time so renders stay pure (no Math.random() in JSX)
+const STARS = Array.from({ length: 30 }, () => ({
+  w: Math.random() * 3 + 1,
+  h: Math.random() * 3 + 1,
+  top: `${Math.random() * 100}%`,
+  left: `${Math.random() * 100}%`,
+  dur: `${2 + Math.random() * 3}s`,
+  delay: `${Math.random() * 2}s`,
+}));
+
 export default function WelcomePage() {
   const router = useRouter();
   const { profile, email, ready } = useProfile();
@@ -75,18 +85,18 @@ export default function WelcomePage() {
 
       {/* Star particles */}
       <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
-        {Array.from({ length: 30 }).map((_, i) => (
+        {STARS.map((s, i) => (
           <div
             key={i}
             style={{
               position: "absolute",
-              width: Math.random() * 3 + 1,
-              height: Math.random() * 3 + 1,
+              width: s.w,
+              height: s.h,
               borderRadius: "50%",
               background: "rgba(255,255,255,0.6)",
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              animation: `twinkle ${2 + Math.random() * 3}s ${Math.random() * 2}s ease-in-out infinite alternate`,
+              top: s.top,
+              left: s.left,
+              animation: `twinkle ${s.dur} ${s.delay} ease-in-out infinite alternate`,
             }}
           />
         ))}
