@@ -79,6 +79,11 @@ npm run build    # بناء static export
 npm run lint     # فحص الكود
 ```
 
+## سير العمل مع Git
+
+- **ادفع مباشرة على `main`** — لا حاجة لـ PRs أو branches وسيطة.
+- تأكد من نجاح `npm run build` قبل الـ push.
+
 ## GitHub Actions
 
 `.github/workflows/nextjs.yml` — بيبني وبينشر تلقائياً على GitHub Pages عند كل push لـ main.
