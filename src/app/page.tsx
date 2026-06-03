@@ -33,7 +33,7 @@ function LoginForm() {
     setFormError(null);
     setLoading(true);
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email: emailInput.trim(),
         password,
       });
@@ -54,17 +54,8 @@ function LoginForm() {
         return;
       }
 
-      const uid = data.user?.id;
-      let dest = "/products";
-      if (uid) {
-        const { data: prof } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", uid)
-          .single();
-        if (prof?.role === "admin") dest = "/admin";
-      }
-      router.push(dest);
+      // Show the welcome animation first, it will auto-redirect to the right page.
+      router.push("/welcome");
       router.refresh();
     } catch (err) {
       setFormError(
