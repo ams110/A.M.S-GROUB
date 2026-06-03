@@ -40,16 +40,29 @@ export function useProfile(): SessionState {
   useEffect(() => {
     const supabase = createClient();
 
-    const load = async () => {
-      // getSession() reads the cached session locally (instant) instead of a
-      // round-trip to the auth server on every page. This is UI-only; data
-      // access is still enforced server-side by RLS.
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const user = session?.user ?? null;
+    const loadProfile = async (userId: string, email: string | undefined) => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .single();
 
-      if (!user) {
+      const profile = (data as Profile) ?? null;
+      setState({
+        loading: false,
+        ready: true,
+        userId,
+        email: email ?? null,
+        profile,
+        showPrice: canSeePrices(profile),
+      });
+    };
+
+    // onAuthStateChange fires INITIAL_SESSION immediately with the current
+    // session (from cookies). Using it as the single source of truth avoids
+    // a duplicate getSession() call and the race condition it caused.
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session?.user) {
         setState({
           loading: false,
           ready: true,
@@ -60,26 +73,9 @@ export function useProfile(): SessionState {
         });
         return;
       }
+      loadProfile(session.user.id, session.user.email);
+    });
 
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-
-      const profile = (data as Profile) ?? null;
-      setState({
-        loading: false,
-        ready: true,
-        userId: user.id,
-        email: user.email ?? null,
-        profile,
-        showPrice: canSeePrices(profile),
-      });
-    };
-
-    load();
-    const { data: sub } = supabase.auth.onAuthStateChange(() => load());
     return () => sub.subscription.unsubscribe();
   }, []);
 
