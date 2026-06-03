@@ -1,0 +1,21 @@
+{
+  "name": "Â.M.Ŝ GROUP",
+  "short_name": "AMS Group",
+  "description": "פורטל הזמנות סיטונאי",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#0D1B36",
+  "background_color": "#0D1B36",
+  "lang": "he",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "./logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

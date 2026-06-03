@@ -170,6 +170,15 @@ export default function Header() {
                 הצעות מחיר
               </Link>
             )}
+            {email && !isAdmin && (
+              <Link
+                href="/account/security"
+                className={navLinkClass(pathname === "/account/security")}
+                title="אבטחה וטביעת אצבע"
+              >
+                🔐 אבטחה
+              </Link>
+            )}
             {isAdmin && (
               <Link
                 href="/admin"
