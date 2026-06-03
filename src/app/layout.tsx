@@ -18,7 +18,7 @@ export default function RootLayout({
       <body>
         <CartProvider>
           <Header />
-          <main className="min-h-[calc(100vh-4rem)]">{children}</main>
+          <main className="min-h-[calc(100vh-4rem)] pb-16 md:pb-0">{children}</main>
           <footer className="border-t border-slate-200 bg-white py-8 text-center text-sm text-slate-500 print:hidden">
             <div className="container-app">
               Tiandy סוחרים — פורטל סיטונאי ליבואן הרשמי · © {new Date().getFullYear()}
