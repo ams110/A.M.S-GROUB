@@ -64,7 +64,7 @@ function LoginForm() {
   return (
     <div className="container-app flex justify-center py-16">
       <div className="card w-full max-w-md p-8">
-        <h1 className="mb-1 text-2xl font-bold">כניסת סוחרים</h1>
+        <h1 className="mb-1 text-2xl font-bold">כניסה לפורטל</h1>
         <p className="mb-6 text-sm text-slate-500">התחברו לחשבון הסוחר שלכם.</p>
         <form onSubmit={submit} className="space-y-4">
           <div>
@@ -99,7 +99,7 @@ function LoginForm() {
           </button>
         </form>
         <p className="mt-6 text-center text-sm text-slate-500">
-          פתיחת חשבון חדש — פנו לצוות Tiandy.
+          פתיחת חשבון חדש — פנו לצוות A.M.S GROUP.
         </p>
       </div>
     </div>

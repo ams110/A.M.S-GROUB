@@ -69,7 +69,7 @@ export default function HomePage() {
         )}
         <div className="container-app relative py-20">
           <h1 className="max-w-2xl text-3xl font-extrabold leading-tight md:text-5xl">
-            {s.hero_title ?? "פורטל הזמנות סיטונאי למוצרי Tiandy"}
+            {s.hero_title ?? "פורטל הזמנות הסיטונאי של A.M.S GROUP"}
           </h1>
           <p className="mt-4 max-w-xl text-base text-blue-100 md:text-lg">
             {s.hero_subtitle ??

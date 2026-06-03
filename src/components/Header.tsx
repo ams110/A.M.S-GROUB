@@ -131,10 +131,13 @@ export default function Header() {
 
           {/* Logo */}
           <Link href="/" className="flex shrink-0 items-center gap-2">
-            <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand font-bold text-white">
-              T
-            </span>
-            <span className="text-lg font-bold text-brand-dark">Tiandy סוחרים</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/logo.svg`}
+              alt="A.M.S GROUP"
+              className="h-9 w-9 rounded-lg"
+            />
+            <span className="text-lg font-bold text-brand-dark">A.M.S GROUP</span>
           </Link>
 
           {/* Desktop nav */}
