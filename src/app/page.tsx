@@ -1,126 +1,126 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect, useState } from "react";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { useProfile } from "@/lib/auth";
-import { applyEffectivePrices } from "@/lib/pricing";
-import ProductCard from "@/components/ProductCard";
-import type { Category, Product } from "@/lib/types";
 
-export default function HomePage() {
-  const { profile, showPrice } = useProfile();
+function LoginForm() {
+  const router = useRouter();
+  const params = useSearchParams();
+  const redirectTo = params.get("redirect") || "";
+  const supabase = createClient();
 
-  const [settings, setSettings] = useState<Record<string, string>>({});
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [featured, setFeatured] = useState<Product[]>([]);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const supabase = createClient();
-
-    (async () => {
-      const [{ data: settingsRows }, { data: cats }, { data: feat }] =
-        await Promise.all([
-          supabase.from("settings").select("key,value"),
-          supabase.from("categories").select("*").order("sort"),
-          supabase
-            .from("products")
-            .select("*")
-            .is("deleted_at", null)
-            .eq("is_featured", true)
-            .order("sort")
-            .limit(8),
-        ]);
-
-      setSettings(
-        Object.fromEntries(
-          (settingsRows ?? []).map((r) => [r.key, r.value])
-        ) as Record<string, string>
-      );
-      setCategories((cats as Category[]) ?? []);
-
-      let featuredList = (feat as Product[]) ?? [];
-      if (featuredList.length === 0) {
-        const { data } = await supabase
-          .from("products")
-          .select("*")
-          .is("deleted_at", null)
-          .order("sort")
-          .limit(8);
-        featuredList = (data as Product[]) ?? [];
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+      if (error) {
+        setError(
+          /invalid login|credentials/i.test(error.message)
+            ? "אימייל או סיסמה שגויים."
+            : /confirm/i.test(error.message)
+            ? "החשבון טרם אומת. פנו למנהל המערכת."
+            : `שגיאת התחברות: ${error.message}`
+        );
+        return;
       }
-      setFeatured(await applyEffectivePrices(supabase, featuredList));
-    })();
-  }, []);
 
-  const s = settings;
+      if (redirectTo) {
+        router.push(redirectTo);
+        router.refresh();
+        return;
+      }
+
+      const uid = data.user?.id;
+      let dest = "/products";
+      if (uid) {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", uid)
+          .single();
+        if (prof?.role === "admin") dest = "/admin";
+      }
+      router.push(dest);
+      router.refresh();
+    } catch (err) {
+      setError(
+        `לא ניתן להתחבר כעת. בדקו את החיבור לאינטרנט ונסו שוב. (${
+          err instanceof Error ? err.message : String(err)
+        })`
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div>
-      {/* Hero */}
-      <section className="relative overflow-hidden bg-brand-dark text-white">
-        {s.hero_image_url && (
-          // eslint-disable-next-line @next/next/no-img-element
+    <div className="flex min-h-[calc(100vh-8rem)] items-center justify-center px-4">
+      <div className="card w-full max-w-md p-8">
+        <div className="mb-6 flex justify-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={s.hero_image_url}
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover opacity-25"
+            src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/logo.svg`}
+            alt="Â.M.Ŝ GROUP"
+            className="h-20 w-20 rounded-2xl shadow-md"
           />
-        )}
-        <div className="container-app relative py-20">
-          <h1 className="max-w-2xl text-3xl font-extrabold leading-tight md:text-5xl">
-            {s.hero_title ?? "פורטל הזמנות הסיטונאי של Â.M.Ŝ GROUP"}
-          </h1>
-          <p className="mt-4 max-w-xl text-base text-blue-100 md:text-lg">
-            {s.hero_subtitle ??
-              "הזמינו ישירות מהיבואן הרשמי — מחירי סוחרים, מלאי מעודכן ומשלוח עד הדלת."}
-          </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="/products" className="btn bg-white text-brand-dark hover:bg-blue-50">
-              לקטלוג המלא
-            </Link>
+        </div>
+        <h1 className="mb-1 text-center text-2xl font-bold">Â.M.Ŝ GROUP</h1>
+        <p className="mb-6 text-center text-sm text-slate-500">פורטל הזמנות סיטונאי</p>
+        <form onSubmit={submit} className="space-y-4">
+          <div>
+            <label className="label">אימייל</label>
+            <input
+              type="email"
+              required
+              autoComplete="email"
+              className="input ltr-input"
+              dir="ltr"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
           </div>
-        </div>
-      </section>
-
-      {/* Categories */}
-      <section className="container-app py-12">
-        <h2 className="mb-6 text-xl font-bold">קטגוריות</h2>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {categories.map((c) => (
-            <Link
-              key={c.id}
-              href={`/products?category=${c.slug}`}
-              className="card flex items-center gap-3 p-4 transition hover:shadow-md"
-            >
-              {c.image_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={c.image_url} alt="" className="h-12 w-12 rounded object-cover" />
-              ) : (
-                <span className="grid h-12 w-12 place-items-center rounded bg-brand-light text-brand">
-                  📷
-                </span>
-              )}
-              <span className="text-sm font-semibold">{c.name_he}</span>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* Featured */}
-      <section className="container-app pb-16">
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-xl font-bold">מוצרים נבחרים</h2>
-          <Link href="/products" className="text-sm font-medium text-brand hover:underline">
-            הצג הכל →
-          </Link>
-        </div>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {featured.map((p) => (
-            <ProductCard key={p.id} product={p} showPrice={showPrice} />
-          ))}
-        </div>
-      </section>
+          <div>
+            <label className="label">סיסמה</label>
+            <input
+              type="password"
+              required
+              autoComplete="current-password"
+              className="input ltr-input"
+              dir="ltr"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+          {error && (
+            <p className="rounded bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>
+          )}
+          <button disabled={loading} className="btn-primary w-full">
+            {loading ? "מתחבר…" : "כניסה"}
+          </button>
+        </form>
+        <p className="mt-6 text-center text-sm text-slate-500">
+          פתיחת חשבון חדש — פנו לצוות Â.M.Ŝ GROUP.
+        </p>
+      </div>
     </div>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-[calc(100vh-8rem)] items-center justify-center text-slate-400">טוען…</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }
