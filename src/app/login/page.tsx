@@ -99,7 +99,7 @@ function LoginForm() {
           </button>
         </form>
         <p className="mt-6 text-center text-sm text-slate-500">
-          פתיחת חשבון חדש — פנו לצוות A.M.S GROUP.
+          פתיחת חשבון חדש — פנו לצוות Â.M.Ŝ GROUP.
         </p>
       </div>
     </div>

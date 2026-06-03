@@ -137,7 +137,7 @@ export default function Header() {
               alt="A.M.S GROUP"
               className="h-9 w-9 rounded-lg"
             />
-            <span className="text-lg font-bold text-brand-dark">A.M.S GROUP</span>
+            <span className="text-lg font-bold text-brand-dark">Â.M.Ŝ GROUP</span>
           </Link>
 
           {/* Desktop nav */}

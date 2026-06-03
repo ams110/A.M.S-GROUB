@@ -12,16 +12,16 @@
   <!-- Decorative accent bar -->
   <rect x="24" y="148" width="152" height="5" rx="2.5" fill="white" opacity="0.25"/>
 
-  <!-- AMS letters -->
+  <!-- ÂMŜ letters -->
   <text
     x="100" y="118"
     font-family="system-ui, Arial Black, sans-serif"
     font-weight="900"
-    font-size="82"
+    font-size="78"
     fill="white"
     text-anchor="middle"
     letter-spacing="-2"
-  >AMS</text>
+  >ÂMŜ</text>
 
   <!-- GROUP label -->
   <text
