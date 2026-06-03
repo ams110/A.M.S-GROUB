@@ -49,6 +49,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm run test:ci
+
       - name: Build with Next.js
         # base_path is "/<repo>" for project sites (or "" for a custom domain);
         # next.config.mjs reads it to set basePath/assetPrefix.
