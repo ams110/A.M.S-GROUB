@@ -79,14 +79,6 @@ export default function HomePage() {
             <Link href="/products" className="btn bg-white text-brand-dark hover:bg-blue-50">
               לקטלוג המלא
             </Link>
-            {!profile && (
-              <Link
-                href="/register"
-                className="btn border border-white/40 text-white hover:bg-white/10"
-              >
-                הרשמת סוחר חדש
-              </Link>
-            )}
           </div>
         </div>
       </section>
