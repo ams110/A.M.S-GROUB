@@ -467,3 +467,8 @@ create policy "store_media_admin_delete" on storage.objects for delete
   using (bucket_id = 'store-media' and store.is_admin());
 
 notify pgrst, 'reload schema';
+
+-- Expose the store schema via PostgREST so the browser client can query it.
+-- Without this the API returns empty results for all store.* tables.
+alter role authenticator set pgrst.db_schemas to 'public,store';
+notify pgrst, 'reload config';
