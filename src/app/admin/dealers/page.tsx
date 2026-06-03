@@ -81,6 +81,18 @@ export default function AdminCustomersPage() {
     await supabase.from("profiles").update({ credit_limit }).eq("id", id);
   };
 
+  const saveUsername = async (id: string, username: string) => {
+    const val = username.trim().toLowerCase() || null;
+    const { error } = await supabase.from("profiles").update({ username: val }).eq("id", id);
+    if (error) {
+      toast(
+        error.message.includes("unique") ? "שם המשתמש כבר תפוס" : "שגיאה בשמירת שם המשתמש",
+        "error"
+      );
+      load();
+    }
+  };
+
   const setTerms = async (id: string, payment_terms: PaymentTerms) => {
     patchLocal(id, { payment_terms });
     await supabase.from("profiles").update({ payment_terms }).eq("id", id);
@@ -206,6 +218,7 @@ export default function AdminCustomersPage() {
                   <th className="p-3">שם</th>
                   <th className="p-3">חברה</th>
                   <th className="p-3">טלפון</th>
+                  <th className="p-3">שם משתמש</th>
                   <th className="p-3">סוג</th>
                   <th className="p-3">מסגרת אשראי</th>
                   <th className="p-3">תנאי תשלום</th>
@@ -220,6 +233,16 @@ export default function AdminCustomersPage() {
                     <td className="p-3 font-medium">{p.full_name ?? "—"}</td>
                     <td className="p-3">{p.company ?? "—"}</td>
                     <td className="p-3">{p.phone ?? "—"}</td>
+                    <td className="p-3">
+                      <input
+                        type="text"
+                        className="input w-28 py-1 ltr-input"
+                        dir="ltr"
+                        placeholder="username"
+                        defaultValue={p.username ?? ""}
+                        onBlur={(e) => saveUsername(p.id, e.target.value)}
+                      />
+                    </td>
                     <td className="p-3">
                       {p.role === "super_admin" ? (
                         <span className="badge bg-purple-100 text-purple-800">מנהל ראשי</span>
@@ -296,7 +319,7 @@ export default function AdminCustomersPage() {
                   </tr>
                 ))}
                 {rows.length === 0 && (
-                  <tr><td colSpan={9} className="p-6 text-center text-slate-400">אין לקוחות עדיין.</td></tr>
+                  <tr><td colSpan={10} className="p-6 text-center text-slate-400">אין לקוחות עדיין.</td></tr>
                 )}
               </tbody>
             </table>

@@ -43,6 +43,7 @@ export type Profile = {
   address: string | null;
   credit_limit: number;
   payment_terms: PaymentTerms;
+  username: string | null;
   created_at: string;
 };
 
