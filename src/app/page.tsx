@@ -143,75 +143,97 @@ function LoginForm() {
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-8rem)] items-center justify-center px-4">
-      <div className="card w-full max-w-md p-8">
-        <div className="mb-6 flex justify-center">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/logo.svg`}
-            alt="Â.M.Ŝ GROUP"
-            className="h-20 w-20 rounded-2xl shadow-md"
-          />
+    <div className="flex min-h-[calc(100vh-8rem)] items-center justify-center px-4 py-8">
+      <div className="w-full max-w-sm animate-fade-up">
+
+        {/* Card */}
+        <div className="overflow-hidden rounded-3xl shadow-2xl ring-1 ring-navy/10">
+
+          {/* ── Navy header ─────────────────────────────────────────── */}
+          <div className="relative overflow-hidden bg-navy-dark px-8 py-10 text-center">
+            {/* Decorative circles */}
+            <div className="pointer-events-none absolute -top-12 -left-12 h-40 w-40 rounded-full bg-white/5" />
+            <div className="pointer-events-none absolute -bottom-8 -right-8 h-32 w-32 rounded-full bg-gold/10" />
+            <div className="pointer-events-none absolute top-1/2 left-1/4 h-20 w-20 -translate-y-1/2 rounded-full bg-white/3" />
+
+            <div className="relative z-10">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/logo.svg`}
+                alt="Â.M.Ŝ GROUP"
+                className="mx-auto mb-4 h-16 w-16 rounded-2xl shadow-lg ring-2 ring-gold/40"
+              />
+              <h1 className="text-2xl font-bold tracking-wide text-white">Â.M.Ŝ GROUP</h1>
+              <p className="mt-1 text-xs font-medium uppercase tracking-widest text-gold/80">
+                פורטל הזמנות סיטונאי
+              </p>
+            </div>
+          </div>
+
+          {/* ── Form panel ──────────────────────────────────────────── */}
+          <div className="bg-white px-8 py-7">
+
+            {/* Passkey button */}
+            {passkeyAvailable && (
+              <button
+                onClick={handlePasskey}
+                disabled={passkeyLoading}
+                className="group mb-5 w-full btn-outline gap-2.5"
+              >
+                <FingerprintIcon className="h-4 w-4 text-navy transition-colors group-hover:text-gold" />
+                {passkeyLoading ? "מאמת…" : "כניסה עם טביעת אצבע"}
+              </button>
+            )}
+
+            {passkeyAvailable && (
+              <div className="mb-5 flex items-center gap-3 text-xs text-slate-400">
+                <span className="flex-1 border-t border-slate-200" />
+                <span>או</span>
+                <span className="flex-1 border-t border-slate-200" />
+              </div>
+            )}
+
+            <form onSubmit={submit} className="space-y-4">
+              <div>
+                <label className="label">אימייל / שם משתמש</label>
+                <input
+                  type="text"
+                  required
+                  autoComplete="username email"
+                  className="input ltr-input"
+                  dir="ltr"
+                  placeholder="user@example.com או username"
+                  value={emailInput}
+                  onChange={(e) => setEmailInput(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="label">סיסמה</label>
+                <input
+                  type="password"
+                  required
+                  autoComplete="current-password"
+                  className="input ltr-input"
+                  dir="ltr"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+              {formError && (
+                <div className="animate-slide-down rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                  {formError}
+                </div>
+              )}
+              <button disabled={loading} className="btn-gold w-full">
+                {loading ? "מתחבר…" : "כניסה ←"}
+              </button>
+            </form>
+
+            <p className="mt-5 text-center text-xs text-slate-400">
+              פתיחת חשבון חדש — פנו לצוות Â.M.Ŝ GROUP
+            </p>
+          </div>
         </div>
-        <h1 className="mb-1 text-center text-2xl font-bold">Â.M.Ŝ GROUP</h1>
-        <p className="mb-6 text-center text-sm text-slate-500">פורטל הזמנות סיטונאי</p>
-
-        {/* Passkey button — only shown when device has a registered passkey */}
-        {passkeyAvailable && (
-          <button
-            onClick={handlePasskey}
-            disabled={passkeyLoading}
-            className="btn mb-5 w-full gap-3 border border-brand/30 bg-brand-light text-brand hover:bg-brand hover:text-white"
-          >
-            <FingerprintIcon className="h-5 w-5" />
-            {passkeyLoading ? "מאמת…" : "כניסה עם טביעת אצבע"}
-          </button>
-        )}
-
-        {passkeyAvailable && (
-          <div className="mb-5 flex items-center gap-3 text-xs text-slate-400">
-            <span className="flex-1 border-t border-slate-200" />
-            <span>או</span>
-            <span className="flex-1 border-t border-slate-200" />
-          </div>
-        )}
-
-        <form onSubmit={submit} className="space-y-4">
-          <div>
-            <label className="label">אימייל / שם משתמש</label>
-            <input
-              type="text"
-              required
-              autoComplete="username email"
-              className="input ltr-input"
-              dir="ltr"
-              placeholder="user@example.com או username"
-              value={emailInput}
-              onChange={(e) => setEmailInput(e.target.value)}
-            />
-          </div>
-          <div>
-            <label className="label">סיסמה</label>
-            <input
-              type="password"
-              required
-              autoComplete="current-password"
-              className="input ltr-input"
-              dir="ltr"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-          {formError && (
-            <p className="rounded bg-rose-50 px-3 py-2 text-sm text-rose-700">{formError}</p>
-          )}
-          <button disabled={loading} className="btn-primary w-full">
-            {loading ? "מתחבר…" : "כניסה"}
-          </button>
-        </form>
-        <p className="mt-6 text-center text-sm text-slate-500">
-          פתיחת חשבון חדש — פנו לצוות Â.M.Ŝ GROUP.
-        </p>
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useProfile, isAdminRole } from "@/lib/auth";
 
 export default function AdminLayout({
@@ -9,9 +10,8 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const { profile, ready, isSuperAdmin } = useProfile();
+  const pathname = usePathname();
 
-  // Wait for the auth check before deciding what to show (avoids a flash of
-  // "no access" for admins while the session loads).
   if (!ready) {
     return <div className="container-app py-20 text-center text-slate-500">טוען…</div>;
   }
@@ -29,7 +29,7 @@ export default function AdminLayout({
   }
 
   const navLinks = [
-    { href: "/admin",                  label: "סקירה" },
+    { href: "/admin",                  label: "סקירה",        exact: true },
     { href: "/admin/orders",           label: "הזמנות" },
     { href: "/admin/quotes",           label: "הצעות מחיר" },
     { href: "/admin/dealers",          label: "לקוחות" },
@@ -43,30 +43,39 @@ export default function AdminLayout({
     ...(isSuperAdmin ? [{ href: "/admin/admins", label: "🔑 מנהלים" }] : []),
   ];
 
+  const isActive = (href: string, exact?: boolean) =>
+    exact ? pathname === href : pathname.startsWith(href);
+
   return (
     <div className="container-app py-8">
       <div className="mb-6 border-b border-slate-200 pb-4">
         <div className="mb-3 flex items-center gap-3">
-          <h1 className="text-xl font-bold">ניהול</h1>
+          <h1 className="text-xl font-bold text-navy-dark">ניהול</h1>
           {isSuperAdmin && (
-            <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-800">
+            <span className="rounded-full bg-gold/15 px-2.5 py-0.5 text-xs font-semibold text-gold-dark border border-gold/30">
               מנהל ראשי
             </span>
           )}
         </div>
-        <nav className="flex gap-1 overflow-x-auto text-sm" style={{ scrollbarWidth: "none" }}>
-          {navLinks.map(({ href, label }) => (
+        <nav className="flex gap-1 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+          {navLinks.map(({ href, label, exact }) => (
             <Link
               key={href}
               href={href}
-              className="shrink-0 rounded-lg px-3 py-1.5 hover:bg-slate-100 whitespace-nowrap"
+              className={`shrink-0 whitespace-nowrap rounded-xl px-3 py-2 text-sm font-medium transition-all duration-150 ${
+                isActive(href, exact)
+                  ? "bg-navy text-white shadow-sm"
+                  : "text-slate-600 hover:bg-navy-50 hover:text-navy"
+              }`}
             >
               {label}
             </Link>
           ))}
         </nav>
       </div>
-      {children}
+      <div className="animate-fade-in">
+        {children}
+      </div>
     </div>
   );
 }
