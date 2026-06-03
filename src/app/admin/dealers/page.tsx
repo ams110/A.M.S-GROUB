@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { useToast } from "@/components/Toast";
 import {
   CUSTOMER_TYPE_HE,
   PAYMENT_TERMS_HE,
@@ -22,6 +23,7 @@ const EMPTY_NEW = {
 
 export default function AdminCustomersPage() {
   const supabase = createClient();
+  const toast = useToast();
   const [rows, setRows] = useState<Profile[]>([]);
   const [balances, setBalances] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
@@ -61,7 +63,9 @@ export default function AdminCustomersPage() {
 
   const setStatus = async (id: string, status: Profile["status"]) => {
     setRows((r) => r.map((p) => (p.id === id ? { ...p, status } : p)));
-    await supabase.from("profiles").update({ status }).eq("id", id);
+    const { error } = await supabase.from("profiles").update({ status }).eq("id", id);
+    if (error) toast("שגיאה בעדכון הסטטוס", "error");
+    else toast(status === "approved" ? "הלקוח אושר" : "הלקוח נדחה");
   };
 
   const setType = async (id: string, customer_type: CustomerType) => {
@@ -106,6 +110,7 @@ export default function AdminCustomersPage() {
       return;
     }
     setCreateOk(`החשבון נוצר: ${form.email}`);
+    toast(`החשבון נוצר בהצלחה: ${form.email}`);
     setForm({ ...EMPTY_NEW });
     load();
   };
@@ -192,133 +197,156 @@ export default function AdminCustomersPage() {
       {loading ? (
         <p className="text-slate-500">טוען…</p>
       ) : (
-        <div className="card overflow-x-auto">
-          <table className="w-full text-right text-sm">
-            <thead className="border-b border-slate-200 text-slate-500">
-              <tr>
-                <th className="p-3">שם</th>
-                <th className="p-3">חברה</th>
-                <th className="p-3">טלפון</th>
-                <th className="p-3">סוג</th>
-                <th className="p-3">מסגרת אשראי</th>
-                <th className="p-3">תנאי תשלום</th>
-                <th className="p-3">חוב פתוח</th>
-                <th className="p-3">סטטוס</th>
-                <th className="p-3">פעולות</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((p) => (
-                <tr key={p.id} className="border-b border-slate-100">
-                  <td className="p-3 font-medium">{p.full_name ?? "—"}</td>
-                  <td className="p-3">{p.company ?? "—"}</td>
-                  <td className="p-3">{p.phone ?? "—"}</td>
-                  <td className="p-3">
-                    {p.role === "admin" ? (
-                      <span className="badge bg-slate-100 text-slate-700">מנהל</span>
-                    ) : (
-                      <select
-                        className="input w-28 py-1"
-                        value={p.customer_type}
-                        onChange={(e) => setType(p.id, e.target.value as CustomerType)}
-                      >
-                        <option value="dealer">{CUSTOMER_TYPE_HE.dealer}</option>
-                        <option value="contractor">{CUSTOMER_TYPE_HE.contractor}</option>
-                      </select>
-                    )}
-                  </td>
-                  <td className="p-3">
-                    {p.role !== "admin" && (
-                      <input
-                        type="number"
-                        className="input w-28 py-1"
-                        value={p.credit_limit}
-                        onChange={(e) =>
-                          patchLocal(p.id, { credit_limit: Number(e.target.value) })
-                        }
-                        onBlur={(e) => saveCredit(p.id, Number(e.target.value))}
-                      />
-                    )}
-                  </td>
-                  <td className="p-3">
-                    {p.role !== "admin" && (
-                      <select
-                        className="input w-28 py-1"
-                        value={p.payment_terms}
-                        onChange={(e) => setTerms(p.id, e.target.value as PaymentTerms)}
-                      >
-                        <option value="immediate">{PAYMENT_TERMS_HE.immediate}</option>
-                        <option value="net30">{PAYMENT_TERMS_HE.net30}</option>
-                        <option value="net60">{PAYMENT_TERMS_HE.net60}</option>
-                      </select>
-                    )}
-                  </td>
-                  <td className="p-3">
-                    {p.role !== "admin" &&
-                      (() => {
+        <>
+          {/* ── Desktop table ── */}
+          <div className="card hidden overflow-x-auto md:block">
+            <table className="w-full text-right text-sm">
+              <thead className="border-b border-slate-200 text-slate-500">
+                <tr>
+                  <th className="p-3">שם</th>
+                  <th className="p-3">חברה</th>
+                  <th className="p-3">טלפון</th>
+                  <th className="p-3">סוג</th>
+                  <th className="p-3">מסגרת אשראי</th>
+                  <th className="p-3">תנאי תשלום</th>
+                  <th className="p-3">חוב פתוח</th>
+                  <th className="p-3">סטטוס</th>
+                  <th className="p-3">פעולות</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((p) => (
+                  <tr key={p.id} className="border-b border-slate-100">
+                    <td className="p-3 font-medium">{p.full_name ?? "—"}</td>
+                    <td className="p-3">{p.company ?? "—"}</td>
+                    <td className="p-3">{p.phone ?? "—"}</td>
+                    <td className="p-3">
+                      {p.role === "admin" ? (
+                        <span className="badge bg-slate-100 text-slate-700">מנהל</span>
+                      ) : (
+                        <select
+                          className="input w-28 py-1"
+                          value={p.customer_type}
+                          onChange={(e) => setType(p.id, e.target.value as CustomerType)}
+                        >
+                          <option value="dealer">{CUSTOMER_TYPE_HE.dealer}</option>
+                          <option value="contractor">{CUSTOMER_TYPE_HE.contractor}</option>
+                        </select>
+                      )}
+                    </td>
+                    <td className="p-3">
+                      {p.role !== "admin" && (
+                        <input
+                          type="number"
+                          className="input w-28 py-1"
+                          value={p.credit_limit}
+                          onChange={(e) => patchLocal(p.id, { credit_limit: Number(e.target.value) })}
+                          onBlur={(e) => saveCredit(p.id, Number(e.target.value))}
+                        />
+                      )}
+                    </td>
+                    <td className="p-3">
+                      {p.role !== "admin" && (
+                        <select
+                          className="input w-28 py-1"
+                          value={p.payment_terms}
+                          onChange={(e) => setTerms(p.id, e.target.value as PaymentTerms)}
+                        >
+                          <option value="immediate">{PAYMENT_TERMS_HE.immediate}</option>
+                          <option value="net30">{PAYMENT_TERMS_HE.net30}</option>
+                          <option value="net60">{PAYMENT_TERMS_HE.net60}</option>
+                        </select>
+                      )}
+                    </td>
+                    <td className="p-3">
+                      {p.role !== "admin" && (() => {
                         const bal = balances[p.id] ?? 0;
                         const over = p.credit_limit > 0 && bal > p.credit_limit;
                         return (
                           <span className={over ? "font-bold text-rose-600" : ""}>
-                            {formatPrice(bal)}
-                            {over && " ⚠"}
+                            {formatPrice(bal)}{over && " ⚠"}
                           </span>
                         );
                       })()}
-                  </td>
-                  <td className="p-3">
-                    <span
-                      className={`badge ${
-                        p.status === "approved"
-                          ? "bg-emerald-50 text-emerald-700"
-                          : p.status === "rejected"
-                          ? "bg-rose-50 text-rose-700"
-                          : "bg-amber-50 text-amber-700"
-                      }`}
-                    >
-                      {PROFILE_STATUS_HE[p.status]}
-                    </span>
-                  </td>
-                  <td className="p-3">
-                    {p.role !== "admin" && (
-                      <div className="flex gap-2">
-                        {p.status !== "approved" && (
-                          <button
-                            onClick={() => setStatus(p.id, "approved")}
-                            className="text-emerald-700 hover:underline"
-                          >
-                            אישור
-                          </button>
-                        )}
-                        {p.status !== "rejected" && (
-                          <button
-                            onClick={() => setStatus(p.id, "rejected")}
-                            className="text-rose-700 hover:underline"
-                          >
-                            דחייה
-                          </button>
-                        )}
-                        <Link
-                          href={`/admin/customer-prices?customer=${p.id}`}
-                          className="text-brand hover:underline"
-                        >
-                          מחירים
-                        </Link>
-                      </div>
+                    </td>
+                    <td className="p-3">
+                      <span className={`badge ${
+                        p.status === "approved" ? "bg-emerald-50 text-emerald-700"
+                        : p.status === "rejected" ? "bg-rose-50 text-rose-700"
+                        : "bg-amber-50 text-amber-700"
+                      }`}>
+                        {PROFILE_STATUS_HE[p.status]}
+                      </span>
+                    </td>
+                    <td className="p-3">
+                      {p.role !== "admin" && (
+                        <div className="flex gap-2">
+                          {p.status !== "approved" && (
+                            <button onClick={() => setStatus(p.id, "approved")} className="text-emerald-700 hover:underline">אישור</button>
+                          )}
+                          {p.status !== "rejected" && (
+                            <button onClick={() => setStatus(p.id, "rejected")} className="text-rose-700 hover:underline">דחייה</button>
+                          )}
+                          <Link href={`/admin/customer-prices?customer=${p.id}`} className="text-brand hover:underline">מחירים</Link>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+                {rows.length === 0 && (
+                  <tr><td colSpan={9} className="p-6 text-center text-slate-400">אין לקוחות עדיין.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* ── Mobile cards ── */}
+          <div className="space-y-3 md:hidden">
+            {rows.length === 0 && (
+              <p className="py-10 text-center text-slate-400">אין לקוחות עדיין.</p>
+            )}
+            {rows.map((p) => (
+              <div key={p.id} className="card p-4 space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="font-semibold">{p.full_name ?? "—"}</p>
+                    <p className="text-xs text-slate-500">{p.company ?? ""}</p>
+                  </div>
+                  <span className={`badge shrink-0 ${
+                    p.status === "approved" ? "bg-emerald-50 text-emerald-700"
+                    : p.status === "rejected" ? "bg-rose-50 text-rose-700"
+                    : "bg-amber-50 text-amber-700"
+                  }`}>
+                    {PROFILE_STATUS_HE[p.status]}
+                  </span>
+                </div>
+                {p.phone && (
+                  <a href={`tel:${p.phone}`} className="block text-sm text-brand">{p.phone}</a>
+                )}
+                {p.role !== "admin" && (() => {
+                  const bal = balances[p.id] ?? 0;
+                  const over = p.credit_limit > 0 && bal > p.credit_limit;
+                  return bal > 0 ? (
+                    <p className={`text-sm ${over ? "font-bold text-rose-600" : "text-slate-600"}`}>
+                      חוב פתוח: {formatPrice(bal)}{over && " ⚠"}
+                    </p>
+                  ) : null;
+                })()}
+                {p.role !== "admin" && (
+                  <div className="flex flex-wrap gap-2 border-t border-slate-100 pt-2">
+                    {p.status !== "approved" && (
+                      <button onClick={() => setStatus(p.id, "approved")} className="btn-outline py-1 text-xs text-emerald-700 border-emerald-300">אישור</button>
                     )}
-                  </td>
-                </tr>
-              ))}
-              {rows.length === 0 && (
-                <tr>
-                  <td colSpan={9} className="p-6 text-center text-slate-400">
-                    אין לקוחות עדיין.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                    {p.status !== "rejected" && (
+                      <button onClick={() => setStatus(p.id, "rejected")} className="btn-outline py-1 text-xs text-rose-700 border-rose-300">דחייה</button>
+                    )}
+                    <Link href={`/admin/customer-prices?customer=${p.id}`} className="btn-outline py-1 text-xs">מחירים</Link>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

@@ -99,10 +99,7 @@ function LoginForm() {
           </button>
         </form>
         <p className="mt-6 text-center text-sm text-slate-500">
-          אין לכם חשבון?{" "}
-          <Link href="/register" className="font-semibold text-brand hover:underline">
-            הרשמת סוחר חדש
-          </Link>
+          פתיחת חשבון חדש — פנו לצוות Tiandy.
         </p>
       </div>
     </div>

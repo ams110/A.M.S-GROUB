@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { useToast } from "@/components/Toast";
 import { asset } from "@/lib/config";
 import type { Product } from "@/lib/types";
 
@@ -10,6 +11,7 @@ type Draft = { price: number; stock: number; min_order_qty: number; is_orderable
 
 export default function AdminProductsPage() {
   const supabase = createClient();
+  const toast = useToast();
   const [rows, setRows] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
@@ -36,7 +38,7 @@ export default function AdminProductsPage() {
 
   const save = async (p: Product) => {
     setSavingId(p.id);
-    await supabase
+    const { error } = await supabase
       .from("products")
       .update({
         price: p.price,
@@ -46,8 +48,13 @@ export default function AdminProductsPage() {
       })
       .eq("id", p.id);
     setSavingId(null);
-    setSavedId(p.id);
-    setTimeout(() => setSavedId((s) => (s === p.id ? null : s)), 1500);
+    if (error) {
+      toast("שגיאה בשמירה", "error");
+    } else {
+      setSavedId(p.id);
+      setTimeout(() => setSavedId((s) => (s === p.id ? null : s)), 1500);
+      toast(`"${p.name_he}" נשמר`);
+    }
   };
 
   const toggleFeatured = async (p: Product) => {
