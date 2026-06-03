@@ -54,7 +54,11 @@ function LoginForm() {
   useEffect(() => {
     if (!ready) return;
     if (sessionEmail) {
-      router.replace(profile?.role === "admin" ? "/admin" : "/products");
+      router.replace(
+        profile?.role === "admin" || profile?.role === "super_admin"
+          ? "/admin"
+          : "/products"
+      );
     }
   }, [ready, sessionEmail, profile, router]);
 
@@ -92,14 +96,26 @@ function LoginForm() {
     setFormError(null);
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: emailInput.trim(),
-        password,
-      });
+      let email = emailInput.trim();
+
+      // If no @ — treat as username and resolve to email via DB function
+      if (!email.includes("@")) {
+        const { data: resolved } = await supabase.rpc("get_email_by_username", {
+          uname: email,
+        });
+        if (!resolved) {
+          setFormError("שם משתמש או אימייל לא נמצאו.");
+          setLoading(false);
+          return;
+        }
+        email = resolved as string;
+      }
+
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
         setFormError(
           /invalid login|credentials/i.test(error.message)
-            ? "אימייל או סיסמה שגויים."
+            ? "אימייל / שם משתמש או סיסמה שגויים."
             : /confirm/i.test(error.message)
             ? "החשבון טרם אומת. פנו למנהל המערכת."
             : `שגיאת התחברות: ${error.message}`
@@ -162,13 +178,14 @@ function LoginForm() {
 
         <form onSubmit={submit} className="space-y-4">
           <div>
-            <label className="label">אימייל</label>
+            <label className="label">אימייל / שם משתמש</label>
             <input
-              type="email"
+              type="text"
               required
-              autoComplete="email"
+              autoComplete="username email"
               className="input ltr-input"
               dir="ltr"
+              placeholder="user@example.com או username"
               value={emailInput}
               onChange={(e) => setEmailInput(e.target.value)}
             />
