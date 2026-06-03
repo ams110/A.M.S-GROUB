@@ -14,11 +14,11 @@
  */
 export const SUPABASE_URL =
   process.env.NEXT_PUBLIC_SUPABASE_URL ??
-  "https://ptgjrtuhvefiuztolhea.supabase.co";
+  "https://rvhjrzbhugvytvktdhor.supabase.co";
 
 export const SUPABASE_ANON_KEY =
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
-  "sb_publishable_7VsMNIZnR37FVGTbHtk44A_1ILMSXCS";
+  "sb_publishable_StYQEWIn705_V2lNNSITtg_ty04ZO5E";
 
 /** Sub-path the site is served from (e.g. "/Tiandy-store" on GitHub Pages). */
 export const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
