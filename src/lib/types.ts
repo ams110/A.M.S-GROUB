@@ -33,7 +33,7 @@ export type PaymentTerms = "immediate" | "net30" | "net60";
 
 export type Profile = {
   id: string;
-  role: "dealer" | "admin";
+  role: "dealer" | "admin" | "super_admin";
   customer_type: CustomerType;
   status: "pending" | "approved" | "rejected";
   full_name: string | null;

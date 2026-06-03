@@ -221,8 +221,10 @@ export default function AdminCustomersPage() {
                     <td className="p-3">{p.company ?? "—"}</td>
                     <td className="p-3">{p.phone ?? "—"}</td>
                     <td className="p-3">
-                      {p.role === "admin" ? (
-                        <span className="badge bg-slate-100 text-slate-700">מנהל</span>
+                      {p.role === "super_admin" ? (
+                        <span className="badge bg-purple-100 text-purple-800">מנהל ראשי</span>
+                      ) : p.role === "admin" ? (
+                        <span className="badge bg-blue-100 text-blue-800">מנהל</span>
                       ) : (
                         <select
                           className="input w-28 py-1"
@@ -235,7 +237,7 @@ export default function AdminCustomersPage() {
                       )}
                     </td>
                     <td className="p-3">
-                      {p.role !== "admin" && (
+                      {p.role === "dealer" && (
                         <input
                           type="number"
                           className="input w-28 py-1"
@@ -246,7 +248,7 @@ export default function AdminCustomersPage() {
                       )}
                     </td>
                     <td className="p-3">
-                      {p.role !== "admin" && (
+                      {p.role === "dealer" && (
                         <select
                           className="input w-28 py-1"
                           value={p.payment_terms}
@@ -259,7 +261,7 @@ export default function AdminCustomersPage() {
                       )}
                     </td>
                     <td className="p-3">
-                      {p.role !== "admin" && (() => {
+                      {p.role === "dealer" && (() => {
                         const bal = balances[p.id] ?? 0;
                         const over = p.credit_limit > 0 && bal > p.credit_limit;
                         return (
@@ -279,7 +281,7 @@ export default function AdminCustomersPage() {
                       </span>
                     </td>
                     <td className="p-3">
-                      {p.role !== "admin" && (
+                      {p.role === "dealer" && (
                         <div className="flex gap-2">
                           {p.status !== "approved" && (
                             <button onClick={() => setStatus(p.id, "approved")} className="text-emerald-700 hover:underline">אישור</button>
@@ -323,7 +325,7 @@ export default function AdminCustomersPage() {
                 {p.phone && (
                   <a href={`tel:${p.phone}`} className="block text-sm text-brand">{p.phone}</a>
                 )}
-                {p.role !== "admin" && (() => {
+                {p.role === "dealer" && (() => {
                   const bal = balances[p.id] ?? 0;
                   const over = p.credit_limit > 0 && bal > p.credit_limit;
                   return bal > 0 ? (
@@ -332,7 +334,7 @@ export default function AdminCustomersPage() {
                     </p>
                   ) : null;
                 })()}
-                {p.role !== "admin" && (
+                {p.role === "dealer" && (
                   <div className="flex flex-wrap gap-2 border-t border-slate-100 pt-2">
                     {p.status !== "approved" && (
                       <button onClick={() => setStatus(p.id, "approved")} className="btn-outline py-1 text-xs text-emerald-700 border-emerald-300">אישור</button>

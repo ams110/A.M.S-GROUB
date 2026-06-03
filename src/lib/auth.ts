@@ -4,9 +4,14 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/lib/types";
 
-/** Prices are only meaningful to approved dealers (and admins). */
+/** Returns true for any admin-level role. */
+export function isAdminRole(role: Profile["role"] | undefined | null): boolean {
+  return role === "admin" || role === "super_admin";
+}
+
+/** Prices are only meaningful to approved dealers and admins. */
 export function canSeePrices(profile: Profile | null) {
-  return !!profile && (profile.status === "approved" || profile.role === "admin");
+  return !!profile && (profile.status === "approved" || isAdminRole(profile.role));
 }
 
 export type SessionState = {
@@ -18,6 +23,7 @@ export type SessionState = {
   email: string | null;
   profile: Profile | null;
   showPrice: boolean;
+  isSuperAdmin: boolean;
 };
 
 /**
@@ -35,6 +41,7 @@ export function useProfile(): SessionState {
     email: null,
     profile: null,
     showPrice: false,
+    isSuperAdmin: false,
   });
 
   useEffect(() => {
@@ -55,6 +62,7 @@ export function useProfile(): SessionState {
         email: email ?? null,
         profile,
         showPrice: canSeePrices(profile),
+        isSuperAdmin: profile?.role === "super_admin",
       });
     };
 
@@ -70,6 +78,7 @@ export function useProfile(): SessionState {
           email: null,
           profile: null,
           showPrice: false,
+          isSuperAdmin: false,
         });
         return;
       }
