@@ -2,15 +2,18 @@
 
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useProfile } from "@/lib/auth";
 import { applyEffectivePrices } from "@/lib/pricing";
 import ProductCard from "@/components/ProductCard";
 import type { Category, Product } from "@/lib/types";
 
+type SortKey = "default" | "name" | "price-asc" | "price-desc";
+
 function Catalog() {
   const params = useSearchParams();
+  const router = useRouter();
   const category = params.get("category") ?? undefined;
   const q = params.get("q") ?? undefined;
 
@@ -18,16 +21,16 @@ function Catalog() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sort, setSort] = useState<SortKey>("default");
+  const [inStockOnly, setInStockOnly] = useState(false);
+  const [search, setSearch] = useState(q ?? "");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
-
     (async () => {
       setLoading(true);
-      const { data: cats } = await supabase
-        .from("categories")
-        .select("*")
-        .order("sort");
+      const { data: cats } = await supabase.from("categories").select("*").order("sort");
       const categoryList = (cats as Category[]) ?? [];
       setCategories(categoryList);
 
@@ -35,12 +38,7 @@ function Catalog() {
         ? categoryList.find((c) => c.slug === category)?.id ?? null
         : null;
 
-      let query = supabase
-        .from("products")
-        .select("*")
-        .is("deleted_at", null)
-        .order("sort");
-
+      let query = supabase.from("products").select("*").is("deleted_at", null).order("sort");
       if (categoryId) query = query.eq("category_id", categoryId);
       if (q) query = query.ilike("name_he", `%${q}%`);
 
@@ -50,62 +48,127 @@ function Catalog() {
     })();
   }, [category, q]);
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const url = new URLSearchParams();
+    if (search) url.set("q", search);
+    if (category) url.set("category", category);
+    router.push(`/products?${url.toString()}`);
+  };
+
+  const sorted = [...products]
+    .filter((p) => !inStockOnly || p.stock > 0)
+    .sort((a, b) => {
+      if (sort === "name") return a.name_he.localeCompare(b.name_he, "he");
+      if (sort === "price-asc") return (a.price ?? 0) - (b.price ?? 0);
+      if (sort === "price-desc") return (b.price ?? 0) - (a.price ?? 0);
+      return 0;
+    });
+
+  const navLinks = (
+    <div className="space-y-1">
+      <Link
+        href="/products"
+        onClick={() => setSidebarOpen(false)}
+        className={`block rounded-lg px-3 py-2 text-sm ${
+          !category ? "bg-brand text-white" : "hover:bg-slate-100"
+        }`}
+      >
+        כל הקטגוריות
+      </Link>
+      {categories.map((c) => (
+        <Link
+          key={c.id}
+          href={`/products?category=${c.slug}`}
+          onClick={() => setSidebarOpen(false)}
+          className={`block rounded-lg px-3 py-2 text-sm ${
+            category === c.slug ? "bg-brand text-white" : "hover:bg-slate-100"
+          }`}
+        >
+          {c.name_he}
+        </Link>
+      ))}
+    </div>
+  );
+
   return (
-    <div className="container-app py-10">
-      <h1 className="mb-2 text-2xl font-bold">קטלוג מוצרים</h1>
+    <div className="container-app py-8">
+      <h1 className="mb-4 text-2xl font-bold">קטלוג מוצרים</h1>
+
       {!showPrice && (
-        <p className="mb-6 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <p className="mb-5 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800">
           המחירים וההזמנה זמינים לסוחרים מאושרים בלבד.{" "}
-          <Link href="/login" className="font-semibold underline">
-            כניסה
-          </Link>{" "}
-          או{" "}
-          <Link href="/register" className="font-semibold underline">
-            הרשמה
-          </Link>
-          .
+          <Link href="/login" className="font-semibold underline">כניסה</Link>.
         </p>
       )}
 
-      <div className="grid gap-8 md:grid-cols-[220px_1fr]">
-        {/* Sidebar */}
-        <aside className="space-y-1">
-          <form action="/products" className="mb-4">
-            <input
-              name="q"
-              defaultValue={q ?? ""}
-              placeholder="חיפוש מוצר…"
-              className="input"
-            />
-          </form>
-          <Link
-            href="/products"
-            className={`block rounded-lg px-3 py-2 text-sm ${
-              !category ? "bg-brand text-white" : "hover:bg-slate-100"
-            }`}
+      {/* Search + filters bar */}
+      <div className="mb-6 flex flex-wrap items-center gap-3">
+        <form onSubmit={handleSearch} className="flex flex-1 gap-2 min-w-0">
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="חיפוש מוצר…"
+            className="input min-w-0 flex-1"
+          />
+          <button type="submit" className="btn-primary shrink-0">חפש</button>
+        </form>
+
+        {/* Mobile category toggle */}
+        <button
+          onClick={() => setSidebarOpen((v) => !v)}
+          className="btn-outline md:hidden"
+        >
+          קטגוריות ▾
+        </button>
+
+        {showPrice && (
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value as SortKey)}
+            className="input w-auto"
           >
-            כל הקטגוריות
-          </Link>
-          {categories.map((c) => (
-            <Link
-              key={c.id}
-              href={`/products?category=${c.slug}`}
-              className={`block rounded-lg px-3 py-2 text-sm ${
-                category === c.slug ? "bg-brand text-white" : "hover:bg-slate-100"
-              }`}
-            >
-              {c.name_he}
-            </Link>
-          ))}
-        </aside>
+            <option value="default">מיון: ברירת מחדל</option>
+            <option value="name">מיון: שם</option>
+            <option value="price-asc">מחיר: זול לייקר</option>
+            <option value="price-desc">מחיר: יקר לזול</option>
+          </select>
+        )}
+
+        <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-600">
+          <input
+            type="checkbox"
+            checked={inStockOnly}
+            onChange={(e) => setInStockOnly(e.target.checked)}
+            className="h-4 w-4 accent-brand"
+          />
+          זמין במלאי בלבד
+        </label>
+      </div>
+
+      {/* Mobile sidebar drawer */}
+      {sidebarOpen && (
+        <div className="mb-4 rounded-xl border border-slate-200 bg-white p-3 md:hidden">
+          {navLinks}
+        </div>
+      )}
+
+      <div className="grid gap-8 md:grid-cols-[200px_1fr]">
+        {/* Desktop sidebar */}
+        <aside className="hidden md:block">{navLinks}</aside>
 
         {/* Grid */}
         <div>
           <p className="mb-4 text-sm text-slate-500">
-            {loading ? "טוען…" : `${products.length} מוצרים`}
+            {loading ? "טוען…" : `${sorted.length} מוצרים`}
           </p>
+          {!loading && sorted.length === 0 && (
+            <div className="rounded-xl border border-dashed border-slate-300 py-16 text-center text-slate-400">
+              לא נמצאו מוצרים תואמים.
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {products.map((p) => (
+            {sorted.map((p) => (
               <ProductCard key={p.id} product={p} showPrice={showPrice} />
             ))}
           </div>
