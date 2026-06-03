@@ -90,3 +90,30 @@ npm run lint     # فحص الكود
 | ضياع الجلسة عند refresh | `createClient()` تنشئ instance جديد في كل استدعاء | Singleton pattern في `client.ts` | #18 |
 | تعليق الصفحة بعد الدخول | Race condition: `load()` تُستدعى مرتين (مباشرة + INITIAL_SESSION) | الاعتماد على `onAuthStateChange` فقط | #18 |
 | انتهاء الجلسة بعد ~ساعة | لا middleware لتجديد الـ token | إضافة `src/middleware.ts` | #18 |
+| Header يكرر نفس race condition | `Header.tsx` كان ينشئ client مستقل مع `getSession()` | استخدام `useProfile()` hook مباشرة | #19 |
+
+## قرارات معمارية مهمة
+
+### التسجيل مغلق للعموم
+صفحة `/register` تعرض رسالة مغلق فقط. الحسابات الجديدة تُنشأ **حصراً** من `/admin/dealers` عبر Edge Function `admin-create-customer`.
+
+### Toast System
+`src/components/Toast.tsx` — `ToastProvider` موجود في `layout.tsx` ويغلّف كل الصفحات. أي component يحتاج toast يستخدم `useToast()` hook.
+
+```ts
+const toast = useToast();
+toast("تم الحفظ");          // success (أخضر)
+toast("خطأ ما", "error");   // error (أحمر)
+toast("ملاحظة", "info");    // info (رمادي)
+```
+
+### Mobile Bottom Navigation
+`src/components/Header.tsx` يعرض bottom nav ثابت في الأسفل على الموبايل (4 أزرار). الزر الرابع يتغير حسب الدور: زائر→كניسה، تاجر→הזמנות، admin→ניהול. Desktop nav ما تغير.
+
+### صلاحيات المستخدمين
+| الحالة | القدرات |
+|--------|---------|
+| زائر | تصفح الكتالوج (الأسعار مخفية) |
+| موزع (pending) | لا شيء — ينتظر موافقة Admin |
+| موزع (approved) | رؤية الأسعار، إضافة للسلة، الدفع |
+| admin | كل شيء + إنشاء حسابات جديدة |
