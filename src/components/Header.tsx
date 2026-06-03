@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { useProfile } from "@/lib/auth";
+import { useProfile, isAdminRole } from "@/lib/auth";
 import { useCart } from "./CartProvider";
 
 // ── Icons ────────────────────────────────────────────────────────────────────
@@ -108,7 +108,7 @@ export default function Header() {
   const { email, profile, ready } = useProfile();
   const router = useRouter();
   const pathname = usePathname();
-  const isAdmin = profile?.role === "admin";
+  const isAdmin = isAdminRole(profile?.role);
 
   const signOut = async () => {
     await createClient().auth.signOut();
