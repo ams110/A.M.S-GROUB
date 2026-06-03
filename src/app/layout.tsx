@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { CartProvider } from "@/components/CartProvider";
-import Header from "@/components/Header";
+import AuthGuard from "@/components/AuthGuard";
 import { ToastProvider } from "@/components/Toast";
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
@@ -30,13 +30,7 @@ export default function RootLayout({
       <body>
         <CartProvider>
           <ToastProvider>
-            <Header />
-            <main className="min-h-[calc(100vh-4rem)] pb-16 md:pb-0">{children}</main>
-            <footer className="border-t border-navy/10 bg-navy-dark py-6 text-center text-sm text-white/40 print:hidden">
-              <div className="container-app">
-                Â.M.Ŝ GROUP — פורטל סיטונאי ליבואן הרשמי · © {new Date().getFullYear()}
-              </div>
-            </footer>
+            <AuthGuard>{children}</AuthGuard>
           </ToastProvider>
         </CartProvider>
       </body>
