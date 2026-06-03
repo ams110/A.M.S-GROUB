@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
     .select("role")
     .eq("id", caller.user.id)
     .single();
-  if (callerProfile?.role !== "admin") return json({ error: "forbidden" }, 403);
+  if (!["admin", "super_admin"].includes(callerProfile?.role ?? "")) return json({ error: "forbidden" }, 403);
 
   // 2) Validate input.
   let body: Record<string, string>;

@@ -1,14 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useProfile } from "@/lib/auth";
+import { useProfile, isAdminRole } from "@/lib/auth";
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { profile, ready } = useProfile();
+  const { profile, ready, isSuperAdmin } = useProfile();
 
   // Wait for the auth check before deciding what to show (avoids a flash of
   // "no access" for admins while the session loads).
@@ -16,7 +16,7 @@ export default function AdminLayout({
     return <div className="container-app py-20 text-center text-slate-500">טוען…</div>;
   }
 
-  if (!profile || profile.role !== "admin") {
+  if (!profile || !isAdminRole(profile.role)) {
     return (
       <div className="container-app py-20 text-center">
         <h1 className="text-2xl font-bold">אין הרשאה</h1>
@@ -28,24 +28,34 @@ export default function AdminLayout({
     );
   }
 
+  const navLinks = [
+    { href: "/admin",                  label: "סקירה" },
+    { href: "/admin/orders",           label: "הזמנות" },
+    { href: "/admin/quotes",           label: "הצעות מחיר" },
+    { href: "/admin/dealers",          label: "לקוחות" },
+    { href: "/admin/customer-prices",  label: "מחירי לקוח" },
+    { href: "/admin/products",         label: "מוצרים" },
+    { href: "/admin/categories",       label: "קטגוריות" },
+    { href: "/admin/inventory",        label: "מלאי" },
+    { href: "/admin/suppliers",        label: "ספקים" },
+    { href: "/admin/purchase-orders",  label: "הזמנות רכש" },
+    { href: "/admin/settings",         label: "הגדרות" },
+    ...(isSuperAdmin ? [{ href: "/admin/admins", label: "🔑 מנהלים" }] : []),
+  ];
+
   return (
     <div className="container-app py-8">
       <div className="mb-6 border-b border-slate-200 pb-4">
-        <h1 className="mb-3 text-xl font-bold">ניהול</h1>
+        <div className="mb-3 flex items-center gap-3">
+          <h1 className="text-xl font-bold">ניהול</h1>
+          {isSuperAdmin && (
+            <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-800">
+              מנהל ראשי
+            </span>
+          )}
+        </div>
         <nav className="flex gap-1 overflow-x-auto text-sm" style={{ scrollbarWidth: "none" }}>
-          {[
-            { href: "/admin",                  label: "סקירה" },
-            { href: "/admin/orders",           label: "הזמנות" },
-            { href: "/admin/quotes",           label: "הצעות מחיר" },
-            { href: "/admin/dealers",          label: "לקוחות" },
-            { href: "/admin/customer-prices",  label: "מחירי לקוח" },
-            { href: "/admin/products",         label: "מוצרים" },
-            { href: "/admin/categories",       label: "קטגוריות" },
-            { href: "/admin/inventory",        label: "מלאי" },
-            { href: "/admin/suppliers",        label: "ספקים" },
-            { href: "/admin/purchase-orders",  label: "הזמנות רכש" },
-            { href: "/admin/settings",         label: "הגדרות" },
-          ].map(({ href, label }) => (
+          {navLinks.map(({ href, label }) => (
             <Link
               key={href}
               href={href}
