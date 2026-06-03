@@ -207,9 +207,9 @@ export default function Header() {
       >
         <div className="grid h-16 grid-cols-4">
           <BottomNavItem
-            href="/"
+            href={isAdmin ? "/admin" : email ? "/products" : "/"}
             label="ראשי"
-            active={pathname === "/"}
+            active={pathname === "/" || pathname === "/admin" && isAdmin}
             icon={<HomeIcon />}
           />
           <BottomNavItem

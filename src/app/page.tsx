@@ -1,31 +1,44 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useProfile } from "@/lib/auth";
 
 function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
   const redirectTo = params.get("redirect") || "";
-  const supabase = createClient();
+  const { email: sessionEmail, profile, ready } = useProfile();
 
-  const [email, setEmail] = useState("");
+  const [emailInput, setEmailInput] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Already logged in → redirect immediately, don't show the form.
+  useEffect(() => {
+    if (!ready) return;
+    if (sessionEmail) {
+      router.replace(profile?.role === "admin" ? "/admin" : "/products");
+    }
+  }, [ready, sessionEmail, profile, router]);
+
+  if (!ready || sessionEmail) return null;
+
+  const supabase = createClient();
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    setFormError(null);
     setLoading(true);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
+        email: emailInput.trim(),
         password,
       });
       if (error) {
-        setError(
+        setFormError(
           /invalid login|credentials/i.test(error.message)
             ? "אימייל או סיסמה שגויים."
             : /confirm/i.test(error.message)
@@ -54,7 +67,7 @@ function LoginForm() {
       router.push(dest);
       router.refresh();
     } catch (err) {
-      setError(
+      setFormError(
         `לא ניתן להתחבר כעת. בדקו את החיבור לאינטרנט ונסו שוב. (${
           err instanceof Error ? err.message : String(err)
         })`
@@ -86,8 +99,8 @@ function LoginForm() {
               autoComplete="email"
               className="input ltr-input"
               dir="ltr"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={emailInput}
+              onChange={(e) => setEmailInput(e.target.value)}
             />
           </div>
           <div>
@@ -102,8 +115,8 @@ function LoginForm() {
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
-          {error && (
-            <p className="rounded bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>
+          {formError && (
+            <p className="rounded bg-rose-50 px-3 py-2 text-sm text-rose-700">{formError}</p>
           )}
           <button disabled={loading} className="btn-primary w-full">
             {loading ? "מתחבר…" : "כניסה"}

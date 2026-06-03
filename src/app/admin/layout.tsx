@@ -30,42 +30,30 @@ export default function AdminLayout({
 
   return (
     <div className="container-app py-8">
-      <div className="mb-6 flex flex-wrap items-center gap-2 border-b border-slate-200 pb-4">
-        <h1 className="ml-4 text-xl font-bold">ניהול</h1>
-        <nav className="flex gap-1 text-sm">
-          <Link href="/admin" className="rounded-lg px-3 py-1.5 hover:bg-slate-100">
-            סקירה
-          </Link>
-          <Link href="/admin/orders" className="rounded-lg px-3 py-1.5 hover:bg-slate-100">
-            הזמנות
-          </Link>
-          <Link href="/admin/quotes" className="rounded-lg px-3 py-1.5 hover:bg-slate-100">
-            הצעות מחיר
-          </Link>
-          <Link href="/admin/dealers" className="rounded-lg px-3 py-1.5 hover:bg-slate-100">
-            לקוחות
-          </Link>
-          <Link href="/admin/customer-prices" className="rounded-lg px-3 py-1.5 hover:bg-slate-100">
-            מחירי לקוח
-          </Link>
-          <Link href="/admin/products" className="rounded-lg px-3 py-1.5 hover:bg-slate-100">
-            מוצרים ומחירים
-          </Link>
-          <Link href="/admin/categories" className="rounded-lg px-3 py-1.5 hover:bg-slate-100">
-            קטגוריות
-          </Link>
-          <Link href="/admin/inventory" className="rounded-lg px-3 py-1.5 hover:bg-slate-100">
-            מלאי ומחסן
-          </Link>
-          <Link href="/admin/suppliers" className="rounded-lg px-3 py-1.5 hover:bg-slate-100">
-            ספקים
-          </Link>
-          <Link href="/admin/purchase-orders" className="rounded-lg px-3 py-1.5 hover:bg-slate-100">
-            הזמנות רכש
-          </Link>
-          <Link href="/admin/settings" className="rounded-lg px-3 py-1.5 hover:bg-slate-100">
-            הגדרות
-          </Link>
+      <div className="mb-6 border-b border-slate-200 pb-4">
+        <h1 className="mb-3 text-xl font-bold">ניהול</h1>
+        <nav className="flex gap-1 overflow-x-auto text-sm" style={{ scrollbarWidth: "none" }}>
+          {[
+            { href: "/admin",                  label: "סקירה" },
+            { href: "/admin/orders",           label: "הזמנות" },
+            { href: "/admin/quotes",           label: "הצעות מחיר" },
+            { href: "/admin/dealers",          label: "לקוחות" },
+            { href: "/admin/customer-prices",  label: "מחירי לקוח" },
+            { href: "/admin/products",         label: "מוצרים" },
+            { href: "/admin/categories",       label: "קטגוריות" },
+            { href: "/admin/inventory",        label: "מלאי" },
+            { href: "/admin/suppliers",        label: "ספקים" },
+            { href: "/admin/purchase-orders",  label: "הזמנות רכש" },
+            { href: "/admin/settings",         label: "הגדרות" },
+          ].map(({ href, label }) => (
+            <Link
+              key={href}
+              href={href}
+              className="shrink-0 rounded-lg px-3 py-1.5 hover:bg-slate-100 whitespace-nowrap"
+            >
+              {label}
+            </Link>
+          ))}
         </nav>
       </div>
       {children}
