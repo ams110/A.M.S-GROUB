@@ -39,6 +39,40 @@ function setLocalPasskeyHint(value: boolean) {
   else localStorage.removeItem(PASSKEY_KEY);
 }
 
+export type PasskeyInfo = {
+  id: string;
+  device_label: string | null;
+  created_at: string;
+  last_used_at: string | null;
+};
+
+/** A short human label for the current device, e.g. "Chrome · Android". */
+function deviceLabel(): string {
+  if (typeof navigator === "undefined") return "מכשיר";
+  const ua = navigator.userAgent;
+  const os =
+    /iPhone|iPad|iPod/.test(ua) ? "iPhone/iPad"
+    : /Android/.test(ua) ? "Android"
+    : /Mac/.test(ua) ? "Mac"
+    : /Windows/.test(ua) ? "Windows"
+    : "מכשיר";
+  const browser =
+    /Edg\//.test(ua) ? "Edge"
+    : /Chrome\//.test(ua) ? "Chrome"
+    : /Firefox\//.test(ua) ? "Firefox"
+    : /Safari\//.test(ua) ? "Safari"
+    : "";
+  return browser ? `${browser} · ${os}` : os;
+}
+
+/** Returns the caller's registered passkeys (one row per device). */
+export async function listPasskeys(): Promise<PasskeyInfo[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc("list_passkeys");
+  if (error) throw new Error(error.message);
+  return (data as PasskeyInfo[]) ?? [];
+}
+
 /** Call this after the user logs in with a password to register their passkey. */
 export async function registerPasskey(): Promise<void> {
   const supabase = createClient();
@@ -82,7 +116,7 @@ export async function registerPasskey(): Promise<void> {
   const finishRes = await fetch(`${FN_BASE}/passkey-register`, {
     method: "POST",
     headers,
-    body: JSON.stringify({ action: "finish", credential }),
+    body: JSON.stringify({ action: "finish", credential, label: deviceLabel() }),
   });
   if (!finishRes.ok) {
     const err = await finishRes.json().catch(() => ({}));
@@ -135,22 +169,9 @@ export async function authenticateWithPasskey(): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-/** Remove the passkey from the server and local hint. */
-export async function removePasskey(): Promise<void> {
+/** Remove one registered passkey (by its row id). */
+export async function removePasskey(id: string): Promise<void> {
   const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not logged in");
-  // Scope the update to the current user's row (RLS would limit it anyway, but
-  // an explicit filter avoids relying on policy side-effects).
-  await supabase
-    .from("profiles")
-    .update({
-      passkey_credential_id: null,
-      passkey_public_key: null,
-      passkey_counter: 0,
-    })
-    .eq("id", user.id);
-  setLocalPasskeyHint(false);
+  const { error } = await supabase.rpc("remove_passkey", { p_id: id });
+  if (error) throw new Error(error.message);
 }

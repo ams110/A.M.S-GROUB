@@ -91,15 +91,15 @@ Deno.serve(async (req) => {
 
     await admin.schema("store").from("passkey_challenges").delete().eq("id", row.id);
 
-    // Look up the profile by credential ID
-    const { data: profile, error: profileErr } = await admin
+    // Look up the credential across all registered devices
+    const { data: cred, error: credErr } = await admin
       .schema("store")
-      .from("profiles")
-      .select("id, passkey_credential_id, passkey_public_key, passkey_counter")
-      .eq("passkey_credential_id", credential.id)
+      .from("passkey_credentials")
+      .select("id, user_id, credential_id, public_key, counter")
+      .eq("credential_id", credential.id)
       .single();
 
-    if (profileErr || !profile) return json({ error: "credential_not_found" }, 401);
+    if (credErr || !cred) return json({ error: "credential_not_found" }, 401);
 
     // Verify the assertion
     let verification;
@@ -110,9 +110,9 @@ Deno.serve(async (req) => {
         expectedOrigin:    ORIGIN,
         expectedRPID:      RP_ID,
         credential: {
-          id:        profile.passkey_credential_id as string,
-          publicKey: fromBase64URL(profile.passkey_public_key as string),
-          counter:   profile.passkey_counter as number,
+          id:        cred.credential_id as string,
+          publicKey: fromBase64URL(cred.public_key as string),
+          counter:   cred.counter as number,
         },
         requireUserVerification: true,
       });
@@ -122,15 +122,18 @@ Deno.serve(async (req) => {
 
     if (!verification.verified) return json({ error: "verification_failed" }, 401);
 
-    // Update counter (replay-attack prevention)
+    // Update counter (replay-attack prevention) + last-used timestamp
     await admin
       .schema("store")
-      .from("profiles")
-      .update({ passkey_counter: verification.authenticationInfo.newCounter })
-      .eq("id", profile.id as string);
+      .from("passkey_credentials")
+      .update({
+        counter: verification.authenticationInfo.newCounter,
+        last_used_at: new Date().toISOString(),
+      })
+      .eq("id", cred.id as string);
 
     // Generate a magic-link token for the client to complete the login
-    const { data: authUser } = await admin.auth.admin.getUserById(profile.id as string);
+    const { data: authUser } = await admin.auth.admin.getUserById(cred.user_id as string);
     if (!authUser?.user?.email) return json({ error: "user_not_found" }, 500);
 
     const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({

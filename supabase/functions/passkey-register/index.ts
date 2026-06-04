@@ -64,6 +64,18 @@ Deno.serve(async (req) => {
       .eq("id", user.id)
       .single();
 
+    // Exclude already-registered authenticators so the same device can't enrol
+    // twice (which would orphan the previous credential).
+    const { data: existing } = await admin
+      .schema("store")
+      .from("passkey_credentials")
+      .select("credential_id")
+      .eq("user_id", user.id);
+    const excludeCredentials = (existing ?? []).map((c: { credential_id: string }) => ({
+      id: c.credential_id,
+      type: "public-key" as const,
+    }));
+
     const options = await generateRegistrationOptions({
       rpID:            RP_ID,
       rpName:          RP_NAME,
@@ -71,6 +83,7 @@ Deno.serve(async (req) => {
       userDisplayName: profile?.company || profile?.full_name || user.email!,
       userID:          new TextEncoder().encode(user.id),
       attestationType: "none",
+      excludeCredentials,
       authenticatorSelection: {
         authenticatorAttachment: "platform",
         userVerification:        "required",
@@ -95,6 +108,9 @@ Deno.serve(async (req) => {
     try {
       const credential = body.credential as RegistrationResponseJSON;
       if (!credential) return json({ error: "missing_credential" }, 400);
+      const label = typeof body.label === "string" && body.label.trim()
+        ? body.label.trim().slice(0, 60)
+        : null;
 
       // Retrieve & delete challenge (one-time use)
       const { data: row, error: rowErr } = await admin
@@ -149,26 +165,23 @@ Deno.serve(async (req) => {
         return json({ error: "bad_registration_info" }, 500);
       }
 
-      // The credential id column is UNIQUE. Detach it from any *other* profile
-      // first so re-registering the same authenticator can never hit a conflict.
-      await admin
+      // One row per authenticator. Upsert on the unique credential id so a
+      // repeated enrolment of the same device refreshes rather than conflicts.
+      const { error: upErr } = await admin
         .schema("store")
-        .from("profiles")
-        .update({ passkey_credential_id: null, passkey_public_key: null, passkey_counter: 0 })
-        .eq("passkey_credential_id", credId)
-        .neq("id", user.id);
+        .from("passkey_credentials")
+        .upsert(
+          {
+            user_id:       user.id,
+            credential_id: credId,
+            public_key:    toBase64URL(pubKey),
+            counter,
+            device_label:  label,
+          },
+          { onConflict: "credential_id" },
+        );
 
-      const { error: updateErr } = await admin
-        .schema("store")
-        .from("profiles")
-        .update({
-          passkey_credential_id: credId,
-          passkey_public_key:    toBase64URL(pubKey),
-          passkey_counter:       counter,
-        })
-        .eq("id", user.id);
-
-      if (updateErr) return json({ error: "save_failed", message: updateErr.message }, 500);
+      if (upErr) return json({ error: "save_failed", message: upErr.message }, 500);
 
       return json({ ok: true });
     } catch (e) {
