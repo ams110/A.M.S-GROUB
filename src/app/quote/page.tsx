@@ -8,20 +8,17 @@ import { formatPrice, QUOTE_STATUS_HE } from "@/lib/format";
 import type { Profile, Quote, QuoteItem } from "@/lib/types";
 
 function QuoteView() {
-  const supabase = createClient();
   const id = useSearchParams().get("id") ?? "";
 
   const [quote, setQuote] = useState<Quote | null>(null);
   const [items, setItems] = useState<QuoteItem[]>([]);
   const [customer, setCustomer] = useState<Profile | null>(null);
   const [business, setBusiness] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(id !== "");
 
   useEffect(() => {
-    if (!id) {
-      setLoading(false);
-      return;
-    }
+    if (!id) return;
+    const supabase = createClient();
     (async () => {
       setLoading(true);
       const { data: q } = await supabase.from("quotes").select("*").eq("id", id).single();

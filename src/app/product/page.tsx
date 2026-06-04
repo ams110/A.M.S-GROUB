@@ -16,13 +16,10 @@ function ProductDetail() {
   const { showPrice } = useProfile();
 
   const [product, setProduct] = useState<Product | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(slug !== "");
 
   useEffect(() => {
-    if (!slug) {
-      setLoading(false);
-      return;
-    }
+    if (!slug) return;
     const supabase = createClient();
     (async () => {
       setLoading(true);
