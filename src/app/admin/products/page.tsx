@@ -5,6 +5,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/Toast";
 import { asset } from "@/lib/config";
+import { formatPrice } from "@/lib/format";
+import { computeMargin, applyPctChange } from "@/lib/margin";
 import type { Product } from "@/lib/types";
 
 type Draft = { price: number; stock: number; min_order_qty: number; is_orderable: boolean };
@@ -17,6 +19,8 @@ export default function AdminProductsPage() {
   const [q, setQ] = useState("");
   const [savingId, setSavingId] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
+  const [bulkPct, setBulkPct] = useState("");
+  const [applying, setApplying] = useState(false);
 
   const load = async () => {
     const { data } = await supabase
@@ -79,6 +83,30 @@ export default function AdminProductsPage() {
     `${p.name_he} ${p.sku ?? ""}`.toLowerCase().includes(q.toLowerCase())
   );
 
+  // Bulk price change: nudge the dealer price of every shown product by ±%.
+  const applyBulk = async () => {
+    const pct = Number(bulkPct);
+    if (!pct || pct === 0) {
+      toast("נא להזין אחוז שינוי (לדוגמה 5 או 5-)", "error");
+      return;
+    }
+    if (!confirm(`לשנות את מחיר הסוחר של ${filtered.length} מוצרים ב-${pct}%?`)) return;
+    setApplying(true);
+    const updated = filtered.map((p) => ({ id: p.id, price: applyPctChange(p.price, pct) }));
+    const priceById = new Map(updated.map((u) => [u.id, u.price]));
+    const results = await Promise.all(
+      updated.map((u) => supabase.from("products").update({ price: u.price }).eq("id", u.id))
+    );
+    setApplying(false);
+    if (results.some((r) => r.error)) {
+      toast("חלק מהמחירים לא נשמרו", "error");
+    } else {
+      toast(`עודכנו ${updated.length} מחירים ב-${pct}% ✓`);
+    }
+    setRows((r) => r.map((x) => (priceById.has(x.id) ? { ...x, price: priceById.get(x.id)! } : x)));
+    setBulkPct("");
+  };
+
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
@@ -95,6 +123,26 @@ export default function AdminProductsPage() {
           </Link>
         </div>
       </div>
+      {/* Bulk price change over the currently shown products */}
+      <div className="card mb-4 flex flex-wrap items-end gap-3 p-4">
+        <div>
+          <label className="label">שינוי מחיר גורף למוצרים המוצגים (%)</label>
+          <input
+            type="number"
+            className="input w-36"
+            placeholder="לדוגמה 5 או 5-"
+            value={bulkPct}
+            onChange={(e) => setBulkPct(e.target.value)}
+          />
+        </div>
+        <button onClick={applyBulk} disabled={applying} className="btn-outline">
+          {applying ? "מעדכן…" : `החל על ${filtered.length}`}
+        </button>
+        <p className="flex-1 text-xs text-slate-400">
+          חיובי מעלה מחירים, שלילי מוריד. צמצמו עם החיפוש כדי לעדכן רק חלק מהקטלוג.
+        </p>
+      </div>
+
       <p className="mb-3 text-sm text-slate-500">{filtered.length} מוצרים</p>
       <div className="card overflow-x-auto">
         <table className="w-full text-right text-sm">
@@ -102,6 +150,7 @@ export default function AdminProductsPage() {
             <tr>
               <th className="p-3">מוצר</th>
               <th className="p-3">מחיר (₪)</th>
+              <th className="p-3">מרווח</th>
               <th className="p-3">מלאי</th>
               <th className="p-3">מינ׳ הזמנה</th>
               <th className="p-3">למכירה</th>
@@ -133,6 +182,22 @@ export default function AdminProductsPage() {
                     onChange={(e) => patch(p.id, { price: Number(e.target.value) })}
                     className="input w-28 py-1"
                   />
+                </td>
+                <td className="p-3">
+                  {(() => {
+                    const m = computeMargin(p.price, p.cost);
+                    if (!m.known) return <span className="text-xs text-slate-300">—</span>;
+                    if (m.belowCost)
+                      return <span className="text-xs font-bold text-rose-600" title={`עלות ${formatPrice(p.cost)}`}>הפסד ⚠</span>;
+                    return (
+                      <span
+                        className={`text-xs font-semibold ${m.thin ? "text-amber-600" : "text-emerald-600"}`}
+                        title={`עלות ${formatPrice(p.cost)}`}
+                      >
+                        {m.marginPct.toFixed(0)}%{m.thin && " ⚠"}
+                      </span>
+                    );
+                  })()}
                 </td>
                 <td className="p-3">
                   <input
