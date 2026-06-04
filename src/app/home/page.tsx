@@ -8,6 +8,7 @@ import { useCart } from "@/components/CartProvider";
 import { applyEffectivePrices } from "@/lib/pricing";
 import ProductCard from "@/components/ProductCard";
 import OpsCenter from "@/components/OpsCenter";
+import Aurora from "@/components/Aurora";
 import type { Product } from "@/lib/types";
 
 function greeting(h: number) {
@@ -73,6 +74,7 @@ function DealerHome() {
             <div className="absolute inset-0 bg-onyx-gradient/80" style={{ background: "linear-gradient(90deg,#0C0B0A 10%,rgba(12,11,10,0.7) 60%,rgba(12,11,10,0.4))" }} />
           </>
         )}
+        {!hero.image && <Aurora />}
         <div className="pointer-events-none absolute -top-20 -left-20 h-64 w-64 rounded-full bg-gold/10 blur-3xl" />
         <div className="relative z-10 max-w-xl">
           <p className="eyebrow text-gold/80">{greeting(h)}{name ? ` · ${name}` : ""}</p>

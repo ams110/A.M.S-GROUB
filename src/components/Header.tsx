@@ -150,7 +150,7 @@ export default function Header() {
               className="h-9 w-9 rounded-xl ring-1 ring-gold/40 shadow-sm transition-transform duration-200 group-hover:scale-105"
             />
             <span className="text-lg font-extrabold tracking-tight text-white">
-              Â.M.Ŝ <span className="text-gradient-gold">GROUP</span>
+              Â.M.Ŝ <span className="text-gradient-gold-shimmer">GROUP</span>
             </span>
           </Link>
 
