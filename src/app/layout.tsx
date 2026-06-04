@@ -4,6 +4,7 @@ import "./globals.css";
 import { CartProvider } from "@/components/CartProvider";
 import AuthGuard from "@/components/AuthGuard";
 import { ToastProvider } from "@/components/Toast";
+import BackgroundProvider from "@/components/BackgroundProvider";
 
 const heebo = Heebo({
   subsets: ["hebrew", "latin"],
@@ -34,13 +35,21 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="AMS Group" />
         <link rel="apple-touch-icon" sizes="180x180" href={`${basePath}/icon-180.png?v=2`} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{var b=localStorage.getItem('ams_bg');var ok=['onyx-aurora','onyx-gold','mesh','light-gold'];document.documentElement.dataset.bg=(b&&ok.indexOf(b)>-1)?b:'onyx-aurora';}catch(e){document.documentElement.dataset.bg='onyx-aurora';}",
+          }}
+        />
       </head>
       <body>
-        <CartProvider>
-          <ToastProvider>
-            <AuthGuard>{children}</AuthGuard>
-          </ToastProvider>
-        </CartProvider>
+        <BackgroundProvider>
+          <CartProvider>
+            <ToastProvider>
+              <AuthGuard>{children}</AuthGuard>
+            </ToastProvider>
+          </CartProvider>
+        </BackgroundProvider>
       </body>
     </html>
   );

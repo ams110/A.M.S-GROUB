@@ -16,6 +16,15 @@ body {
   letter-spacing: -0.01em;
   position: relative;
   min-height: 100vh;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-color: #0A0908;
+}
+
+/* ════════ Switchable app backgrounds (set on <html data-bg>) ════════ */
+
+/* LIGHT · strong gold */
+html[data-bg="light-gold"] body {
   background-color: #F7F3EA;
   background-image:
     radial-gradient(rgba(28, 26, 23, 0.05) 1px, transparent 1.5px),
@@ -25,10 +34,99 @@ body {
     radial-gradient(55% 55% at 0% 100%, rgba(201, 162, 39, 0.20), transparent 72%),
     linear-gradient(180deg, #FBF7EE 0%, #F4EEE0 100%);
   background-size: 24px 24px, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
-  background-attachment: fixed;
 }
+
+/* MESH · colourful living */
+html[data-bg="mesh"] body {
+  background-color: #FBF6EA;
+  background-image:
+    radial-gradient(40% 44% at 12% 14%, rgba(201, 162, 39, 0.40), transparent 60%),
+    radial-gradient(42% 46% at 88% 8%, rgba(224, 120, 60, 0.28), transparent 62%),
+    radial-gradient(46% 50% at 82% 86%, rgba(124, 45, 58, 0.26), transparent 64%),
+    radial-gradient(44% 48% at 8% 92%, rgba(176, 137, 31, 0.34), transparent 62%),
+    linear-gradient(160deg, #FCF8EF 0%, #F3EADb 100%);
+  background-size: 200% 200%, 200% 200%, 200% 200%, 200% 200%, 100% 100%;
+  animation: meshMove 26s ease-in-out infinite alternate;
+}
+@keyframes meshMove {
+  from { background-position: 0% 0%, 100% 0%, 100% 100%, 0% 100%, 0 0; }
+  to   { background-position: 30% 20%, 70% 25%, 65% 70%, 25% 75%, 0 0; }
+}
+
+/* ONYX · dark gold gradient */
+html[data-bg="onyx-gold"] body {
+  background-color: #0C0B0A;
+  background-image:
+    radial-gradient(60% 60% at 12% 0%, rgba(201, 162, 39, 0.28), transparent 64%),
+    radial-gradient(55% 60% at 95% 8%, rgba(176, 137, 31, 0.22), transparent 66%),
+    radial-gradient(70% 70% at 88% 100%, rgba(124, 45, 58, 0.20), transparent 70%),
+    linear-gradient(165deg, #1C1A17 0%, #0C0B0A 55%, #07060500 100%),
+    linear-gradient(0deg, #0A0908, #0A0908);
+}
+
+/* ONYX · living aurora — solid base; the canvas backdrop is drawn by BackgroundProvider */
+html[data-bg="onyx-aurora"] body,
+html:not([data-bg]) body {
+  background-color: #0A0908;
+}
+
+/* ════════ Readability on dark backgrounds ════════ */
+html[data-bg="onyx-aurora"] body,
+html[data-bg="onyx-gold"] body,
+html:not([data-bg]) body { color: #ECE6DA; }
+
+/* Light surfaces keep a dark default text colour so un-classed text stays readable */
+html[data-bg="onyx-aurora"] .card, html[data-bg="onyx-gold"] .card, html:not([data-bg]) .card,
+html[data-bg="onyx-aurora"] .input, html[data-bg="onyx-gold"] .input, html:not([data-bg]) .input,
+html[data-bg="onyx-aurora"] .bg-white, html[data-bg="onyx-gold"] .bg-white, html:not([data-bg]) .bg-white,
+html[data-bg="onyx-aurora"] table, html[data-bg="onyx-gold"] table, html:not([data-bg]) table { color: #1C1A17; }
+
+/* Lift bare-canvas text to light */
+html[data-bg="onyx-aurora"] .text-navy-dark,
+html[data-bg="onyx-gold"] .text-navy-dark,
+html:not([data-bg]) .text-navy-dark { color: #F5F0E4; }
+html[data-bg="onyx-aurora"] .text-slate-900,
+html[data-bg="onyx-gold"] .text-slate-900,
+html:not([data-bg]) .text-slate-900 { color: #F1ECE0; }
+html[data-bg="onyx-aurora"] .text-slate-800,
+html[data-bg="onyx-gold"] .text-slate-800,
+html:not([data-bg]) .text-slate-800 { color: #E7E1D5; }
+html[data-bg="onyx-aurora"] .text-slate-700,
+html[data-bg="onyx-gold"] .text-slate-700,
+html:not([data-bg]) .text-slate-700 { color: #D6D0C4; }
+html[data-bg="onyx-aurora"] .text-slate-600,
+html[data-bg="onyx-gold"] .text-slate-600,
+html:not([data-bg]) .text-slate-600 { color: #C3BDB1; }
+html[data-bg="onyx-aurora"] .text-slate-500,
+html[data-bg="onyx-gold"] .text-slate-500,
+html:not([data-bg]) .text-slate-500 { color: #A39D91; }
+html[data-bg="onyx-aurora"] .text-slate-400,
+html[data-bg="onyx-gold"] .text-slate-400,
+html:not([data-bg]) .text-slate-400 { color: #8C867C; }
+html[data-bg="onyx-aurora"] .text-brand-dark,
+html[data-bg="onyx-gold"] .text-brand-dark,
+html:not([data-bg]) .text-brand-dark { color: #F0EADE; }
+
+/* Keep dark text inside light surfaces (cards, inputs, tables, white panels) */
+html[data-bg="onyx-aurora"] .card .text-navy-dark, html[data-bg="onyx-gold"] .card .text-navy-dark, html:not([data-bg]) .card .text-navy-dark,
+html[data-bg="onyx-aurora"] .bg-white .text-navy-dark, html[data-bg="onyx-gold"] .bg-white .text-navy-dark, html:not([data-bg]) .bg-white .text-navy-dark { color: #0C0B0A; }
+html[data-bg="onyx-aurora"] .card .text-slate-900, html[data-bg="onyx-gold"] .card .text-slate-900, html:not([data-bg]) .card .text-slate-900,
+html[data-bg="onyx-aurora"] .bg-white .text-slate-900, html[data-bg="onyx-gold"] .bg-white .text-slate-900, html:not([data-bg]) .bg-white .text-slate-900 { color: #0f172a; }
+html[data-bg="onyx-aurora"] .card .text-slate-800, html[data-bg="onyx-gold"] .card .text-slate-800, html:not([data-bg]) .card .text-slate-800,
+html[data-bg="onyx-aurora"] .bg-white .text-slate-800, html[data-bg="onyx-gold"] .bg-white .text-slate-800, html:not([data-bg]) .bg-white .text-slate-800 { color: #1e293b; }
+html[data-bg="onyx-aurora"] .card .text-slate-700, html[data-bg="onyx-gold"] .card .text-slate-700, html:not([data-bg]) .card .text-slate-700,
+html[data-bg="onyx-aurora"] .bg-white .text-slate-700, html[data-bg="onyx-gold"] .bg-white .text-slate-700, html:not([data-bg]) .bg-white .text-slate-700 { color: #334155; }
+html[data-bg="onyx-aurora"] .card .text-slate-600, html[data-bg="onyx-gold"] .card .text-slate-600, html:not([data-bg]) .card .text-slate-600,
+html[data-bg="onyx-aurora"] .bg-white .text-slate-600, html[data-bg="onyx-gold"] .bg-white .text-slate-600, html:not([data-bg]) .bg-white .text-slate-600 { color: #475569; }
+html[data-bg="onyx-aurora"] .card .text-slate-500, html[data-bg="onyx-gold"] .card .text-slate-500, html:not([data-bg]) .card .text-slate-500,
+html[data-bg="onyx-aurora"] .bg-white .text-slate-500, html[data-bg="onyx-gold"] .bg-white .text-slate-500, html:not([data-bg]) .bg-white .text-slate-500 { color: #64748b; }
+html[data-bg="onyx-aurora"] .card .text-slate-400, html[data-bg="onyx-gold"] .card .text-slate-400, html:not([data-bg]) .card .text-slate-400,
+html[data-bg="onyx-aurora"] .bg-white .text-slate-400, html[data-bg="onyx-gold"] .bg-white .text-slate-400, html:not([data-bg]) .bg-white .text-slate-400 { color: #94a3b8; }
+html[data-bg="onyx-aurora"] .card .text-brand-dark, html[data-bg="onyx-gold"] .card .text-brand-dark, html:not([data-bg]) .card .text-brand-dark,
+html[data-bg="onyx-aurora"] .bg-white .text-brand-dark, html[data-bg="onyx-gold"] .bg-white .text-brand-dark, html:not([data-bg]) .bg-white .text-brand-dark { color: #1C1A17; }
+
 @media (prefers-reduced-motion: reduce) {
-  body::before { animation: none; }
+  html[data-bg="mesh"] body { animation: none; }
 }
 
 /* Premium heading rhythm */
