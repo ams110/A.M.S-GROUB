@@ -18,9 +18,13 @@ src/
   app/           # صفحات Next.js (كلها "use client")
     admin/       # لوحة الإدارة — محمية بـ AdminLayout
     account/     # صفحات الموزع (طلبات، عروض أسعار)
-    login/       # تسجيل الدخول
-    register/    # تسجيل موزع جديد
-  components/    # Header, CartProvider, ProductCard, AddToCart
+    login/       # redirect لـ /
+    register/    # تسجيل موزع جديد (مغلق)
+    welcome/     # splash screen بعد الدخول (ثم redirect لـ /products)
+  components/
+    AuthGuard.tsx  # حماية كل الـ routes — يُعرض في layout.tsx
+    Header.tsx     # nav bar (يظهر فقط للمستخدمين المسجّلين)
+    CartProvider, ProductCard, AddToCart, Toast
   lib/
     auth.ts      # useProfile hook — جلسة المستخدم وبياناته
     supabase/
@@ -41,11 +45,19 @@ src/middleware.ts  # يجدد الـ session token تلقائياً
 ### Middleware
 `src/middleware.ts` يستدعي `getUser()` على كل request لتجديد الـ session cookies قبل انتهاء صلاحية الـ access token (~ساعة). **لا تحذف هذا الملف**.
 
+### AuthGuard — حماية كل الـ Routes
+`src/components/AuthGuard.tsx` يغلّف كل التطبيق في `layout.tsx`. المنطق:
+- `/` و `/login` فقط public (بدون header/footer) — كل الباقي يتطلب تسجيل دخول
+- زائر غير مسجّل → redirect فوري لـ `/?redirect=<path>`
+- أثناء التحقق من الجلسة → splash screen داكن (بدون وميض أبيض)
+- بعد الدخول وريثما تكتمل الـ navigation → overlay داكن يمنع الشاشة البيضاء
+- **لا تضيف header أو footer داخل أي صفحة** — AuthGuard يتكفّل بهما
+
 ### صلاحيات المستخدمين
 | الحالة | القدرات |
 |--------|---------|
-| زائر | تصفح الكتالوج (الأسعار مخفية) |
-| موزع (pending) | تسجيل — ينتظر موافقة المدير |
+| زائر | صفحة الدخول فقط |
+| موزع (pending) | ينتظر موافقة المدير |
 | موزع (approved) | رؤية الأسعار، إضافة للسلة، الدفع |
 | admin | كل شيء |
 
@@ -96,6 +108,8 @@ npm run lint     # فحص الكود
 | تعليق الصفحة بعد الدخول | Race condition: `load()` تُستدعى مرتين (مباشرة + INITIAL_SESSION) | الاعتماد على `onAuthStateChange` فقط | #18 |
 | انتهاء الجلسة بعد ~ساعة | لا middleware لتجديد الـ token | إضافة `src/middleware.ts` | #18 |
 | Header يكرر نفس race condition | `Header.tsx` كان ينشئ client مستقل مع `getSession()` | استخدام `useProfile()` hook مباشرة | #19 |
+| الزوار يقدرون يدخلون الكتالوج بدون login | لا حماية على الـ routes | `AuthGuard` component يغلّف كل التطبيق | #29 |
+| شاشة بيضاء لحظة بعد الدخول | `LoginForm` يُرجع null بعد الـ auth بينما الـ navigation لم تكتمل | AuthGuard يعرض overlay داكن بدل null خلال الانتقال | #29 |
 
 ## قرارات معمارية مهمة
 

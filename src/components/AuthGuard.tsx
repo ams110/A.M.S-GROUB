@@ -27,8 +27,13 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     }
   }, [ready, isAuthenticated, isPublic, pathname, router]);
 
-  // Login page: full-screen, no chrome
+  // Login page: full-screen, no chrome.
+  // If auth just completed (redirect in-flight), show a dark overlay so there's
+  // no white flash between the form disappearing and the next page mounting.
   if (isPublic) {
+    if (ready && isAuthenticated) {
+      return <div className="fixed inset-0 bg-navy-dark" style={{ zIndex: 9999 }} />;
+    }
     return <>{children}</>;
   }
 
