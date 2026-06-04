@@ -41,7 +41,7 @@ function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
   const redirectTo = params.get("redirect") || "";
-  const { email: sessionEmail, profile, ready } = useProfile();
+  const { email: sessionEmail, ready } = useProfile();
 
   const [emailInput, setEmailInput]   = useState("");
   const [password, setPassword]       = useState("");
