@@ -47,23 +47,37 @@ export function useProfile(): SessionState {
   useEffect(() => {
     const supabase = createClient();
 
-    const loadProfile = async (userId: string, email: string | undefined) => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .single();
+    const setReady = (partial: Omit<SessionState, "loading" | "ready">) =>
+      setState({ loading: false, ready: true, ...partial });
 
-      const profile = (data as Profile) ?? null;
-      setState({
-        loading: false,
-        ready: true,
-        userId,
-        email: email ?? null,
-        profile,
-        showPrice: canSeePrices(profile),
-        isSuperAdmin: profile?.role === "super_admin",
-      });
+    const noSession = () =>
+      setReady({ userId: null, email: null, profile: null, showPrice: false, isSuperAdmin: false });
+
+    // Fallback: if Supabase hangs (paused project, slow network), show the
+    // login form after 5 s instead of staying dark forever.
+    const fallback = setTimeout(noSession, 5000);
+
+    const loadProfile = async (userId: string, email: string | undefined) => {
+      try {
+        const { data } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", userId)
+          .single();
+
+        clearTimeout(fallback);
+        const profile = (data as Profile) ?? null;
+        setReady({
+          userId,
+          email: email ?? null,
+          profile,
+          showPrice: canSeePrices(profile),
+          isSuperAdmin: profile?.role === "super_admin",
+        });
+      } catch {
+        clearTimeout(fallback);
+        noSession();
+      }
     };
 
     // onAuthStateChange fires INITIAL_SESSION immediately with the current
@@ -71,21 +85,17 @@ export function useProfile(): SessionState {
     // a duplicate getSession() call and the race condition it caused.
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session?.user) {
-        setState({
-          loading: false,
-          ready: true,
-          userId: null,
-          email: null,
-          profile: null,
-          showPrice: false,
-          isSuperAdmin: false,
-        });
+        clearTimeout(fallback);
+        noSession();
         return;
       }
       loadProfile(session.user.id, session.user.email);
     });
 
-    return () => sub.subscription.unsubscribe();
+    return () => {
+      clearTimeout(fallback);
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   return state;
