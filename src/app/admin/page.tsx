@@ -37,6 +37,8 @@ export default function AdminDashboard() {
   const [range, setRange] = useState<RangeDays>(14);
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const firstLoad = useRef(true);
 
   const reload = useCallback(async (r: RangeDays) => {
     const supabase = createClient();
