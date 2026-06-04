@@ -159,12 +159,12 @@ export async function authenticateWithPasskey(): Promise<void> {
   }
   const { email, token } = await finishRes.json();
 
-  // 4. Complete sign-in using the one-time token
+  // 4. Complete sign-in using the one-time email OTP returned by the server
   const supabase = createClient();
   const { error } = await supabase.auth.verifyOtp({
     email,
     token,
-    type: "magiclink",
+    type: "email",
   });
   if (error) throw new Error(error.message);
 }
