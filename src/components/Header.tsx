@@ -132,7 +132,7 @@ export default function Header() {
           <Link href="/" className="flex shrink-0 items-center gap-2.5 group">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/logo.svg`}
+              src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/logo.svg?v=2`}
               alt="A.M.S GROUP"
               className="h-9 w-9 rounded-xl ring-1 ring-gold/40 shadow-sm transition-transform duration-200 group-hover:scale-105"
             />

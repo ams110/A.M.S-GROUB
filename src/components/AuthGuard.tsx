@@ -47,7 +47,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         <div className="text-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={`${basePath}/logo.svg`}
+            src={`${basePath}/logo.svg?v=2`}
             alt="Â.M.Ŝ GROUP"
             className="mx-auto mb-4 h-16 w-16 rounded-2xl ring-2 ring-gold/50 shadow-gold animate-pulse"
           />
