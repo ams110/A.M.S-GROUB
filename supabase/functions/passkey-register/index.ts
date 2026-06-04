@@ -88,60 +88,90 @@ Deno.serve(async (req) => {
 
   // ── FINISH ────────────────────────────────────────────────────────────────
   if (body.action === "finish") {
-    const credential = body.credential as RegistrationResponseJSON;
-    if (!credential) return json({ error: "missing_credential" }, 400);
-
-    // Retrieve & delete challenge (one-time use)
-    const { data: row, error: rowErr } = await admin
-      .schema("store")
-      .from("passkey_challenges")
-      .select("id, challenge, created_at")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single();
-
-    if (rowErr || !row) return json({ error: "challenge_not_found" }, 400);
-
-    // Reject challenges older than 5 minutes
-    if (Date.now() - new Date(row.created_at as string).getTime() > 5 * 60_000) {
-      return json({ error: "challenge_expired" }, 400);
-    }
-
-    await admin.schema("store").from("passkey_challenges").delete().eq("id", row.id);
-
-    let verification;
+    // Whole step wrapped so an unexpected error returns a readable message
+    // instead of a bare 500 (which the UI could only show as a generic failure).
     try {
-      verification = await verifyRegistrationResponse({
-        response:           credential,
-        expectedChallenge:  row.challenge as string,
-        expectedOrigin:     ORIGIN,
-        expectedRPID:       RP_ID,
-        requireUserVerification: true,
-      });
+      const credential = body.credential as RegistrationResponseJSON;
+      if (!credential) return json({ error: "missing_credential" }, 400);
+
+      // Retrieve & delete challenge (one-time use)
+      const { data: row, error: rowErr } = await admin
+        .schema("store")
+        .from("passkey_challenges")
+        .select("id, challenge, created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (rowErr || !row) return json({ error: "challenge_not_found" }, 400);
+
+      // Reject challenges older than 5 minutes
+      if (Date.now() - new Date(row.created_at as string).getTime() > 5 * 60_000) {
+        return json({ error: "challenge_expired" }, 400);
+      }
+
+      await admin.schema("store").from("passkey_challenges").delete().eq("id", row.id);
+
+      let verification;
+      try {
+        verification = await verifyRegistrationResponse({
+          response:           credential,
+          expectedChallenge:  row.challenge as string,
+          expectedOrigin:     ORIGIN,
+          expectedRPID:       RP_ID,
+          requireUserVerification: true,
+        });
+      } catch (e) {
+        return json({ error: "verification_error", message: String(e) }, 400);
+      }
+
+      if (!verification.verified || !verification.registrationInfo) {
+        return json({ error: "verification_failed" }, 400);
+      }
+
+      // Support both @simplewebauthn shapes: v10+ exposes
+      // registrationInfo.credential {id, publicKey, counter}; v9 exposes
+      // registrationInfo.credentialID / credentialPublicKey / counter.
+      // deno-lint-ignore no-explicit-any
+      const info = verification.registrationInfo as any;
+      const credId: string =
+        info.credential?.id ??
+        (typeof info.credentialID === "string"
+          ? info.credentialID
+          : toBase64URL(info.credentialID));
+      const pubKey: Uint8Array = info.credential?.publicKey ?? info.credentialPublicKey;
+      const counter: number = info.credential?.counter ?? info.counter ?? 0;
+
+      if (!credId || !pubKey) {
+        return json({ error: "bad_registration_info" }, 500);
+      }
+
+      // The credential id column is UNIQUE. Detach it from any *other* profile
+      // first so re-registering the same authenticator can never hit a conflict.
+      await admin
+        .schema("store")
+        .from("profiles")
+        .update({ passkey_credential_id: null, passkey_public_key: null, passkey_counter: 0 })
+        .eq("passkey_credential_id", credId)
+        .neq("id", user.id);
+
+      const { error: updateErr } = await admin
+        .schema("store")
+        .from("profiles")
+        .update({
+          passkey_credential_id: credId,
+          passkey_public_key:    toBase64URL(pubKey),
+          passkey_counter:       counter,
+        })
+        .eq("id", user.id);
+
+      if (updateErr) return json({ error: "save_failed", message: updateErr.message }, 500);
+
+      return json({ ok: true });
     } catch (e) {
-      return json({ error: "verification_error", message: String(e) }, 400);
+      return json({ error: "finish_exception", message: String(e) }, 500);
     }
-
-    if (!verification.verified || !verification.registrationInfo) {
-      return json({ error: "verification_failed" }, 400);
-    }
-
-    const { credential: cred } = verification.registrationInfo;
-
-    const { error: updateErr } = await admin
-      .schema("store")
-      .from("profiles")
-      .update({
-        passkey_credential_id: cred.id,
-        passkey_public_key:    toBase64URL(cred.publicKey),
-        passkey_counter:       cred.counter,
-      })
-      .eq("id", user.id);
-
-    if (updateErr) return json({ error: "save_failed", message: updateErr.message }, 500);
-
-    return json({ ok: true });
   }
 
   return json({ error: "unknown_action" }, 400);

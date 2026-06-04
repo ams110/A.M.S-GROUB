@@ -53,6 +53,13 @@ export default function AdminHub() {
     { href: "/admin/admins", label: "מנהלים", desc: "ניהול הרשאות מנהלים", icon: "🔑", superOnly: true },
   ];
 
+  const quickActions = [
+    { href: "/admin/dealers/new", label: "הוספת לקוח", icon: "✨", primary: true },
+    { href: "/admin/products/edit", label: "מוצר חדש", icon: "➕" },
+    { href: "/admin/quotes", label: "הצעת מחיר", icon: "📝" },
+    { href: "/admin/purchase-orders", label: "הזמנת רכש", icon: "🚚" },
+  ];
+
   return (
     <div className="space-y-6">
       <div>
@@ -62,6 +69,24 @@ export default function AdminHub() {
           לסקירה החיה והנתונים — עברו ל
           <Link href="/home" className="font-semibold text-brand hover:underline">דף הבית</Link>.
         </p>
+      </div>
+
+      {/* Quick actions — start the common flows in one tap */}
+      <div className="flex flex-wrap gap-2.5">
+        {quickActions.map((a) => (
+          <Link
+            key={a.href}
+            href={a.href}
+            className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all ${
+              a.primary
+                ? "bg-gold-gradient text-navy-dark shadow-gold hover:brightness-105"
+                : "bg-white text-slate-600 ring-1 ring-navy/10 hover:bg-gold-50 hover:text-navy hover:ring-gold/30"
+            }`}
+          >
+            <span>{a.icon}</span>
+            {a.label}
+          </Link>
+        ))}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
