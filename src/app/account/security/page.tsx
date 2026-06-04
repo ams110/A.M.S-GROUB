@@ -68,7 +68,8 @@ export default function SecurityPage() {
 
   return (
     <div className="container-app py-8">
-      <h1 className="mb-6 text-xl font-bold">אבטחת חשבון</h1>
+      <p className="eyebrow mb-1.5">פרטיות והגנה</p>
+      <h1 className="mb-6 text-3xl font-extrabold tracking-tight text-navy-dark">אבטחת חשבון</h1>
 
       <div className="card max-w-lg p-6 space-y-4">
         <div className="flex items-center gap-3">

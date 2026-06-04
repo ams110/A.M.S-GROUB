@@ -94,7 +94,8 @@ export default function AccountPage() {
 
   return (
     <div className="container-app py-8">
-      <h1 className="mb-6 text-xl font-bold text-navy-dark">האזור האישי</h1>
+      <p className="eyebrow mb-1.5">החשבון שלך</p>
+      <h1 className="mb-6 text-3xl font-extrabold tracking-tight text-navy-dark">האזור האישי</h1>
 
       {/* Profile summary */}
       <div className="mb-6 flex items-center gap-4 rounded-2xl bg-navy-dark px-5 py-5 text-white shadow-navy">
