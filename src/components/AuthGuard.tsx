@@ -25,6 +25,9 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     if (!isAuthenticated && !isPublic) {
       router.replace(`/?redirect=${encodeURIComponent(pathname)}`);
     }
+    if (isAuthenticated && isPublic) {
+      router.replace("/welcome");
+    }
   }, [ready, isAuthenticated, isPublic, pathname, router]);
 
   // Login page: full-screen, no chrome.

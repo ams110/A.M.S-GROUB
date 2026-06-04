@@ -75,7 +75,6 @@ function LoginForm() {
     try {
       await authenticateWithPasskey();
       router.push("/welcome");
-      router.refresh();
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       if (msg.includes("cancel") || msg.includes("NotAllowedError")) {
@@ -124,12 +123,10 @@ function LoginForm() {
 
       if (redirectTo) {
         router.push(redirectTo);
-        router.refresh();
         return;
       }
 
       router.push("/welcome");
-      router.refresh();
     } catch (err) {
       setFormError(
         `לא ניתן להתחבר כעת. בדקו את החיבור לאינטרנט ונסו שוב. (${
