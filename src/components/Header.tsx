@@ -110,7 +110,7 @@ export default function Header() {
   };
 
   const navLinkClass = (active: boolean) =>
-    `text-sm font-medium transition-colors duration-150 px-3 py-1.5 rounded-lg ${
+    `relative text-sm font-medium transition-colors duration-150 px-3 py-1.5 rounded-lg ${
       active
         ? "text-gold bg-white/8"
         : "text-white/65 hover:text-white hover:bg-white/8"

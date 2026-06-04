@@ -197,6 +197,8 @@ function LoginForm() {
             </h1>
             <p className="eyebrow mt-1">פורטל הזמנות סיטונאי</p>
           </div>
+          {/* Gold hairline */}
+          <div className="h-px w-full hairline-gold" />
 
           <div className="mb-6 hidden lg:block">
             <h1 className="text-2xl font-extrabold tracking-tight text-navy-dark">ברוכים הבאים</h1>

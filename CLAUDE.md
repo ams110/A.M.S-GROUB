@@ -18,7 +18,7 @@ src/
   app/           # صفحات Next.js (كلها "use client")
     page.tsx     # صفحة الدخول (إيميل/username + passkey)
     admin/       # لوحة الإدارة — محمية بـ AdminLayout (admins, dealers, products, orders, quotes, inventory, suppliers, purchase-orders, customer-prices, settings)
-    account/     # صفحات الموزع (orders, quotes, order, security=passkey)
+    account/     # حساب الموزّع: page.tsx (هَب "האזור האישי") + orders, quotes, order, security=passkey
     register/    # تسجيل موزع جديد (مغلق)
     welcome/     # splash screen بعد الدخول (ثم redirect لـ /products)
   components/
@@ -34,6 +34,7 @@ src/
     config.ts    # SUPABASE_URL, SUPABASE_ANON_KEY, BASE_PATH
     types.ts     # TypeScript types للـ DB
 src/middleware.ts  # يجدد الـ session token (لا يعمل على static export)
+public/          # logo.svg, placeholder.svg, icon-180/192/512.png, manifest.json (PWA)
 ```
 
 ## Auth — أهم قواعد العمل
@@ -157,6 +158,8 @@ npm run lint     # فحص الكود
 | صفحة `/account/security` تفشل (400) | schema الـ passkeys لم يُطبَّق + الـ view ناقص `passkey_credential_id` | تطبيق `20260603_passkeys.sql` + تحديث الـ view | #40 |
 | Edge Functions تفشل: "permission denied for schema store" | `service_role` بلا صلاحيات على `store` | منح `service_role` وصولاً كاملاً | #40 |
 | passkey لا يعمل في الإنتاج | `WEBAUTHN_RP_ID` افتراضي `ams110.github.io` لا يطابق الدومين | تصحيحه إلى `ams-groub.linko.services` | #40 |
+| البصمة وعروض الأسعار بلا مدخل على الموبايل | شريط الموبايل (4 خانات) يُغفلها؛ موصولة بالديسكتوب فقط | صفحة `/account` هَب + التبويب الرابع للموزّع → `/account` | #42 |
+| أيقونة التطبيق باهتة على iPhone | `apple-touch-icon` كان SVG (iOS لا يدعمه) | توليد أيقونات PNG (180/192/512) من الشعار وربطها | #43 |
 
 ## قرارات معمارية مهمة
 
@@ -173,8 +176,20 @@ toast("خطأ ما", "error");   // error (أحمر)
 toast("ملاحظة", "info");    // info (رمادي)
 ```
 
-### Mobile Bottom Navigation
-`src/components/Header.tsx` يعرض bottom nav ثابت في الأسفل على الموبايل (4 أزرار). الزر الرابع يتغير حسب الدور: زائر→كניسה، تاجر→הזמנות، admin→ניהול. Desktop nav ما تغير.
+### التنقّل وصفحة "حسابي" (مهم: تطابق ديسكتوب/موبايل)
+`src/components/Header.tsx` فيه شريطان: nav علوي للديسكتوب (`md:flex`) وbottom nav للموبايل (`md:hidden`، 4 أزرار).
+- **شريط الموبايل (4 خانات):** ראשי / קטלוג / עגלה / [الرابع]. الرابع حسب الدور: زائر→login، **موزّع→חשבون (`/account`)**، admin→ניהول.
+- **صفحة `/account` ("האזور האישי")** هي هَب الموزّع: تجمع روابط الطلبات + عروض الأسعار + الأمان/البصمة + تسجيل الخروج. أُنشئت لأن شريط الموبايل (4 خانات) كان يُغفل عروض الأسعار والأمان — والبصمة ميزة موبايل بالأساس.
+- شريط الديسكتوب يعرض رابط "חשבون" لكل المسجّلين (شامل الأدمن) → الأمان/البصمة متاح للجميع.
+- **القاعدة:** أي صفحة/ميزة جديدة — تأكّد أن لها مدخلاً في **كلا** الشريطين، لا الديسكتوب وحده.
+
+### PWA — التثبيت على الهاتف
+التطبيق قابل للتثبيت كتطبيق (يفتح standalone بملء الشاشة).
+- `public/manifest.json` مربوط في `layout.tsx` (`<link rel="manifest">`)؛ `display: standalone`، لون `#0D1B36`.
+- **الأيقونات:** `icon-180.png` (apple-touch-icon لـ iOS) + `icon-192/512.png` (manifest لأندرويد). ⚠️ iOS لا يدعم SVG لأيقونة الشاشة الرئيسية — لذلك PNG ضروري.
+- وسوم iOS في `layout.tsx`: `apple-mobile-web-app-capable` + `-status-bar-style` + `-title` + `theme-color`.
+- **إعادة توليد الأيقونات** عند تغيير الشعار: من `public/logo.svg` (نسخة بملء المربّع: `rx="36"`→`0`) عبر Chromium بأحجام 180/192/512.
+- التثبيت: iPhone (Safari → مشاركة → "إضافة إلى الشاشة الرئيسية")؛ Android (Chrome → ⋮ → "تثبيت التطبيق"). ملاحظة: iOS يخزّن الأيقونة بالكاش — احذف وأعد الإضافة بعد تغييرها.
 
 ### صلاحيات المستخدمين
 | الحالة | القدرات |
