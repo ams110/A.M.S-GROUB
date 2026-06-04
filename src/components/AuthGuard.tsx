@@ -16,7 +16,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const { ready, userId } = useProfile();
 
   const isPublic = PUBLIC_PATHS.some(
-    (p) => pathname === p || pathname.startsWith(p + "?")
+    (p) => pathname === p || pathname === p + "/" || pathname.startsWith(p + "?")
   );
   const isAuthenticated = !!userId;
 
