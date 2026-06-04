@@ -14,6 +14,14 @@ function Chevron() {
     </svg>
   );
 }
+function UserIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-5 w-5">
+      <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  );
+}
 function PackageIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-5 w-5">
@@ -98,10 +106,15 @@ export default function AccountPage() {
       <h1 className="mb-6 text-3xl font-extrabold tracking-tight text-navy-dark">האזור האישי</h1>
 
       {/* Profile summary */}
-      <div className="mb-6 flex items-center gap-4 rounded-2xl bg-navy-dark px-5 py-5 text-white shadow-navy">
-        <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-white/10 text-2xl font-bold text-gold">
-          {displayName.trim().charAt(0).toUpperCase() || "?"}
-        </span>
+      <Link href="/account/profile" className="mb-6 flex items-center gap-4 rounded-2xl bg-navy-dark px-5 py-5 text-white shadow-navy transition hover:ring-1 hover:ring-gold/40">
+        {profile?.avatar_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={profile.avatar_url} alt="" className="h-14 w-14 shrink-0 rounded-full object-cover ring-2 ring-gold/40" />
+        ) : (
+          <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-white/10 text-2xl font-bold text-gold">
+            {displayName.trim().charAt(0).toUpperCase() || "?"}
+          </span>
+        )}
         <div className="min-w-0">
           <p className="truncate text-lg font-bold">{displayName}</p>
           <p className="truncate text-sm text-white/60">{email}</p>
@@ -111,10 +124,12 @@ export default function AccountPage() {
             </span>
           )}
         </div>
-      </div>
+        <span className="ml-auto text-white/40">←</span>
+      </Link>
 
       {/* Menu */}
       <div className="space-y-2.5">
+        <MenuRow href="/account/profile"  icon={<UserIcon />}        title="הפרופיל שלי"        subtitle="תמונה, פרטים אישיים וסיסמה" />
         <MenuRow href="/account/orders"   icon={<PackageIcon />}     title="ההזמנות שלי"        subtitle="מעקב אחר ההזמנות והסטטוס" />
         <MenuRow href="/account/quotes"   icon={<QuoteIcon />}       title="הצעות מחיר"          subtitle="הצעות המחיר שהונפקו עבורך" />
         <MenuRow href="/account/security" icon={<FingerprintIcon />} title="אבטחה וטביעת אצבע"   subtitle="כניסה ביומטרית ללא סיסמה" />
