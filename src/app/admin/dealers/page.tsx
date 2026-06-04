@@ -10,6 +10,14 @@ import {
   PROFILE_STATUS_HE,
   formatPrice,
 } from "@/lib/format";
+import {
+  computeReceivables,
+  termDays,
+  type AROrder,
+  type Receivables,
+} from "@/lib/ar";
+import { paymentReminderMessage, waMessageLink } from "@/lib/messages";
+import { BASE_PATH } from "@/lib/config";
 import type { CustomerType, PaymentTerms, Profile } from "@/lib/types";
 
 const EMPTY_NEW = {
@@ -25,7 +33,7 @@ export default function AdminCustomersPage() {
   const supabase = createClient();
   const toast = useToast();
   const [rows, setRows] = useState<Profile[]>([]);
-  const [balances, setBalances] = useState<Record<string, number>>({});
+  const [receivables, setReceivables] = useState<Record<string, Receivables>>({});
   const [loading, setLoading] = useState(true);
 
   // Create-account form.
@@ -37,23 +45,42 @@ export default function AdminCustomersPage() {
   const load = async () => {
     const [{ data }, { data: orders }] = await Promise.all([
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
-      supabase.from("orders").select("dealer_id,total,payment_status"),
+      supabase.from("orders").select("dealer_id,total,payment_status,status,created_at"),
     ]);
-    setRows((data as Profile[]) ?? []);
+    const profs = (data as Profile[]) ?? [];
+    setRows(profs);
 
-    // Outstanding balance = sum of unpaid order totals per customer.
-    const bal: Record<string, number> = {};
-    for (const o of (orders ?? []) as {
-      dealer_id: string;
-      total: number;
-      payment_status: string;
-    }[]) {
-      if (o.payment_status !== "paid") {
-        bal[o.dealer_id] = (bal[o.dealer_id] ?? 0) + Number(o.total);
-      }
+    // Receivables per customer: outstanding + overdue + aging, using each
+    // dealer's own payment terms (immediate / net30 / net60).
+    const byDealer = new Map<string, AROrder[]>();
+    for (const o of (orders ?? []) as (AROrder & { dealer_id: string })[]) {
+      const arr = byDealer.get(o.dealer_id) ?? [];
+      arr.push(o);
+      byDealer.set(o.dealer_id, arr);
     }
-    setBalances(bal);
+    const rec: Record<string, Receivables> = {};
+    for (const p of profs) {
+      const list = byDealer.get(p.id);
+      if (list && list.length) rec[p.id] = computeReceivables(list, termDays(p.payment_terms));
+    }
+    setReceivables(rec);
     setLoading(false);
+  };
+
+  const loginUrl =
+    typeof window !== "undefined" ? `${window.location.origin}${BASE_PATH}/` : "";
+
+  const remindLink = (p: Profile) => {
+    const r = receivables[p.id];
+    if (!p.phone || !r || r.outstanding <= 0) return null;
+    const msg = paymentReminderMessage({
+      name: p.full_name || p.company || undefined,
+      amount: r.outstanding,
+      overdue: r.overdue,
+      oldestOverdueDays: r.oldestOverdueDays,
+      loginUrl,
+    });
+    return waMessageLink(p.phone, msg);
   };
 
   useEffect(() => {
@@ -294,12 +321,20 @@ export default function AdminCustomersPage() {
                     </td>
                     <td className="p-3">
                       {p.role === "dealer" && (() => {
-                        const bal = balances[p.id] ?? 0;
+                        const r = receivables[p.id];
+                        const bal = r?.outstanding ?? 0;
+                        if (bal <= 0) return <span className="text-slate-300">—</span>;
                         const over = p.credit_limit > 0 && bal > p.credit_limit;
                         return (
-                          <span className={over ? "font-bold text-rose-600" : ""}>
-                            {formatPrice(bal)}{over && " ⚠"}
-                          </span>
+                          <div className={over ? "font-bold text-rose-600" : ""}>
+                            <span>{formatPrice(bal)}{over && " ⚠"}</span>
+                            {r && r.overdue > 0 && (
+                              <span className="mt-0.5 block text-xs font-semibold text-rose-600">
+                                באיחור {formatPrice(r.overdue)}
+                                {r.oldestOverdueDays ? ` · ${r.oldestOverdueDays} ימים` : ""}
+                              </span>
+                            )}
+                          </div>
                         );
                       })()}
                     </td>
@@ -314,7 +349,7 @@ export default function AdminCustomersPage() {
                     </td>
                     <td className="p-3">
                       {p.role === "dealer" && (
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                           {p.status !== "approved" && (
                             <button onClick={() => setStatus(p.id, "approved")} className="text-emerald-700 hover:underline">אישור</button>
                           )}
@@ -322,6 +357,14 @@ export default function AdminCustomersPage() {
                             <button onClick={() => setStatus(p.id, "rejected")} className="text-rose-700 hover:underline">דחייה</button>
                           )}
                           <Link href={`/admin/customer-prices?customer=${p.id}`} className="text-brand hover:underline">מחירים</Link>
+                          {(() => {
+                            const link = remindLink(p);
+                            return link ? (
+                              <a href={link} target="_blank" rel="noopener noreferrer" className="font-medium text-emerald-700 hover:underline">
+                                תזכורת תשלום
+                              </a>
+                            ) : null;
+                          })()}
                         </div>
                       )}
                     </td>
@@ -358,11 +401,18 @@ export default function AdminCustomersPage() {
                   <a href={`tel:${p.phone}`} className="block text-sm text-brand">{p.phone}</a>
                 )}
                 {p.role === "dealer" && (() => {
-                  const bal = balances[p.id] ?? 0;
+                  const r = receivables[p.id];
+                  const bal = r?.outstanding ?? 0;
                   const over = p.credit_limit > 0 && bal > p.credit_limit;
                   return bal > 0 ? (
                     <p className={`text-sm ${over ? "font-bold text-rose-600" : "text-slate-600"}`}>
                       חוב פתוח: {formatPrice(bal)}{over && " ⚠"}
+                      {r && r.overdue > 0 && (
+                        <span className="block text-xs font-semibold text-rose-600">
+                          באיחור {formatPrice(r.overdue)}
+                          {r.oldestOverdueDays ? ` · ${r.oldestOverdueDays} ימים` : ""}
+                        </span>
+                      )}
                     </p>
                   ) : null;
                 })()}
@@ -375,6 +425,12 @@ export default function AdminCustomersPage() {
                       <button onClick={() => setStatus(p.id, "rejected")} className="btn-outline py-1 text-xs text-rose-700 border-rose-300">דחייה</button>
                     )}
                     <Link href={`/admin/customer-prices?customer=${p.id}`} className="btn-outline py-1 text-xs">מחירים</Link>
+                    {(() => {
+                      const link = remindLink(p);
+                      return link ? (
+                        <a href={link} target="_blank" rel="noopener noreferrer" className="btn-outline py-1 text-xs text-emerald-700 border-emerald-300">תזכורת תשלום</a>
+                      ) : null;
+                    })()}
                   </div>
                 )}
               </div>

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { formatPrice, QUOTE_STATUS_HE } from "@/lib/format";
+import { computeMargin } from "@/lib/margin";
 import type { Product, Profile, Quote, QuoteItem } from "@/lib/types";
 
 type Line = { product_id: string; qty: number; unit_price: number };
@@ -206,45 +207,62 @@ export default function AdminQuotesPage() {
                 + שורה
               </button>
             </div>
-            {lines.map((l, i) => (
-              <div key={i} className="grid grid-cols-[1fr_90px_120px_auto] gap-2">
-                <select
-                  className="input"
-                  value={l.product_id}
-                  onChange={(e) => onPickProduct(i, e.target.value)}
-                >
-                  <option value="">— מוצר —</option>
-                  {products.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name_he}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  type="number"
-                  min={1}
-                  className="input"
-                  placeholder="כמות"
-                  value={l.qty}
-                  onChange={(e) => setLine(i, { qty: Number(e.target.value) })}
-                />
-                <input
-                  type="number"
-                  step="0.01"
-                  className="input"
-                  placeholder="מחיר יח׳"
-                  value={l.unit_price}
-                  onChange={(e) => setLine(i, { unit_price: Number(e.target.value) })}
-                />
-                <button
-                  type="button"
-                  onClick={() => setLines((ls) => ls.filter((_, j) => j !== i))}
-                  className="px-2 text-slate-400 hover:text-rose-600"
-                >
-                  ✕
-                </button>
+            {lines.map((l, i) => {
+              const prod = products.find((x) => x.id === l.product_id);
+              const m = prod ? computeMargin(l.unit_price, prod.cost) : null;
+              return (
+              <div key={i}>
+                <div className="grid grid-cols-[1fr_90px_120px_auto] gap-2">
+                  <select
+                    className="input"
+                    value={l.product_id}
+                    onChange={(e) => onPickProduct(i, e.target.value)}
+                  >
+                    <option value="">— מוצר —</option>
+                    {products.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name_he}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="number"
+                    min={1}
+                    className="input"
+                    placeholder="כמות"
+                    value={l.qty}
+                    onChange={(e) => setLine(i, { qty: Number(e.target.value) })}
+                  />
+                  <input
+                    type="number"
+                    step="0.01"
+                    className={`input ${m?.belowCost ? "border-rose-400" : ""}`}
+                    placeholder="מחיר יח׳"
+                    value={l.unit_price}
+                    onChange={(e) => setLine(i, { unit_price: Number(e.target.value) })}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setLines((ls) => ls.filter((_, j) => j !== i))}
+                    className="px-2 text-slate-400 hover:text-rose-600"
+                  >
+                    ✕
+                  </button>
+                </div>
+                {m && m.known && (
+                  <p className="mt-0.5 pr-1 text-xs">
+                    {m.belowCost ? (
+                      <span className="font-bold text-rose-600">מתחת לעלות ({formatPrice(prod!.cost)}) ⚠</span>
+                    ) : (
+                      <span className={m.thin ? "text-amber-600" : "text-slate-400"}>
+                        מרווח {m.marginPct.toFixed(0)}%{m.thin && " — נמוך ⚠"}
+                      </span>
+                    )}
+                  </p>
+                )}
               </div>
-            ))}
+              );
+            })}
           </div>
 
           <button disabled={saving} className="btn-primary">

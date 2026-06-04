@@ -2,19 +2,33 @@
 
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useProfile } from "@/lib/auth";
+import { useToast } from "@/components/Toast";
 import { formatPrice, QUOTE_STATUS_HE } from "@/lib/format";
 import type { Profile, Quote, QuoteItem } from "@/lib/types";
 
+const ACCEPT_ERROR_HE: Record<string, string> = {
+  ALREADY_CONVERTED: "ההצעה כבר הומרה להזמנה.",
+  QUOTE_NOT_OPEN: "לא ניתן לאשר הצעה זו.",
+  QUOTE_EXPIRED: "תוקף ההצעה פג.",
+  DEALER_NOT_APPROVED: "החשבון ממתין לאישור היבואן.",
+  NOT_AUTHORIZED: "אין הרשאה לאשר הצעה זו.",
+};
+
 function QuoteView() {
   const id = useSearchParams().get("id") ?? "";
+  const router = useRouter();
+  const toast = useToast();
+  const { userId } = useProfile();
 
   const [quote, setQuote] = useState<Quote | null>(null);
   const [items, setItems] = useState<QuoteItem[]>([]);
   const [customer, setCustomer] = useState<Profile | null>(null);
   const [business, setBusiness] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(id !== "");
+  const [accepting, setAccepting] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -54,16 +68,59 @@ function QuoteView() {
 
   const total = items.reduce((s, l) => s + Number(l.line_total), 0);
 
+  // The signed-in dealer may accept their own open quote and turn it into an
+  // order — no need to wait for the importer.
+  const isExpired =
+    !!quote.valid_until && new Date(quote.valid_until) < new Date(new Date().toDateString());
+  const canAccept =
+    !!userId &&
+    quote.customer_id === userId &&
+    !quote.order_id &&
+    !["converted", "rejected", "expired"].includes(quote.status) &&
+    !isExpired;
+
+  const accept = async () => {
+    if (!confirm("לאשר את ההצעה ולהפוך אותה להזמנה? המלאי יישמר עבורך.")) return;
+    setAccepting(true);
+    const supabase = createClient();
+    const { data, error } = await supabase.rpc("accept_my_quote", { p_quote_id: quote.id });
+    setAccepting(false);
+    if (error) {
+      const code = error.message.split(":")[0].trim();
+      if (/INSUFFICIENT_STOCK/.test(error.message)) {
+        toast("אחד הפריטים אזל מהמלאי. פנו אלינו ונשמח לעזור.", "error");
+      } else {
+        toast(ACCEPT_ERROR_HE[code] ?? `האישור נכשל: ${error.message}`, "error");
+      }
+      return;
+    }
+    toast("ההצעה אושרה והפכה להזמנה 🎉");
+    router.push(`/account/order?id=${data.id}&new=1`);
+  };
+
   return (
     <div className="container-app py-10">
-      <div className="mb-6 flex items-center justify-between print:hidden">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 print:hidden">
         <Link href="/account/quotes" className="text-sm text-brand hover:underline">
           ← להצעות המחיר שלי
         </Link>
-        <button onClick={() => window.print()} className="btn-primary">
-          הדפסה / שמירה כ-PDF
-        </button>
+        <div className="flex items-center gap-3">
+          {canAccept && (
+            <button onClick={accept} disabled={accepting} className="btn-gold disabled:opacity-50">
+              {accepting ? "מאשר…" : "✓ אישור והזמנה"}
+            </button>
+          )}
+          <button onClick={() => window.print()} className="btn-primary">
+            הדפסה / שמירה כ-PDF
+          </button>
+        </div>
       </div>
+
+      {canAccept && (
+        <div className="mb-4 rounded-xl border border-gold/30 bg-gold-50 px-4 py-3 text-sm text-navy-dark print:hidden">
+          הצעה זו בתוקף — ניתן לאשר אותה כעת והיא תהפוך אוטומטית להזמנה.
+        </div>
+      )}
 
       <div className="card mx-auto max-w-3xl p-8">
         <div className="flex items-start justify-between border-b border-slate-200 pb-4">

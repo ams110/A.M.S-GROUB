@@ -4,11 +4,14 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useToast } from "@/components/Toast";
 import { formatPrice, CUSTOMER_TYPE_HE } from "@/lib/format";
+import { computeMargin, applyPctChange } from "@/lib/margin";
 import type { CustomerPrice, Product, Profile } from "@/lib/types";
 
 function CustomerPrices() {
   const supabase = createClient();
+  const toast = useToast();
   const customerId = useSearchParams().get("customer") ?? "";
 
   const [customers, setCustomers] = useState<Profile[]>([]);
@@ -18,6 +21,8 @@ function CustomerPrices() {
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [bulkPct, setBulkPct] = useState("");
+  const [applying, setApplying] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -86,6 +91,35 @@ function CustomerPrices() {
     setSavingId(null);
   };
 
+  // Bulk: set a special price for every filtered product at (base − pct%).
+  const applyBulkDiscount = async () => {
+    const pct = Number(bulkPct);
+    if (!pct || pct <= 0 || pct >= 100) {
+      toast("נא להזין אחוז הנחה בין 1 ל-99", "error");
+      return;
+    }
+    if (!confirm(`להחיל הנחה של ${pct}% על ${filtered.length} מוצרים? פעולה זו תדרוס מחירים מיוחדים קיימים.`))
+      return;
+    setApplying(true);
+    const next: Record<string, number> = { ...overrides };
+    const rows = filtered.map((p) => {
+      const price = applyPctChange(basePrice(p), -pct);
+      next[p.id] = price;
+      return { profile_id: customerId, product_id: p.id, price };
+    });
+    const { error } = await supabase
+      .from("customer_prices")
+      .upsert(rows, { onConflict: "profile_id,product_id" });
+    setApplying(false);
+    if (error) {
+      toast("החלת ההנחה נכשלה", "error");
+      return;
+    }
+    setOverrides(next);
+    setBulkPct("");
+    toast(`הוחלה הנחה של ${pct}% על ${rows.length} מוצרים ✓`);
+  };
+
   if (loading) return <p className="text-slate-500">טוען…</p>;
 
   // No customer chosen → picker.
@@ -129,6 +163,28 @@ function CustomerPrices() {
         </Link>
       </div>
 
+      {/* Bulk discount — set special prices for the whole (filtered) catalogue */}
+      <div className="card mb-3 flex flex-wrap items-end gap-3 p-4">
+        <div>
+          <label className="label">הנחה גורפת מהמחיר הרגיל (%)</label>
+          <input
+            type="number"
+            min={1}
+            max={99}
+            className="input w-32"
+            placeholder="לדוגמה 12"
+            value={bulkPct}
+            onChange={(e) => setBulkPct(e.target.value)}
+          />
+        </div>
+        <button onClick={applyBulkDiscount} disabled={applying} className="btn-outline">
+          {applying ? "מחיל…" : `החל על ${filtered.length} מוצרים`}
+        </button>
+        <p className="flex-1 text-xs text-slate-400">
+          מחשב מחיר מיוחד לכל מוצר מוצג = מחיר רגיל פחות האחוז. אפשר לצמצם עם החיפוש לפני ההחלה.
+        </p>
+      </div>
+
       <input
         placeholder="חיפוש מוצר…"
         value={q}
@@ -143,10 +199,14 @@ function CustomerPrices() {
               <th className="p-3">מוצר</th>
               <th className="p-3">מחיר רגיל</th>
               <th className="p-3">מחיר מיוחד</th>
+              <th className="p-3">מרווח</th>
             </tr>
           </thead>
           <tbody>
-            {filtered.map((p) => (
+            {filtered.map((p) => {
+              const effective = overrides[p.id] ?? basePrice(p);
+              const m = computeMargin(effective, p.cost);
+              return (
               <tr key={p.id} className="border-b border-slate-100">
                 <td className="p-3">
                   <div className="font-medium">{p.name_he}</div>
@@ -158,7 +218,7 @@ function CustomerPrices() {
                     type="number"
                     step="0.01"
                     className={`input w-32 py-1 ${
-                      overrides[p.id] ? "border-brand" : ""
+                      m.belowCost ? "border-rose-400" : overrides[p.id] ? "border-brand" : ""
                     }`}
                     defaultValue={overrides[p.id] ?? ""}
                     placeholder="—"
@@ -168,8 +228,20 @@ function CustomerPrices() {
                     <span className="mr-2 text-xs text-slate-400">שומר…</span>
                   )}
                 </td>
+                <td className="p-3">
+                  {!m.known ? (
+                    <span className="text-xs text-slate-300">—</span>
+                  ) : m.belowCost ? (
+                    <span className="text-xs font-bold text-rose-600">מתחת לעלות ⚠</span>
+                  ) : (
+                    <span className={`text-xs font-semibold ${m.thin ? "text-amber-600" : "text-emerald-600"}`}>
+                      {m.marginPct.toFixed(0)}%{m.thin && " ⚠"}
+                    </span>
+                  )}
+                </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>

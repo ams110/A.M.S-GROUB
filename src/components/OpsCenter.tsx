@@ -5,6 +5,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { formatPrice, compactPrice, ORDER_STATUS_HE } from "@/lib/format";
 import Aurora from "@/components/Aurora";
+import ReceivablesPanel from "@/components/ReceivablesPanel";
 
 // ── Shape of store.admin_ops_dashboard() ─────────────────────────────────────
 
@@ -418,6 +419,9 @@ export default function OpsCenter() {
           )}
         </section>
       </div>
+
+      {/* ── Receivables / debt collection ────────────────────────────── */}
+      <ReceivablesPanel />
 
       {/* ── Top products + Activity ──────────────────────────────────── */}
       <div className="grid gap-4 lg:grid-cols-2">
