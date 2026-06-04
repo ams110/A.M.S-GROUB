@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useProfile } from "@/lib/auth";
 import Header from "@/components/Header";
 import CommandPalette from "@/components/CommandPalette";
+import PasskeyPrompt from "@/components/PasskeyPrompt";
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
@@ -68,6 +69,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     <>
       <Header />
       <CommandPalette />
+      <PasskeyPrompt />
       <main className="min-h-[calc(100vh-4rem)] pb-28 md:pb-0">{children}</main>
       <footer className="bg-onyx-gradient pb-6 text-center text-sm text-white/40 print:hidden">
         <div className="h-px w-full hairline-gold" />

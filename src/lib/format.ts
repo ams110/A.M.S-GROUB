@@ -10,6 +10,20 @@ export function formatPrice(value: number, currency = "ILS") {
   }
 }
 
+/** Compact currency for headline figures: ₪1.2M, ₪34K. */
+export function compactPrice(value: number, currency = "ILS") {
+  try {
+    return new Intl.NumberFormat("he-IL", {
+      style: "currency",
+      currency,
+      notation: "compact",
+      maximumFractionDigits: 1,
+    }).format(value);
+  } catch {
+    return formatPrice(value, currency);
+  }
+}
+
 export const ORDER_STATUS_HE: Record<string, string> = {
   pending: "ממתין לאישור",
   confirmed: "אושר",
