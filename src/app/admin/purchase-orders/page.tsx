@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { formatPrice, PO_STATUS_HE } from "@/lib/format";
+import { computeSalesVelocity, suggestReplenishment } from "@/lib/replenish";
 import type {
   Product,
   PurchaseOrder,
@@ -11,6 +12,8 @@ import type {
 } from "@/lib/types";
 
 type Line = { product_id: string; qty: number; unit_cost: number };
+
+const DAY = 24 * 60 * 60 * 1000;
 
 export default function AdminPurchaseOrdersPage() {
   const supabase = createClient();
@@ -29,6 +32,74 @@ export default function AdminPurchaseOrdersPage() {
   const [notes, setNotes] = useState("");
   const [lines, setLines] = useState<Line[]>([{ product_id: "", qty: 1, unit_cost: 0 }]);
   const [saving, setSaving] = useState(false);
+
+  // Smart replenishment.
+  const [velocity, setVelocity] = useState<Record<string, number>>({});
+  const [picked, setPicked] = useState<Record<string, boolean>>({});
+
+  // Sales velocity from the last 30 days, to size suggested order quantities.
+  useEffect(() => {
+    (async () => {
+      const since = new Date(Date.now() - 35 * DAY).toISOString();
+      const { data: vOrders } = await supabase
+        .from("orders")
+        .select("id,created_at")
+        .gte("created_at", since);
+      const ids = ((vOrders as { id: string }[]) ?? []).map((o) => o.id);
+      let vItems: { order_id: string; product_id: string | null; qty: number }[] = [];
+      if (ids.length) {
+        const { data } = await supabase
+          .from("order_items")
+          .select("order_id,product_id,qty")
+          .in("order_id", ids);
+        vItems = (data as typeof vItems) ?? [];
+      }
+      setVelocity(computeSalesVelocity((vOrders as any[]) ?? [], vItems, { windowDays: 30 }));
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const suggestions = useMemo(
+    () =>
+      suggestReplenishment(
+        products.map((p) => ({
+          id: p.id,
+          name_he: p.name_he,
+          stock: p.stock,
+          reorder_point: p.reorder_point,
+          min_order_qty: p.min_order_qty,
+          cost: p.cost,
+        })),
+        velocity
+      ),
+    [products, velocity]
+  );
+
+  // Default every suggestion to picked once they're computed.
+  useEffect(() => {
+    setPicked((prev) => {
+      const next = { ...prev };
+      for (const s of suggestions) if (!(s.product_id in next)) next[s.product_id] = true;
+      return next;
+    });
+  }, [suggestions]);
+
+  const pickedSuggestions = suggestions.filter((s) => picked[s.product_id]);
+  const suggestTotal = pickedSuggestions.reduce((sum, s) => sum + s.lineCost, 0);
+
+  const fillFromSuggestions = () => {
+    if (pickedSuggestions.length === 0) return;
+    setLines(
+      pickedSuggestions.map((s) => ({
+        product_id: s.product_id,
+        qty: s.suggestedQty,
+        unit_cost: s.unitCost,
+      }))
+    );
+    setShowForm(true);
+    setError(null);
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const supplierName = useMemo(() => {
     const m = new Map(suppliers.map((s) => [s.id, s.name]));
@@ -144,6 +215,82 @@ export default function AdminPurchaseOrdersPage() {
 
       {error && (
         <p className="rounded bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>
+      )}
+
+      {/* ── Smart replenishment ──────────────────────────────────────── */}
+      {suggestions.length > 0 && (
+        <section className="rounded-2xl border border-gold/30 bg-gold-50/60 p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="flex items-center gap-2 font-bold text-navy-dark">
+                <span>💡</span> הצעת רכש חכמה
+                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-700">
+                  {suggestions.length}
+                </span>
+              </h3>
+              <p className="mt-0.5 text-xs text-slate-500">
+                מוצרים מתחת לנקודת ההזמנה, עם כמות מומלצת לפי קצב המכירות שלהם.
+              </p>
+            </div>
+            <button
+              onClick={fillFromSuggestions}
+              disabled={pickedSuggestions.length === 0}
+              className="btn-primary disabled:opacity-40"
+            >
+              מלא טופס רכש ({pickedSuggestions.length})
+            </button>
+          </div>
+
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full text-right text-sm">
+              <thead className="text-slate-500">
+                <tr>
+                  <th className="p-2"></th>
+                  <th className="p-2">מוצר</th>
+                  <th className="p-2">מלאי / נק׳</th>
+                  <th className="p-2">צפי אוזל</th>
+                  <th className="p-2">כמות מומלצת</th>
+                  <th className="p-2">עלות משוערת</th>
+                </tr>
+              </thead>
+              <tbody>
+                {suggestions.map((s) => (
+                  <tr key={s.product_id} className="border-t border-gold/20">
+                    <td className="p-2">
+                      <input
+                        type="checkbox"
+                        checked={!!picked[s.product_id]}
+                        onChange={() =>
+                          setPicked((p) => ({ ...p, [s.product_id]: !p[s.product_id] }))
+                        }
+                        className="h-4 w-4 accent-gold"
+                        aria-label={`בחר ${s.name_he}`}
+                      />
+                    </td>
+                    <td className="p-2 font-medium text-navy-dark">{s.name_he}</td>
+                    <td className="p-2">
+                      <span className="font-semibold text-rose-600">{s.stock}</span>
+                      <span className="text-slate-400"> / {s.reorder_point}</span>
+                    </td>
+                    <td className="p-2 text-amber-600">
+                      {s.daysLeft != null ? `~${s.daysLeft} ימים` : "—"}
+                    </td>
+                    <td className="p-2 font-bold text-navy-dark">{s.suggestedQty}</td>
+                    <td className="p-2">{s.unitCost > 0 ? formatPrice(s.lineCost) : "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="border-t border-gold/30 font-bold text-navy-dark">
+                  <td className="p-2" colSpan={5}>
+                    סה״כ נבחר ({pickedSuggestions.length})
+                  </td>
+                  <td className="p-2">{formatPrice(suggestTotal)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </section>
       )}
 
       {showForm && (

@@ -1,9 +1,12 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useProfile, isAdminRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/client";
+import { compactPrice } from "@/lib/format";
+import { computeDealerPulse, type DealerPulse, type PulseOrder } from "@/lib/pulse";
 
 // ── Icons ────────────────────────────────────────────────────────────────────
 function Chevron() {
@@ -62,6 +65,17 @@ function SettingsIcon() {
   );
 }
 
+function RepeatIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-5 w-5">
+      <polyline points="17 1 21 5 17 9" />
+      <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+      <polyline points="7 23 3 19 7 15" />
+      <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+    </svg>
+  );
+}
+
 // ── Row ──────────────────────────────────────────────────────────────────────
 function MenuRow({ href, icon, title, subtitle }: { href: string; icon: React.ReactNode; title: string; subtitle: string }) {
   return (
@@ -87,7 +101,18 @@ const ROLE_LABEL: Record<string, string> = {
 
 export default function AccountPage() {
   const router = useRouter();
-  const { ready, email, profile } = useProfile();
+  const { ready, email, profile, userId } = useProfile();
+  const [pulse, setPulse] = useState<DealerPulse | null>(null);
+
+  // Dealer pulse — a quick "where do I stand?" snapshot from order history.
+  useEffect(() => {
+    if (!userId || isAdminRole(profile?.role)) return;
+    const supabase = createClient();
+    (async () => {
+      const { data } = await supabase.from("orders").select("total,status,created_at");
+      setPulse(computeDealerPulse((data as PulseOrder[]) ?? []));
+    })();
+  }, [userId, profile?.role]);
 
   const signOut = async () => {
     await createClient().auth.signOut();
@@ -127,8 +152,14 @@ export default function AccountPage() {
         <span className="ml-auto text-white/40">←</span>
       </Link>
 
+      {/* Dealer pulse — status that turns into action (reorder) */}
+      {!isAdmin && pulse && pulse.lifetimeOrders > 0 && <PulseCard pulse={pulse} />}
+
       {/* Menu */}
       <div className="space-y-2.5">
+        {!isAdmin && (
+          <MenuRow href="/account/reorder" icon={<RepeatIcon />} title="הזמנה חוזרת חכמה" subtitle="המוצרים שאתה מזמין בקביעות — בלחיצה אחת" />
+        )}
         <MenuRow href="/account/profile"  icon={<UserIcon />}        title="הפרופיל שלי"        subtitle="תמונה, פרטים אישיים וסיסמה" />
         <MenuRow href="/account/orders"   icon={<PackageIcon />}     title="ההזמנות שלי"        subtitle="מעקב אחר ההזמנות והסטטוס" />
         <MenuRow href="/account/quotes"   icon={<QuoteIcon />}       title="הצעות מחיר"          subtitle="הצעות המחיר שהונפקו עבורך" />
@@ -145,6 +176,52 @@ export default function AccountPage() {
       >
         יציאה מהחשבון
       </button>
+    </div>
+  );
+}
+
+// ── Dealer pulse card ─────────────────────────────────────────────────────────
+function PulseCard({ pulse }: { pulse: DealerPulse }) {
+  const delta = pulse.spendDeltaPct;
+  return (
+    <div className="mb-6 overflow-hidden rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-medium text-slate-500">הוצאה החודש</p>
+          <p className="mt-1 text-2xl font-extrabold tabular-nums text-navy-dark">
+            {compactPrice(pulse.monthSpend)}
+          </p>
+          {delta != null && (
+            <p className={`mt-0.5 text-xs font-semibold ${delta >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+              {delta >= 0 ? "▲" : "▼"} {Math.abs(delta).toFixed(0)}% מול חודש שעבר
+            </p>
+          )}
+        </div>
+        <Link
+          href="/account/reorder"
+          className="shrink-0 rounded-xl bg-gold-gradient px-3.5 py-2 text-sm font-bold text-navy-dark shadow-gold transition hover:brightness-105"
+        >
+          🔁 הזמנה חוזרת
+        </Link>
+      </div>
+
+      <div className="mt-4 grid grid-cols-3 gap-3 border-t border-slate-100 pt-3 text-center">
+        <Stat label="הזמנות" value={String(pulse.lifetimeOrders)} />
+        <Stat label="ממוצע הזמנה" value={compactPrice(pulse.avgOrderValue)} />
+        <Stat
+          label="הזמנה אחרונה"
+          value={pulse.daysSinceLastOrder == null ? "—" : `לפני ${pulse.daysSinceLastOrder} ימים`}
+        />
+      </div>
+    </div>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0">
+      <p className="truncate text-sm font-bold text-navy-dark">{value}</p>
+      <p className="mt-0.5 truncate text-[11px] text-slate-400">{label}</p>
     </div>
   );
 }
