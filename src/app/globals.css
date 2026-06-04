@@ -70,60 +70,57 @@ html:not([data-bg]) body {
   background-color: #0A0908;
 }
 
-/* ════════ Readability on dark backgrounds ════════ */
-html[data-bg="onyx-aurora"] body,
-html[data-bg="onyx-gold"] body,
-html:not([data-bg]) body { color: #ECE6DA; }
+/* ════════ Dark themes: elegant dark surfaces (easy on the eyes) ════════ */
+/* :is(...) groups the three dark roots so each rule is written once. */
 
-/* Light surfaces keep a dark default text colour so un-classed text stays readable */
-html[data-bg="onyx-aurora"] .card, html[data-bg="onyx-gold"] .card, html:not([data-bg]) .card,
-html[data-bg="onyx-aurora"] .input, html[data-bg="onyx-gold"] .input, html:not([data-bg]) .input,
-html[data-bg="onyx-aurora"] .bg-white, html[data-bg="onyx-gold"] .bg-white, html:not([data-bg]) .bg-white,
-html[data-bg="onyx-aurora"] table, html[data-bg="onyx-gold"] table, html:not([data-bg]) table { color: #1C1A17; }
+:is(html[data-bg="onyx-aurora"], html[data-bg="onyx-gold"], html:not([data-bg])) body { color: #E8E2D6; }
 
-/* Lift bare-canvas text to light */
-html[data-bg="onyx-aurora"] .text-navy-dark,
-html[data-bg="onyx-gold"] .text-navy-dark,
-html:not([data-bg]) .text-navy-dark { color: #F5F0E4; }
-html[data-bg="onyx-aurora"] .text-slate-900,
-html[data-bg="onyx-gold"] .text-slate-900,
-html:not([data-bg]) .text-slate-900 { color: #F1ECE0; }
-html[data-bg="onyx-aurora"] .text-slate-800,
-html[data-bg="onyx-gold"] .text-slate-800,
-html:not([data-bg]) .text-slate-800 { color: #E7E1D5; }
-html[data-bg="onyx-aurora"] .text-slate-700,
-html[data-bg="onyx-gold"] .text-slate-700,
-html:not([data-bg]) .text-slate-700 { color: #D6D0C4; }
-html[data-bg="onyx-aurora"] .text-slate-600,
-html[data-bg="onyx-gold"] .text-slate-600,
-html:not([data-bg]) .text-slate-600 { color: #C3BDB1; }
-html[data-bg="onyx-aurora"] .text-slate-500,
-html[data-bg="onyx-gold"] .text-slate-500,
-html:not([data-bg]) .text-slate-500 { color: #A39D91; }
-html[data-bg="onyx-aurora"] .text-slate-400,
-html[data-bg="onyx-gold"] .text-slate-400,
-html:not([data-bg]) .text-slate-400 { color: #8C867C; }
-html[data-bg="onyx-aurora"] .text-brand-dark,
-html[data-bg="onyx-gold"] .text-brand-dark,
-html:not([data-bg]) .text-brand-dark { color: #F0EADE; }
+/* Cards & white panels → warm dark glass instead of glaring white */
+:is(html[data-bg="onyx-aurora"], html[data-bg="onyx-gold"], html:not([data-bg])) .card {
+  background-color: rgba(30, 27, 22, 0.66);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-color: rgba(201, 162, 39, 0.18);
+  box-shadow: 0 16px 40px -20px rgba(0, 0, 0, 0.75);
+  color: #E8E2D6;
+}
+:is(html[data-bg="onyx-aurora"], html[data-bg="onyx-gold"], html:not([data-bg])) .bg-white {
+  background-color: rgba(30, 27, 22, 0.66);
+  color: #E8E2D6;
+}
+:is(html[data-bg="onyx-aurora"], html[data-bg="onyx-gold"], html:not([data-bg])) .input,
+:is(html[data-bg="onyx-aurora"], html[data-bg="onyx-gold"], html:not([data-bg])) textarea.input,
+:is(html[data-bg="onyx-aurora"], html[data-bg="onyx-gold"], html:not([data-bg])) select.input {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: rgba(201, 162, 39, 0.22);
+  color: #F1ECE0;
+}
+:is(html[data-bg="onyx-aurora"], html[data-bg="onyx-gold"], html:not([data-bg])) .input::placeholder { color: rgba(236, 230, 218, 0.4); }
 
-/* Keep dark text inside light surfaces (cards, inputs, tables, white panels) */
-html[data-bg="onyx-aurora"] .card .text-navy-dark, html[data-bg="onyx-gold"] .card .text-navy-dark, html:not([data-bg]) .card .text-navy-dark,
-html[data-bg="onyx-aurora"] .bg-white .text-navy-dark, html[data-bg="onyx-gold"] .bg-white .text-navy-dark, html:not([data-bg]) .bg-white .text-navy-dark { color: #0C0B0A; }
-html[data-bg="onyx-aurora"] .card .text-slate-900, html[data-bg="onyx-gold"] .card .text-slate-900, html:not([data-bg]) .card .text-slate-900,
-html[data-bg="onyx-aurora"] .bg-white .text-slate-900, html[data-bg="onyx-gold"] .bg-white .text-slate-900, html:not([data-bg]) .bg-white .text-slate-900 { color: #0f172a; }
-html[data-bg="onyx-aurora"] .card .text-slate-800, html[data-bg="onyx-gold"] .card .text-slate-800, html:not([data-bg]) .card .text-slate-800,
-html[data-bg="onyx-aurora"] .bg-white .text-slate-800, html[data-bg="onyx-gold"] .bg-white .text-slate-800, html:not([data-bg]) .bg-white .text-slate-800 { color: #1e293b; }
-html[data-bg="onyx-aurora"] .card .text-slate-700, html[data-bg="onyx-gold"] .card .text-slate-700, html:not([data-bg]) .card .text-slate-700,
-html[data-bg="onyx-aurora"] .bg-white .text-slate-700, html[data-bg="onyx-gold"] .bg-white .text-slate-700, html:not([data-bg]) .bg-white .text-slate-700 { color: #334155; }
-html[data-bg="onyx-aurora"] .card .text-slate-600, html[data-bg="onyx-gold"] .card .text-slate-600, html:not([data-bg]) .card .text-slate-600,
-html[data-bg="onyx-aurora"] .bg-white .text-slate-600, html[data-bg="onyx-gold"] .bg-white .text-slate-600, html:not([data-bg]) .bg-white .text-slate-600 { color: #475569; }
-html[data-bg="onyx-aurora"] .card .text-slate-500, html[data-bg="onyx-gold"] .card .text-slate-500, html:not([data-bg]) .card .text-slate-500,
-html[data-bg="onyx-aurora"] .bg-white .text-slate-500, html[data-bg="onyx-gold"] .bg-white .text-slate-500, html:not([data-bg]) .bg-white .text-slate-500 { color: #64748b; }
-html[data-bg="onyx-aurora"] .card .text-slate-400, html[data-bg="onyx-gold"] .card .text-slate-400, html:not([data-bg]) .card .text-slate-400,
-html[data-bg="onyx-aurora"] .bg-white .text-slate-400, html[data-bg="onyx-gold"] .bg-white .text-slate-400, html:not([data-bg]) .bg-white .text-slate-400 { color: #94a3b8; }
-html[data-bg="onyx-aurora"] .card .text-brand-dark, html[data-bg="onyx-gold"] .card .text-brand-dark, html:not([data-bg]) .card .text-brand-dark,
-html[data-bg="onyx-aurora"] .bg-white .text-brand-dark, html[data-bg="onyx-gold"] .bg-white .text-brand-dark, html:not([data-bg]) .bg-white .text-brand-dark { color: #1C1A17; }
+/* Text → light (uniform; surfaces are dark too) */
+:is(html[data-bg="onyx-aurora"], html[data-bg="onyx-gold"], html:not([data-bg])) .text-navy,
+:is(html[data-bg="onyx-aurora"], html[data-bg="onyx-gold"], html:not([data-bg])) .text-navy-dark { color: #F5F0E4; }
+:is(html[data-bg="onyx-aurora"], html[data-bg="onyx-gold"], html:not([data-bg])) .text-slate-900 { color: #F1ECE0; }
+:is(html[data-bg="onyx-aurora"], html[data-bg="onyx-gold"], html:not([data-bg])) .text-slate-800 { color: #E7E1D5; }
+:is(html[data-bg="onyx-aurora"], html[data-bg="onyx-gold"], html:not([data-bg])) .text-slate-700 { color: #D8D2C6; }
+:is(html[data-bg="onyx-aurora"], html[data-bg="onyx-gold"], html:not([data-bg])) .text-slate-600 { color: #C6C0B4; }
+:is(html[data-bg="onyx-aurora"], html[data-bg="onyx-gold"], html:not([data-bg])) .text-slate-500 { color: #A8A296; }
+:is(html[data-bg="onyx-aurora"], html[data-bg="onyx-gold"], html:not([data-bg])) .text-slate-400 { color: #8C867C; }
+:is(html[data-bg="onyx-aurora"], html[data-bg="onyx-gold"], html:not([data-bg])) .text-brand { color: #E0BE45; }
+:is(html[data-bg="onyx-aurora"], html[data-bg="onyx-gold"], html:not([data-bg])) .text-brand-dark { color: #F2ECDF; }
+
+/* Borders / dividers → subtle light */
+:is(html[data-bg="onyx-aurora"], html[data-bg="onyx-gold"], html:not([data-bg])) .border-slate-100,
+:is(html[data-bg="onyx-aurora"], html[data-bg="onyx-gold"], html:not([data-bg])) .border-slate-200,
+:is(html[data-bg="onyx-aurora"], html[data-bg="onyx-gold"], html:not([data-bg])) .divide-slate-100 > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(255, 255, 255, 0.09);
+}
+
+/* Light tints → dark tints */
+:is(html[data-bg="onyx-aurora"], html[data-bg="onyx-gold"], html:not([data-bg])) .bg-slate-50,
+:is(html[data-bg="onyx-aurora"], html[data-bg="onyx-gold"], html:not([data-bg])) .bg-slate-100 { background-color: rgba(255, 255, 255, 0.06); }
+:is(html[data-bg="onyx-aurora"], html[data-bg="onyx-gold"], html:not([data-bg])) .bg-navy-50 { background-color: rgba(255, 255, 255, 0.045); }
+:is(html[data-bg="onyx-aurora"], html[data-bg="onyx-gold"], html:not([data-bg])) .bg-gold-50 { background-color: rgba(201, 162, 39, 0.14); }
 
 @media (prefers-reduced-motion: reduce) {
   html[data-bg="mesh"] body { animation: none; }
