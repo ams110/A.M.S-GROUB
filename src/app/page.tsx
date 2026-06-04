@@ -143,12 +143,12 @@ function LoginForm() {
       <div className="w-full max-w-sm animate-fade-up">
 
         {/* Card */}
-        <div className="overflow-hidden rounded-3xl shadow-2xl ring-1 ring-navy/10">
+        <div className="overflow-hidden rounded-3xl shadow-onyx ring-1 ring-navy/10">
 
-          {/* ── Navy header ─────────────────────────────────────────── */}
-          <div className="relative overflow-hidden bg-navy-dark px-8 py-10 text-center">
+          {/* ── Onyx header ─────────────────────────────────────────── */}
+          <div className="relative overflow-hidden bg-onyx-gradient px-8 py-10 text-center">
             {/* Decorative circles */}
-            <div className="pointer-events-none absolute -top-12 -left-12 h-40 w-40 rounded-full bg-white/5" />
+            <div className="pointer-events-none absolute -top-12 -left-12 h-40 w-40 rounded-full bg-gold/5" />
             <div className="pointer-events-none absolute -bottom-8 -right-8 h-32 w-32 rounded-full bg-gold/10" />
             <div className="pointer-events-none absolute top-1/2 left-1/4 h-20 w-20 -translate-y-1/2 rounded-full bg-white/3" />
 
@@ -157,14 +157,18 @@ function LoginForm() {
               <img
                 src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/logo.svg`}
                 alt="Â.M.Ŝ GROUP"
-                className="mx-auto mb-4 h-16 w-16 rounded-2xl shadow-lg ring-2 ring-gold/40"
+                className="mx-auto mb-4 h-16 w-16 rounded-2xl shadow-gold ring-2 ring-gold/50"
               />
-              <h1 className="text-2xl font-bold tracking-wide text-white">Â.M.Ŝ GROUP</h1>
+              <h1 className="text-2xl font-bold tracking-wide text-white">
+                Â.M.Ŝ <span className="text-gradient-gold">GROUP</span>
+              </h1>
               <p className="mt-1 text-xs font-medium uppercase tracking-widest text-gold/80">
                 פורטל הזמנות סיטונאי
               </p>
             </div>
           </div>
+          {/* Gold hairline */}
+          <div className="h-px w-full hairline-gold" />
 
           {/* ── Form panel ──────────────────────────────────────────── */}
           <div className="bg-white px-8 py-7">

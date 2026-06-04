@@ -48,11 +48,13 @@ export default function AdminLayout({
 
   return (
     <div className="container-app py-8">
-      <div className="mb-6 border-b border-slate-200 pb-4">
+      <div className="mb-6 border-b border-navy/10 pb-4">
         <div className="mb-3 flex items-center gap-3">
-          <h1 className="text-xl font-bold text-navy-dark">ניהול</h1>
+          <h1 className="text-xl font-bold text-navy-dark">
+            לוח <span className="text-gradient-gold">ניהול</span>
+          </h1>
           {isSuperAdmin && (
-            <span className="rounded-full bg-gold/15 px-2.5 py-0.5 text-xs font-semibold text-gold-dark border border-gold/30">
+            <span className="rounded-full border border-gold/30 bg-gold/10 px-2.5 py-0.5 text-xs font-semibold text-gold-dark">
               מנהל ראשי
             </span>
           )}
@@ -64,8 +66,8 @@ export default function AdminLayout({
               href={href}
               className={`shrink-0 whitespace-nowrap rounded-xl px-3 py-2 text-sm font-medium transition-all duration-150 ${
                 isActive(href, exact)
-                  ? "bg-navy text-white shadow-sm"
-                  : "text-slate-600 hover:bg-navy-50 hover:text-navy"
+                  ? "bg-gold-gradient text-navy-dark shadow-gold"
+                  : "text-slate-600 hover:bg-gold-50 hover:text-navy"
               }`}
             >
               {label}
