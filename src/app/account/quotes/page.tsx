@@ -51,7 +51,8 @@ export default function MyQuotesPage() {
 
   return (
     <div className="container-app py-10">
-      <h1 className="mb-4 text-2xl font-bold">הצעות המחיר שלי</h1>
+      <p className="eyebrow mb-1.5">הצעות מותאמות עבורך</p>
+      <h1 className="mb-4 text-3xl font-extrabold tracking-tight text-navy-dark">הצעות המחיר שלי</h1>
 
       {loading ? (
         <div className="card p-10 text-center text-slate-500">טוען…</div>

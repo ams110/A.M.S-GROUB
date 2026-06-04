@@ -1,8 +1,16 @@
 import type { Metadata } from "next";
+import { Heebo } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/components/CartProvider";
 import AuthGuard from "@/components/AuthGuard";
 import { ToastProvider } from "@/components/Toast";
+
+const heebo = Heebo({
+  subsets: ["hebrew", "latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+  variable: "--font-heebo",
+  display: "swap",
+});
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
@@ -17,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="he" dir="rtl">
+    <html lang="he" dir="rtl" className={heebo.variable}>
       <head>
         <link rel="manifest" href={`${basePath}/manifest.json`} />
         <meta name="theme-color" content="#0C0B0A" />

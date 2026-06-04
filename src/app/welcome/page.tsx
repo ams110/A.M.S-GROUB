@@ -4,16 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useProfile } from "@/lib/auth";
 
-// Pre-computed at module load time so renders stay pure (no Math.random() in JSX)
-const STARS = Array.from({ length: 30 }, () => ({
-  w: Math.random() * 3 + 1,
-  h: Math.random() * 3 + 1,
-  top: `${Math.random() * 100}%`,
-  left: `${Math.random() * 100}%`,
-  dur: `${2 + Math.random() * 3}s`,
-  delay: `${Math.random() * 2}s`,
-}));
-
 export default function WelcomePage() {
   const router = useRouter();
   const { profile, email, ready } = useProfile();
@@ -30,9 +20,9 @@ export default function WelcomePage() {
       return;
     }
 
-    const t1 = setTimeout(() => setPhase("show"), 100);
-    const t2 = setTimeout(() => setPhase("exit"), 2800);
-    const t3 = setTimeout(() => router.replace(dest), 3300);
+    const t1 = setTimeout(() => setPhase("show"), 80);
+    const t2 = setTimeout(() => setPhase("exit"), 2200);
+    const t3 = setTimeout(() => router.replace(dest), 2700);
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
@@ -83,24 +73,21 @@ export default function WelcomePage() {
         ))}
       </div>
 
-      {/* Star particles */}
-      <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
-        {STARS.map((s, i) => (
-          <div
-            key={i}
-            style={{
-              position: "absolute",
-              width: s.w,
-              height: s.h,
-              borderRadius: "50%",
-              background: "rgba(255,255,255,0.6)",
-              top: s.top,
-              left: s.left,
-              animation: `twinkle ${s.dur} ${s.delay} ease-in-out infinite alternate`,
-            }}
-          />
-        ))}
-      </div>
+      {/* Subtle gold hairline accents */}
+      <div
+        style={{
+          position: "absolute",
+          top: "50%",
+          left: 0,
+          right: 0,
+          height: 1,
+          background:
+            "linear-gradient(90deg, transparent, rgba(201,162,39,0.35), transparent)",
+          transform: "translateY(-120px)",
+          opacity: phase === "show" ? 1 : 0,
+          transition: "opacity 1s 0.3s ease",
+        }}
+      />
 
       {/* Main content */}
       <div
@@ -182,11 +169,12 @@ export default function WelcomePage() {
         {/* Tagline */}
         <p
           style={{
-            fontSize: "1rem",
-            color: "rgba(255,255,255,0.65)",
+            fontSize: "0.95rem",
+            color: "rgba(201,162,39,0.85)",
             marginBottom: "2.5rem",
-            letterSpacing: "0.08em",
+            letterSpacing: "0.18em",
             textTransform: "uppercase",
+            fontWeight: 600,
             animation: "slideUp 0.8s 0.35s both",
           }}
         >

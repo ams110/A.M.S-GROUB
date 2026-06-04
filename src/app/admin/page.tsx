@@ -115,10 +115,11 @@ export default function AdminDashboard() {
           <Link
             key={c.label}
             href={c.href}
-            className="card p-5 transition hover:shadow-md"
+            className="card card-hover group relative overflow-hidden p-5"
           >
-            <p className="text-sm text-slate-500">{c.label}</p>
-            <p className={`mt-2 text-2xl font-bold ${c.accent}`}>{c.value}</p>
+            <span className="absolute inset-x-0 top-0 h-1 bg-gold-gradient opacity-70 transition-opacity group-hover:opacity-100" />
+            <p className="text-sm font-medium text-slate-500">{c.label}</p>
+            <p className={`mt-2 text-3xl font-extrabold tracking-tight ${c.accent}`}>{c.value}</p>
             {c.hint && (
               <p className="mt-1 text-xs text-slate-400">{c.hint}</p>
             )}

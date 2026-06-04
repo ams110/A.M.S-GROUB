@@ -44,7 +44,8 @@ export default function MyOrdersPage() {
 
   return (
     <div className="container-app py-10">
-      <h1 className="mb-2 text-2xl font-bold">ההזמנות שלי</h1>
+      <p className="eyebrow mb-1.5">מעקב הזמנות</p>
+      <h1 className="mb-2 text-3xl font-extrabold tracking-tight text-navy-dark">ההזמנות שלי</h1>
       {profile && profile.status !== "approved" && (
         <p className="mb-6 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800">
           סטטוס חשבון: <strong>{PROFILE_STATUS_HE[profile.status]}</strong>. ניתן יהיה

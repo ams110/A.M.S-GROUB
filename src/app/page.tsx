@@ -139,40 +139,73 @@ function LoginForm() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4 py-8">
-      <div className="w-full max-w-sm animate-fade-up">
+    <div className="grid min-h-screen lg:grid-cols-2">
 
-        {/* Card */}
-        <div className="overflow-hidden rounded-3xl shadow-onyx ring-1 ring-navy/10">
+      {/* ── Brand panel (desktop) ───────────────────────────────────── */}
+      <div className="relative hidden overflow-hidden bg-onyx-gradient lg:flex lg:flex-col lg:justify-between lg:p-12">
+        <div className="pointer-events-none absolute -top-24 -right-24 h-96 w-96 rounded-full bg-gold/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-32 -left-24 h-96 w-96 rounded-full bg-gold/5 blur-3xl" />
 
-          {/* ── Onyx header ─────────────────────────────────────────── */}
-          <div className="relative overflow-hidden bg-onyx-gradient px-8 py-10 text-center">
-            {/* Decorative circles */}
-            <div className="pointer-events-none absolute -top-12 -left-12 h-40 w-40 rounded-full bg-gold/5" />
-            <div className="pointer-events-none absolute -bottom-8 -right-8 h-32 w-32 rounded-full bg-gold/10" />
-            <div className="pointer-events-none absolute top-1/2 left-1/4 h-20 w-20 -translate-y-1/2 rounded-full bg-white/3" />
+        <div className="relative z-10 flex items-center gap-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/logo.svg`}
+            alt="Â.M.Ŝ GROUP"
+            className="h-11 w-11 rounded-xl ring-2 ring-gold/50 shadow-gold"
+          />
+          <span className="text-xl font-extrabold tracking-tight text-white">
+            Â.M.Ŝ <span className="text-gradient-gold">GROUP</span>
+          </span>
+        </div>
 
-            <div className="relative z-10">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/logo.svg`}
-                alt="Â.M.Ŝ GROUP"
-                className="mx-auto mb-4 h-16 w-16 rounded-2xl shadow-gold ring-2 ring-gold/50"
-              />
-              <h1 className="text-2xl font-bold tracking-wide text-white">
-                Â.M.Ŝ <span className="text-gradient-gold">GROUP</span>
-              </h1>
-              <p className="mt-1 text-xs font-medium uppercase tracking-widest text-gold/80">
-                פורטל הזמנות סיטונאי
-              </p>
-            </div>
+        <div className="relative z-10 max-w-md">
+          <p className="eyebrow mb-4 text-gold/80">פורטל סיטונאי · היבואן הרשמי</p>
+          <h2 className="text-4xl font-extrabold leading-tight text-white">
+            כל הקטלוג של <span className="text-gradient-gold">Tiandy</span>,
+            <br />במקום אחד.
+          </h2>
+          <p className="mt-4 text-base leading-relaxed text-white/60">
+            מחירי סיטונאות, מלאי בזמן אמת והזמנות מהירות — לסוחרים מורשים בלבד.
+          </p>
+          <ul className="mt-8 space-y-3">
+            {["מצלמות, מקליטים ובקרת כניסה", "מחירים מותאמים אישית", "מעקב הזמנות והצעות מחיר"].map((t) => (
+              <li key={t} className="flex items-center gap-3 text-sm text-white/75">
+                <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-gold-gradient text-[11px] font-bold text-navy-dark">✓</span>
+                {t}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <p className="relative z-10 text-xs text-white/35">© {new Date().getFullYear()} Â.M.Ŝ GROUP · כל הזכויות שמורות</p>
+      </div>
+
+      {/* ── Form panel ──────────────────────────────────────────────── */}
+      <div className="flex items-center justify-center bg-white px-5 py-10 sm:px-8">
+        <div className="w-full max-w-sm animate-fade-up">
+
+          {/* Mobile brand head */}
+          <div className="mb-8 text-center lg:hidden">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/logo.svg`}
+              alt="Â.M.Ŝ GROUP"
+              className="mx-auto mb-3 h-16 w-16 rounded-2xl shadow-gold ring-2 ring-gold/50"
+            />
+            <h1 className="text-2xl font-extrabold tracking-tight text-navy-dark">
+              Â.M.Ŝ <span className="text-gradient-gold">GROUP</span>
+            </h1>
+            <p className="eyebrow mt-1">פורטל הזמנות סיטונאי</p>
           </div>
           {/* Gold hairline */}
           <div className="h-px w-full hairline-gold" />
 
-          {/* ── Form panel ──────────────────────────────────────────── */}
-          <div className="bg-white px-8 py-7">
+          <div className="mb-6 hidden lg:block">
+            <h1 className="text-2xl font-extrabold tracking-tight text-navy-dark">ברוכים הבאים</h1>
+            <p className="mt-1 text-sm text-slate-500">היכנסו לחשבון הסיטונאי שלכם</p>
+          </div>
 
+          <div>
             {/* Passkey button */}
             {passkeyAvailable && (
               <button

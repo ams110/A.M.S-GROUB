@@ -22,7 +22,8 @@ export default function CartPage() {
 
   return (
     <div className="container-app py-10">
-      <h1 className="mb-6 text-2xl font-bold">עגלת קניות</h1>
+      <p className="eyebrow mb-1.5">סל ההזמנה שלך</p>
+      <h1 className="mb-6 text-3xl font-extrabold tracking-tight text-navy-dark">עגלת קניות</h1>
       <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
         <div className="space-y-3">
           {lines.map((l) => (

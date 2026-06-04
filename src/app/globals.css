@@ -6,21 +6,34 @@
   color-scheme: light;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   @apply bg-navy-50 text-slate-900 antialiased;
+  font-family: var(--font-heebo), system-ui, "Segoe UI", Arial, sans-serif;
+  letter-spacing: -0.01em;
   background-image:
-    radial-gradient(circle at 0% 0%, rgba(201, 162, 39, 0.06), transparent 38%),
-    radial-gradient(circle at 100% 0%, rgba(12, 11, 10, 0.04), transparent 32%);
+    radial-gradient(circle at 0% 0%, rgba(201, 162, 39, 0.05), transparent 36%),
+    radial-gradient(circle at 100% 0%, rgba(12, 11, 10, 0.035), transparent 30%);
   background-attachment: fixed;
 }
 
+/* Premium heading rhythm */
+h1, h2, h3 {
+  letter-spacing: -0.02em;
+}
+
 .container-app {
-  @apply mx-auto w-full max-w-6xl px-4;
+  @apply mx-auto w-full max-w-6xl px-4 sm:px-6;
 }
 
 /* ── Buttons ─────────────────────────────────────────────────────── */
 .btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 active:scale-[0.97];
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200
+    disabled:cursor-not-allowed disabled:opacity-50 active:scale-[0.97]
+    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/40 focus-visible:ring-offset-2;
 }
 .btn-primary {
   @apply btn bg-navy text-white hover:bg-navy-mid shadow-sm hover:shadow-md;
@@ -31,13 +44,16 @@ body {
 .btn-outline {
   @apply btn border border-navy/15 bg-white text-navy hover:border-gold/50 hover:bg-gold-50;
 }
+.btn-lg {
+  @apply px-5 py-3 text-base rounded-2xl;
+}
 
 /* ── Cards ───────────────────────────────────────────────────────── */
 .card {
-  @apply rounded-2xl border border-navy/10 bg-white shadow-sm transition-all duration-200;
+  @apply rounded-2xl border border-navy/10 bg-white shadow-soft transition-all duration-200;
 }
 .card-hover {
-  @apply hover:-translate-y-0.5 hover:border-gold/40 hover:shadow-gold;
+  @apply hover:-translate-y-1 hover:border-gold/40 hover:shadow-gold;
 }
 
 /* ── Form elements ───────────────────────────────────────────────── */
@@ -59,10 +75,22 @@ body {
 
 /* ── Decorative helpers ──────────────────────────────────────────── */
 .text-gradient-gold {
-  @apply bg-gold-gradient bg-clip-text text-transparent;
+  background-image: linear-gradient(135deg, #E6C24E 0%, #C9A227 55%, #A8821C 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 .hairline-gold {
   background-image: linear-gradient(90deg, transparent, rgba(201, 162, 39, 0.7), transparent);
+}
+/* Glassy floating surface (pill nav, etc.) */
+.glass-onyx {
+  background: rgba(12, 11, 10, 0.82);
+  backdrop-filter: saturate(160%) blur(14px);
+  -webkit-backdrop-filter: saturate(160%) blur(14px);
+}
+.eyebrow {
+  @apply text-xs font-semibold uppercase tracking-[0.18em] text-gold-dark;
 }
 
 /* ── Animations ──────────────────────────────────────────────────── */

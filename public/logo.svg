@@ -1,37 +1,51 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
   <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#0b5cad"/>
-      <stop offset="100%" style="stop-color:#073f78"/>
+    <linearGradient id="onyx" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#26221C"/>
+      <stop offset="55%" stop-color="#14110D"/>
+      <stop offset="100%" stop-color="#0A0908"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F4DD92"/>
+      <stop offset="45%" stop-color="#D4AF37"/>
+      <stop offset="100%" stop-color="#A8821C"/>
+    </linearGradient>
+    <linearGradient id="goldsoft" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#D4AF37" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#D4AF37"/>
+      <stop offset="100%" stop-color="#D4AF37" stop-opacity="0"/>
     </linearGradient>
   </defs>
 
-  <!-- Background rounded square -->
-  <rect width="200" height="200" rx="36" fill="url(#bg)"/>
+  <!-- Onyx rounded square -->
+  <rect width="200" height="200" rx="42" fill="url(#onyx)"/>
 
-  <!-- Decorative accent bar -->
-  <rect x="24" y="148" width="152" height="5" rx="2.5" fill="white" opacity="0.25"/>
+  <!-- Inner gold hairline frame -->
+  <rect x="9" y="9" width="182" height="182" rx="34" fill="none" stroke="url(#gold)" stroke-opacity="0.55" stroke-width="2"/>
 
-  <!-- ÂMŜ letters -->
+  <!-- ÂMŜ monogram -->
   <text
-    x="100" y="118"
-    font-family="system-ui, Arial Black, sans-serif"
-    font-weight="900"
-    font-size="78"
-    fill="white"
+    x="100" y="116"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-weight="700"
+    font-size="76"
+    fill="url(#gold)"
     text-anchor="middle"
-    letter-spacing="-2"
+    letter-spacing="-1"
   >ÂMŜ</text>
+
+  <!-- Gold accent bar -->
+  <rect x="44" y="138" width="112" height="3" rx="1.5" fill="url(#goldsoft)"/>
 
   <!-- GROUP label -->
   <text
     x="100" y="162"
     font-family="system-ui, Arial, sans-serif"
-    font-weight="500"
-    font-size="22"
-    fill="white"
-    opacity="0.75"
+    font-weight="600"
+    font-size="19"
+    fill="#D4AF37"
+    fill-opacity="0.85"
     text-anchor="middle"
-    letter-spacing="6"
+    letter-spacing="7"
   >GROUP</text>
 </svg>

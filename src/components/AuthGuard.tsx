@@ -66,7 +66,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   return (
     <>
       <Header />
-      <main className="min-h-[calc(100vh-4rem)] pb-16 md:pb-0">{children}</main>
+      <main className="min-h-[calc(100vh-4rem)] pb-28 md:pb-0">{children}</main>
       <footer className="bg-onyx-gradient pb-6 text-center text-sm text-white/40 print:hidden">
         <div className="h-px w-full hairline-gold" />
         <div className="container-app pt-6">

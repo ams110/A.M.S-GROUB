@@ -120,7 +120,8 @@ export default function CheckoutPage() {
 
   return (
     <div className="container-app py-10">
-      <h1 className="mb-6 text-2xl font-bold">סיום הזמנה ותשלום</h1>
+      <p className="eyebrow mb-1.5">השלב האחרון</p>
+      <h1 className="mb-6 text-3xl font-extrabold tracking-tight text-navy-dark">סיום הזמנה ותשלום</h1>
 
       {notApproved && (
         <div className="mb-6 rounded-lg bg-amber-50 px-4 py-4 text-sm text-amber-800">
