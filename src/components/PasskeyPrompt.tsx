@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 import { useProfile } from "@/lib/auth";
 import { useToast } from "@/components/Toast";
-import { createClient } from "@/lib/supabase/client";
 import {
   isPlatformAuthenticatorAvailable,
   hasLocalPasskeyHint,
+  listPasskeys,
   registerPasskey,
 } from "@/lib/passkey";
 
@@ -39,17 +39,12 @@ export default function PasskeyPrompt() {
       const supported = await isPlatformAuthenticatorAvailable();
       if (cancelled || !supported) return;
 
-      // Confirm the account doesn't already have a server-side credential.
-      const supabase = createClient();
-      const { data } = await supabase
-        .from("profiles")
-        .select("passkey_credential_id")
-        .eq("id", userId)
-        .single();
-      if (cancelled) return;
-      if (data?.passkey_credential_id) {
-        // Enrolled elsewhere already — don't nag, but remember locally.
-        return;
+      // Don't nag if the account already has a registered passkey.
+      try {
+        const existing = await listPasskeys();
+        if (cancelled || existing.length > 0) return;
+      } catch {
+        /* if the check fails, fall through and offer enrolment */
       }
       // Small delay so it doesn't fight the welcome screen / first paint.
       setTimeout(() => !cancelled && setShow(true), 1200);

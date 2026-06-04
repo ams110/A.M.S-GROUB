@@ -6,12 +6,12 @@ import { useProfile } from "@/lib/auth";
 import { useToast } from "@/components/Toast";
 import {
   isPlatformAuthenticatorAvailable,
-  hasLocalPasskeyHint,
   registerPasskey,
   removePasskey,
+  listPasskeys,
+  type PasskeyInfo,
 } from "@/lib/passkey";
 import { isPushSupported, isSubscribed, enablePush, disablePush, sendTestPush } from "@/lib/push";
-import { createClient } from "@/lib/supabase/client";
 
 export default function SecurityPage() {
   const router = useRouter();
@@ -19,32 +19,39 @@ export default function SecurityPage() {
   const toast = useToast();
 
   const [supported, setSupported]   = useState(false);
-  const [hasPasskey, setHasPasskey] = useState(false);
+  const [passkeys, setPasskeys]     = useState<PasskeyInfo[]>([]);
+  const [loaded, setLoaded]         = useState(false);
   const [working, setWorking]       = useState(false);
+
+  const loadPasskeys = async () => {
+    try {
+      setPasskeys(await listPasskeys());
+    } catch {
+      /* ignore — show empty */
+    } finally {
+      setLoaded(true);
+    }
+  };
 
   useEffect(() => {
     if (!ready) return;
     if (!userId) { router.replace("/"); return; }
     isPlatformAuthenticatorAvailable().then(setSupported);
-    // Check DB for actual stored credential
-    const supabase = createClient();
-    supabase
-      .from("profiles")
-      .select("passkey_credential_id")
-      .eq("id", userId)
-      .single()
-      .then(({ data }) => setHasPasskey(!!data?.passkey_credential_id));
+    loadPasskeys();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, userId, router]);
 
   const handleRegister = async () => {
     setWorking(true);
     try {
       await registerPasskey();
-      setHasPasskey(true);
-      toast("טביעת האצבע נרשמה בהצלחה ✓");
+      await loadPasskeys();
+      toast("המכשיר נרשם בהצלחה ✓");
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      if (!msg.includes("cancel") && !msg.includes("NotAllowedError")) {
+      if (msg.includes("excludeCredentials") || msg.includes("already")) {
+        toast("המכשיר הזה כבר רשום", "info");
+      } else if (!msg.includes("cancel") && !msg.includes("NotAllowedError")) {
         toast(msg || "הרישום נכשל", "error");
       }
     } finally {
@@ -52,12 +59,13 @@ export default function SecurityPage() {
     }
   };
 
-  const handleRemove = async () => {
+  const handleRemove = async (id: string) => {
+    if (!confirm("להסיר את המכשיר הזה? לא תהיה אפשרות להתחבר ממנו בטביעת אצבע.")) return;
     setWorking(true);
     try {
-      await removePasskey();
-      setHasPasskey(false);
-      toast("טביעת האצבע הוסרה");
+      await removePasskey(id);
+      await loadPasskeys();
+      toast("המכשיר הוסר");
     } catch {
       toast("ההסרה נכשלה", "error");
     } finally {
@@ -89,43 +97,58 @@ export default function SecurityPage() {
           <p className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-700">
             המכשיר הנוכחי אינו תומך בכניסה ביומטרית.
           </p>
-        ) : hasPasskey ? (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-              <span className="text-lg">✓</span>
-              טביעת אצבע רשומה ופעילה על המכשיר הזה
-            </div>
-            <p className="text-sm text-slate-500">
-              רצונכם להסיר ולרשום מחדש? לחצו על הסרה ואז חזרו לרשום שוב.
-            </p>
-            <button
-              onClick={handleRemove}
-              disabled={working}
-              className="btn border border-rose-200 text-rose-600 hover:bg-rose-50"
-            >
-              {working ? "מסיר…" : "הסר טביעת אצבע"}
-            </button>
-          </div>
         ) : (
           <div className="space-y-3">
-            <p className="text-sm text-slate-600">
-              לא נרשמה טביעת אצבע למכשיר זה. לחצו להפעלה — המכשיר יבקש אישור ביומטרי.
-            </p>
+            {/* Registered devices */}
+            {loaded && passkeys.length > 0 && (
+              <ul className="space-y-2">
+                {passkeys.map((pk) => (
+                  <li
+                    key={pk.id}
+                    className="flex items-center justify-between gap-3 rounded-lg bg-emerald-50 px-4 py-3"
+                  >
+                    <div className="min-w-0">
+                      <p className="flex items-center gap-1.5 text-sm font-medium text-emerald-800">
+                        <span>✓</span>
+                        {pk.device_label || "מכשיר רשום"}
+                      </p>
+                      <p className="text-xs text-emerald-700/70">
+                        נרשם {new Date(pk.created_at).toLocaleDateString("he-IL")}
+                        {pk.last_used_at &&
+                          ` · שימוש אחרון ${new Date(pk.last_used_at).toLocaleDateString("he-IL")}`}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleRemove(pk.id)}
+                      disabled={working}
+                      className="shrink-0 text-sm text-rose-600 hover:underline"
+                    >
+                      הסרה
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {loaded && passkeys.length === 0 && (
+              <p className="text-sm text-slate-600">
+                לא נרשם עדיין אף מכשיר. לחצו להפעלה — המכשיר יבקש אישור ביומטרי.
+              </p>
+            )}
+
             <button
               onClick={handleRegister}
               disabled={working}
               className="btn-primary flex items-center gap-2"
             >
               <FingerprintIcon className="h-4 w-4" />
-              {working ? "ממתין לאישור…" : "הפעל כניסה עם טביעת אצבע"}
+              {working
+                ? "ממתין לאישור…"
+                : passkeys.length > 0
+                ? "הוספת מכשיר נוסף"
+                : "הפעל כניסה עם טביעת אצבע"}
             </button>
           </div>
-        )}
-
-        {hasLocalPasskeyHint() && !hasPasskey && (
-          <p className="text-xs text-slate-400">
-            שים לב: כניסה ביומטרית קיימת ב localStorage אך לא בשרת. יש לרשום מחדש.
-          </p>
         )}
       </div>
 
