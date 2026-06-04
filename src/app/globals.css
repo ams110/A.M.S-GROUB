@@ -8,6 +8,10 @@
 
 body {
   @apply bg-navy-50 text-slate-900 antialiased;
+  background-image:
+    radial-gradient(circle at 0% 0%, rgba(201, 162, 39, 0.06), transparent 38%),
+    radial-gradient(circle at 100% 0%, rgba(12, 11, 10, 0.04), transparent 32%);
+  background-attachment: fixed;
 }
 
 .container-app {
@@ -22,15 +26,18 @@ body {
   @apply btn bg-navy text-white hover:bg-navy-mid shadow-sm hover:shadow-md;
 }
 .btn-gold {
-  @apply btn bg-gold text-navy-dark hover:bg-gold-dark shadow-sm hover:shadow-gold;
+  @apply btn bg-gold-gradient text-navy-dark shadow-gold hover:shadow-gold-lg;
 }
 .btn-outline {
-  @apply btn border border-navy/20 bg-white text-navy hover:bg-navy-50 hover:border-navy/30;
+  @apply btn border border-navy/15 bg-white text-navy hover:border-gold/50 hover:bg-gold-50;
 }
 
 /* ── Cards ───────────────────────────────────────────────────────── */
 .card {
-  @apply rounded-2xl border border-slate-100 bg-white shadow-sm;
+  @apply rounded-2xl border border-navy/10 bg-white shadow-sm transition-all duration-200;
+}
+.card-hover {
+  @apply hover:-translate-y-0.5 hover:border-gold/40 hover:shadow-gold;
 }
 
 /* ── Form elements ───────────────────────────────────────────────── */
@@ -38,7 +45,7 @@ body {
   @apply w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm outline-none
     transition-all duration-150
     hover:border-slate-300
-    focus:border-navy focus:ring-2 focus:ring-navy/15;
+    focus:border-gold focus:ring-2 focus:ring-gold/25;
 }
 .label {
   @apply mb-1.5 block text-sm font-medium text-slate-700;
@@ -48,6 +55,14 @@ body {
 }
 .badge {
   @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+}
+
+/* ── Decorative helpers ──────────────────────────────────────────── */
+.text-gradient-gold {
+  @apply bg-gold-gradient bg-clip-text text-transparent;
+}
+.hairline-gold {
+  background-image: linear-gradient(90deg, transparent, rgba(201, 162, 39, 0.7), transparent);
 }
 
 /* ── Animations ──────────────────────────────────────────────────── */

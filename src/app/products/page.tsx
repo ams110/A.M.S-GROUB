@@ -93,7 +93,9 @@ function Catalog() {
 
   return (
     <div className="container-app py-8">
-      <h1 className="mb-4 text-2xl font-bold">קטלוג מוצרים</h1>
+      <h1 className="mb-4 text-2xl font-bold text-navy-dark">
+        קטלוג <span className="text-gradient-gold">מוצרים</span>
+      </h1>
 
       {!showPrice && (
         <p className="mb-5 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800">

@@ -74,14 +74,17 @@ function BottomNavItem({
   return (
     <Link
       href={href}
-      className={`flex flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors duration-150 ${
-        active ? "text-gold" : "text-white/40 hover:text-white/70"
+      className={`relative flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium transition-colors duration-150 ${
+        active ? "text-gold" : "text-white/45 hover:text-white/80"
       }`}
     >
+      {active && (
+        <span className="absolute top-0 h-0.5 w-7 rounded-full bg-gold-gradient" />
+      )}
       <span className="relative">
         {icon}
         {badge != null && badge > 0 && (
-          <span className="absolute -top-1 -right-2 grid h-4 min-w-4 place-items-center rounded-full bg-gold px-0.5 text-[10px] font-bold text-navy-dark">
+          <span className="absolute -top-1 -right-2 grid h-4 min-w-4 place-items-center rounded-full bg-gold-gradient px-0.5 text-[10px] font-bold text-navy-dark">
             {badge > 99 ? "99+" : badge}
           </span>
         )}
@@ -107,10 +110,10 @@ export default function Header() {
   };
 
   const navLinkClass = (active: boolean) =>
-    `text-sm font-medium transition-colors duration-150 px-3 py-1.5 rounded-lg ${
+    `relative text-sm font-medium transition-colors duration-150 px-3 py-1.5 rounded-lg ${
       active
-        ? "text-gold bg-white/10"
-        : "text-white/70 hover:text-white hover:bg-white/8"
+        ? "text-gold bg-white/8"
+        : "text-white/65 hover:text-white hover:bg-white/8"
     }`;
 
   const fourthTab = isAdmin
@@ -122,7 +125,7 @@ export default function Header() {
   return (
     <>
       {/* ── Top bar ────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-navy-dark shadow-navy print:hidden">
+      <header className="sticky top-0 z-40 bg-onyx-gradient shadow-onyx print:hidden">
         <div className="container-app flex h-16 items-center justify-between gap-4">
 
           {/* Logo */}
@@ -131,9 +134,11 @@ export default function Header() {
             <img
               src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/logo.svg`}
               alt="A.M.S GROUP"
-              className="h-9 w-9 rounded-xl shadow-sm transition-transform duration-200 group-hover:scale-105"
+              className="h-9 w-9 rounded-xl ring-1 ring-gold/40 shadow-sm transition-transform duration-200 group-hover:scale-105"
             />
-            <span className="text-lg font-bold text-white tracking-wide">Â.M.Ŝ GROUP</span>
+            <span className="text-lg font-bold tracking-wide text-white">
+              Â.M.Ŝ <span className="text-gradient-gold">GROUP</span>
+            </span>
           </Link>
 
           {/* Desktop nav */}
@@ -181,10 +186,10 @@ export default function Header() {
 
           {/* Desktop actions */}
           <div className="hidden items-center gap-3 md:flex">
-            <Link href="/cart" className="relative rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-white/15 hover:border-white/30">
+            <Link href="/cart" className="relative rounded-xl border border-white/15 bg-white/8 px-4 py-2 text-sm font-semibold text-white transition-all hover:border-gold/40 hover:bg-white/12">
               עגלה
               {count > 0 && (
-                <span className="absolute -top-2 -left-2 grid h-5 min-w-5 place-items-center rounded-full bg-gold px-1 text-xs font-bold text-navy-dark">
+                <span className="absolute -top-2 -left-2 grid h-5 min-w-5 place-items-center rounded-full bg-gold-gradient px-1 text-xs font-bold text-navy-dark">
                   {count}
                 </span>
               )}
@@ -193,7 +198,7 @@ export default function Header() {
               email ? (
                 <button
                   onClick={signOut}
-                  className="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white/80 transition-all hover:bg-white/15 hover:text-white"
+                  className="rounded-xl border border-white/15 bg-white/8 px-4 py-2 text-sm font-semibold text-white/75 transition-all hover:bg-white/12 hover:text-white"
                 >
                   יציאה
                 </button>
@@ -209,26 +214,29 @@ export default function Header() {
               email ? (
                 <button
                   onClick={signOut}
-                  className="rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white/80"
+                  className="rounded-lg border border-white/15 bg-white/8 px-3 py-1.5 text-xs font-semibold text-white/75"
                 >
                   יציאה
                 </button>
               ) : (
-                <Link href="/" className="rounded-lg bg-gold px-3 py-1.5 text-xs font-bold text-navy-dark">
+                <Link href="/" className="rounded-lg bg-gold-gradient px-3 py-1.5 text-xs font-bold text-navy-dark">
                   כניסה
                 </Link>
               )
             )}
           </div>
         </div>
+        {/* Gold hairline accent */}
+        <div className="h-px w-full hairline-gold" />
       </header>
 
       {/* ── Mobile bottom nav ──────────────────────────────────────── */}
       <nav
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-navy-dark md:hidden print:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 bg-onyx-gradient md:hidden print:hidden"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
-        <div className="grid h-16 grid-cols-4">
+        <div className="h-px w-full hairline-gold" />
+        <div className="grid h-16 grid-cols-4 items-center">
           <BottomNavItem
             href={isAdmin ? "/admin" : email ? "/products" : "/"}
             label="ראשי"
@@ -247,13 +255,22 @@ export default function Header() {
             active={pathname.startsWith("/products") || pathname.startsWith("/product")}
             icon={<GridIcon />}
           />
-          <BottomNavItem
-            href="/cart"
-            label="עגלה"
-            active={pathname === "/cart"}
-            icon={<CartIcon />}
-            badge={count}
-          />
+
+          {/* Elevated cart FAB */}
+          <Link href="/cart" className="relative -mt-7 flex flex-col items-center">
+            <span className="grid h-14 w-14 place-items-center rounded-2xl bg-gold-gradient text-navy-dark shadow-gold-lg ring-4 ring-navy-dark transition-transform active:scale-95">
+              <CartIcon />
+              {count > 0 && (
+                <span className="absolute -top-1 right-1 grid h-5 min-w-5 place-items-center rounded-full bg-wine px-1 text-[10px] font-bold text-white ring-2 ring-navy-dark">
+                  {count > 99 ? "99+" : count}
+                </span>
+              )}
+            </span>
+            <span className={`mt-0.5 text-[11px] font-semibold ${pathname === "/cart" ? "text-gold" : "text-white/60"}`}>
+              עגלה
+            </span>
+          </Link>
+
           <BottomNavItem {...fourthTab} />
         </div>
       </nav>

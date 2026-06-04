@@ -20,7 +20,7 @@ export default function RootLayout({
     <html lang="he" dir="rtl">
       <head>
         <link rel="manifest" href={`${basePath}/manifest.json`} />
-        <meta name="theme-color" content="#0D1B36" />
+        <meta name="theme-color" content="#0C0B0A" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />

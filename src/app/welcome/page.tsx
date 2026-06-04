@@ -51,7 +51,7 @@ export default function WelcomePage() {
         alignItems: "center",
         justifyContent: "center",
         overflow: "hidden",
-        background: "linear-gradient(135deg, #0D1B36 0%, #1B2D5B 60%, #0D1B36 100%)",
+        background: "linear-gradient(135deg, #0C0B0A 0%, #1C1A17 55%, #0C0B0A 100%)",
         opacity: phase === "exit" ? 0 : 1,
         transition: phase === "exit" ? "opacity 0.5s ease-in" : "none",
       }}
@@ -73,7 +73,7 @@ export default function WelcomePage() {
               height: orb.size,
               borderRadius: "50%",
               background:
-                "radial-gradient(circle, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0) 70%)",
+                "radial-gradient(circle, rgba(201,162,39,0.10) 0%, rgba(201,162,39,0) 70%)",
               top: orb.top,
               left: (orb as any).left,
               right: (orb as any).right,

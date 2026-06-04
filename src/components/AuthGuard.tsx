@@ -43,15 +43,15 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   // Still checking auth state
   if (!ready) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-navy-dark">
+      <div className="flex min-h-screen items-center justify-center bg-onyx-gradient">
         <div className="text-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={`${basePath}/logo.svg`}
             alt="Â.M.Ŝ GROUP"
-            className="mx-auto mb-4 h-16 w-16 rounded-2xl animate-pulse"
+            className="mx-auto mb-4 h-16 w-16 rounded-2xl ring-2 ring-gold/50 shadow-gold animate-pulse"
           />
-          <p className="text-white/50 text-sm">טוען…</p>
+          <p className="text-sm text-gold/70">טוען…</p>
         </div>
       </div>
     );
@@ -67,9 +67,10 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     <>
       <Header />
       <main className="min-h-[calc(100vh-4rem)] pb-16 md:pb-0">{children}</main>
-      <footer className="border-t border-navy/10 bg-navy-dark py-6 text-center text-sm text-white/40 print:hidden">
-        <div className="container-app">
-          Â.M.Ŝ GROUP — פורטל סיטונאי ליבואן הרשמי · © {new Date().getFullYear()}
+      <footer className="bg-onyx-gradient pb-6 text-center text-sm text-white/40 print:hidden">
+        <div className="h-px w-full hairline-gold" />
+        <div className="container-app pt-6">
+          <span className="text-gradient-gold font-semibold">Â.M.Ŝ GROUP</span> — פורטל סיטונאי ליבואן הרשמי · © {new Date().getFullYear()}
         </div>
       </footer>
     </>
