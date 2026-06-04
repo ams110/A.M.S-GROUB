@@ -1,4 +1,4 @@
-import { render, act, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { CartProvider, useCart } from "@/components/CartProvider";
 
@@ -122,20 +122,81 @@ describe("CartProvider", () => {
     expect(screen.getByTestId("count").textContent).toBe("0");
   });
 
-  it("clamps qty to stock maximum", async () => {
+  it("clamps qty to stock maximum when adding repeatedly", async () => {
     const user = userEvent.setup();
     render(<Wrapper />);
-    await user.click(screen.getByText("add-p1"));
-    // stock is 10, try to set qty to 99 — should clamp to 10
-    await act(async () => {
-      // use setQty to 99 — but our button sets to 5, so let's just verify clamp works
-      // via the add-x2 multiple times reaching stock limit
-    });
-    // simple: count should never exceed stock (10)
     for (let i = 0; i < 15; i++) {
       await user.click(screen.getByText("add-p1"));
     }
     expect(Number(screen.getByTestId("count").textContent)).toBeLessThanOrEqual(10);
+  });
+
+  it("clamps setQty above stock to stock value", async () => {
+    const user = userEvent.setup();
+
+    function HighQtyWrapper() {
+      return (
+        <CartProvider>
+          <HighQtyDisplay />
+        </CartProvider>
+      );
+    }
+    function HighQtyDisplay() {
+      const { count, add, setQty } = useCart();
+      return (
+        <div>
+          <span data-testid="hcount">{count}</span>
+          <button onClick={() => add({ product_id: "p2", slug: "cam-2", name_he: "מצ׳", price: 50, image_url: null, min_order_qty: 1, stock: 5 }, 1)}>add-p2</button>
+          <button onClick={() => setQty("p2", 999)}>setQty-999</button>
+        </div>
+      );
+    }
+
+    render(<HighQtyWrapper />);
+    await user.click(screen.getByText("add-p2"));
+    await user.click(screen.getByText("setQty-999"));
+    expect(Number(screen.getByTestId("hcount").textContent)).toBe(5);
+  });
+
+  it("clamps qty up to min_order_qty when qty is below minimum", async () => {
+    function MinQtyWrapper() {
+      return (
+        <CartProvider>
+          <MinQtyDisplay />
+        </CartProvider>
+      );
+    }
+    function MinQtyDisplay() {
+      const { count, add } = useCart();
+      return (
+        <div>
+          <span data-testid="mcount">{count}</span>
+          <button onClick={() => add({ product_id: "p3", slug: "cam-3", name_he: "מצלמה", price: 200, image_url: null, min_order_qty: 3, stock: 20 }, 1)}>add-p3</button>
+        </div>
+      );
+    }
+
+    const user = userEvent.setup();
+    render(<MinQtyWrapper />);
+    await user.click(screen.getByText("add-p3"));
+    expect(Number(screen.getByTestId("mcount").textContent)).toBe(3);
+  });
+
+  it("persists cart to localStorage and restores on mount", async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(<Wrapper />);
+    await user.click(screen.getByText("add-p1"));
+    await user.click(screen.getByText("add-p1"));
+    unmount();
+
+    render(<Wrapper />);
+    expect(Number(screen.getByTestId("count").textContent)).toBe(2);
+  });
+
+  it("handles corrupted localStorage gracefully", () => {
+    localStorageMock.setItem("tiandy_cart_v1", "not-valid-json{{{");
+    render(<Wrapper />);
+    expect(screen.getByTestId("count").textContent).toBe("0");
   });
 
   it("throws if useCart is used outside CartProvider", () => {

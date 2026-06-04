@@ -126,12 +126,18 @@ export async function authenticateWithPasskey(): Promise<void> {
 /** Remove the passkey from the server and local hint. */
 export async function removePasskey(): Promise<void> {
   const supabase = createClient();
-  await supabase
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not logged in");
+  const { error } = await supabase
     .from("profiles")
     .update({
       passkey_credential_id: null,
       passkey_public_key: null,
       passkey_counter: 0,
-    });
+    })
+    .eq("id", user.id);
+  if (error) throw new Error(error.message);
   setLocalPasskeyHint(false);
 }

@@ -58,7 +58,8 @@ export default function CheckoutPage() {
       // Current outstanding balance (sum of this customer's unpaid orders).
       const { data: orders } = await supabase
         .from("orders")
-        .select("total,payment_status");
+        .select("total,payment_status")
+        .eq("dealer_id", user.id);
       setOutstanding(
         ((orders ?? []) as { total: number; payment_status: string }[])
           .filter((o) => o.payment_status !== "paid")
