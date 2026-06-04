@@ -5,6 +5,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { formatPrice, QUOTE_STATUS_HE } from "@/lib/format";
 import { computeMargin } from "@/lib/margin";
+import { quoteMessage, waMessageLink } from "@/lib/messages";
+import { BASE_PATH } from "@/lib/config";
 import type { Product, Profile, Quote, QuoteItem } from "@/lib/types";
 
 type Line = { product_id: string; qty: number; unit_price: number };
@@ -65,6 +67,25 @@ export default function AdminQuotesPage() {
 
   const quoteTotal = (qid: string) =>
     (itemsByQuote.get(qid) ?? []).reduce((s, it) => s + Number(it.line_total), 0);
+
+  // WhatsApp link to send a quote to its customer, with a link they can open
+  // and accept themselves.
+  const quoteWaLink = (q: Quote): string | null => {
+    const cust = customers.find((c) => c.id === q.customer_id);
+    if (!cust?.phone) return null;
+    const viewUrl =
+      typeof window !== "undefined" ? `${window.location.origin}${BASE_PATH}/quote?id=${q.id}` : "";
+    return waMessageLink(
+      cust.phone,
+      quoteMessage({
+        name: cust.full_name || cust.company || undefined,
+        quoteNumber: q.quote_number,
+        total: quoteTotal(q.id),
+        validUntil: q.valid_until,
+        viewUrl,
+      })
+    );
+  };
 
   // Suggested price for a product given the selected customer's type.
   const suggestPrice = (productId: string) => {
@@ -316,6 +337,14 @@ export default function AdminQuotesPage() {
                     <Link href={`/quote?id=${q.id}`} className="text-brand hover:underline">
                       צפייה
                     </Link>
+                    {(() => {
+                      const link = quoteWaLink(q);
+                      return link ? (
+                        <a href={link} target="_blank" rel="noopener noreferrer" className="text-emerald-700 hover:underline">
+                          וואטסאפ
+                        </a>
+                      ) : null;
+                    })()}
                     {q.status === "draft" && (
                       <button
                         onClick={() => setStatus(q, "sent")}

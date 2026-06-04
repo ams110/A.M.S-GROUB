@@ -4,15 +4,16 @@ import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { useProfile } from "@/lib/auth";
+import { useProfile, isAdminRole } from "@/lib/auth";
 import { formatPrice } from "@/lib/format";
+import { invoiceMessage, waMessageLink } from "@/lib/messages";
 import type { Invoice, Order, OrderItem } from "@/lib/types";
 
 function InvoiceView() {
   const supabase = createClient();
   const orderId = useSearchParams().get("order") ?? "";
   const { profile } = useProfile();
-  const isAdmin = profile?.role === "admin";
+  const isAdmin = isAdminRole(profile?.role);
 
   const [order, setOrder] = useState<Order | null>(null);
   const [items, setItems] = useState<OrderItem[]>([]);
@@ -88,13 +89,34 @@ function InvoiceView() {
   return (
     <div className="container-app py-10">
       {/* Toolbar — hidden when printing */}
-      <div className="mb-6 flex items-center justify-between print:hidden">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 print:hidden">
         <Link href="/account/orders" className="text-sm text-brand hover:underline">
           ← להזמנות שלי
         </Link>
-        <button onClick={() => window.print()} className="btn-primary">
-          הדפסה / שמירה כ-PDF
-        </button>
+        <div className="flex items-center gap-3">
+          {isAdmin && order.ship_phone && (
+            <a
+              href={waMessageLink(
+                order.ship_phone,
+                invoiceMessage({
+                  name: order.ship_name || undefined,
+                  invoiceNumber: invoice.invoice_number,
+                  total: invoice.total,
+                  currency: order.currency,
+                  viewUrl: typeof window !== "undefined" ? window.location.href : "",
+                })
+              )}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-xl border border-emerald-300 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50"
+            >
+              שליחה בוואטסאפ
+            </a>
+          )}
+          <button onClick={() => window.print()} className="btn-primary">
+            הדפסה / שמירה כ-PDF
+          </button>
+        </div>
       </div>
 
       <div className="card mx-auto max-w-3xl p-8">

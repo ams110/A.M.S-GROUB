@@ -225,7 +225,8 @@ export default function CheckoutPage() {
             )}
             {method === "card" && (
               <p className="mt-3 rounded bg-slate-50 p-3 text-xs text-slate-600">
-                סליקת אשראי מאובטחת. ההזמנה תיווצר במצב “ממתין לתשלום” עד להשלמת הסליקה.
+                תשלום בכרטיס אשראי — נציג ייצור איתכם קשר להשלמת הסליקה. ההזמנה תיווצר
+                במצב “ממתין לתשלום”.
               </p>
             )}
             {method === "cod" && (

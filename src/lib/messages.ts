@@ -116,6 +116,22 @@ export function winBackMessage(opts: {
   return lines.join("\n");
 }
 
+/** Purchase order to send to a supplier (item list + quantities). */
+export function purchaseOrderMessage(opts: {
+  supplierName?: string;
+  poNumber?: string | null;
+  lines: { name: string; qty: number }[];
+  notes?: string | null;
+}): string {
+  const hi = opts.supplierName ? `שלום ${opts.supplierName} 👋` : "שלום 👋";
+  const lines = [hi, "", "נשמח להזמין את הפריטים הבאים:"];
+  for (const l of opts.lines) lines.push(`• ${l.name} — ${l.qty} יח׳`);
+  if (opts.poNumber) lines.push("", `מס׳ הזמנה: ${opts.poNumber}`);
+  if (opts.notes) lines.push(`הערות: ${opts.notes}`);
+  lines.push("", "תודה רבה! 🤝", SIGN);
+  return lines.join("\n");
+}
+
 /** Build a wa.me link pre-filled with any of the messages above. */
 export function waMessageLink(phone: string, message: string): string {
   return waLink(phone, message);
