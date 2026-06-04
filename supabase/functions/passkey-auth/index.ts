@@ -142,14 +142,16 @@ Deno.serve(async (req) => {
       options: { shouldCreateUser: false },
     });
 
-    if (linkErr || !linkData?.properties?.hashed_token) {
+    if (linkErr || !linkData?.properties?.email_otp) {
       return json({ error: "session_error", message: linkErr?.message }, 500);
     }
 
+    // Return the one-time email OTP (not the hashed token) — the client
+    // completes the login with verifyOtp({ email, token, type: "email" }).
     return json({
       ok:    true,
       email: authUser.user.email,
-      token: linkData.properties.hashed_token,
+      token: linkData.properties.email_otp,
     });
   }
 
