@@ -66,7 +66,7 @@ export async function registerPasskey(): Promise<void> {
   const { options } = await startRes.json();
 
   // 2. Browser prompts for biometric — throws if user cancels
-  const credential = await startRegistration({ optionsJSON: options });
+  const credential = await startRegistration(options);
 
   // 3. Verify & store on server
   const finishRes = await fetch(`${FN_BASE}/passkey-register`, {
@@ -99,7 +99,7 @@ export async function authenticateWithPasskey(): Promise<void> {
   const { options } = await startRes.json();
 
   // 2. Browser prompts for biometric — throws if user cancels
-  const credential = await startAuthentication({ optionsJSON: options });
+  const credential = await startAuthentication(options);
 
   // 3. Verify on server — returns email + OTP token
   const finishRes = await fetch(`${FN_BASE}/passkey-auth`, {
