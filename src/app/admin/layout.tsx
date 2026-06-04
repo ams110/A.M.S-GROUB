@@ -59,15 +59,15 @@ export default function AdminLayout({
             </span>
           )}
         </div>
-        <nav className="flex gap-1 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+        <nav className="-mx-1 flex flex-wrap gap-1.5 px-1">
           {navLinks.map(({ href, label, exact }) => (
             <Link
               key={href}
               href={href}
-              className={`shrink-0 whitespace-nowrap rounded-xl px-3 py-2 text-sm font-medium transition-all duration-150 ${
+              className={`shrink-0 whitespace-nowrap rounded-xl px-3 py-1.5 text-sm font-medium transition-all duration-150 ${
                 isActive(href, exact)
                   ? "bg-gold-gradient text-navy-dark shadow-gold"
-                  : "text-slate-600 hover:bg-gold-50 hover:text-navy"
+                  : "bg-white text-slate-600 ring-1 ring-navy/10 hover:bg-gold-50 hover:text-navy hover:ring-gold/30"
               }`}
             >
               {label}

@@ -91,25 +91,25 @@ export default function AdminSettingsPage() {
           <label className="label">תת-כותרת</label>
           <textarea
             className="input"
-            rows={2}
+            rows={3}
             value={values.hero_subtitle ?? ""}
             onChange={(e) => set("hero_subtitle", e.target.value)}
           />
         </div>
         <div>
           <label className="label">תמונת רקע</label>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={values.hero_image_url || asset("/placeholder.svg")}
               alt=""
-              className="h-20 w-32 rounded-lg border border-slate-200 object-cover"
+              className="h-32 w-full rounded-lg border border-slate-200 object-cover sm:h-20 sm:w-32"
             />
             <div className="flex-1 space-y-2">
               <input
                 type="file"
                 accept="image/*"
-                className="block text-sm"
+                className="block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-navy file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-white hover:file:bg-navy-mid"
                 onChange={(e) => {
                   const f = e.target.files?.[0];
                   if (f) onUploadHero(f);
@@ -119,6 +119,7 @@ export default function AdminSettingsPage() {
               <input
                 className="input ltr-input"
                 dir="ltr"
+                placeholder="https://…"
                 value={values.hero_image_url ?? ""}
                 onChange={(e) => set("hero_image_url", e.target.value)}
               />
