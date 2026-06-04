@@ -14,10 +14,41 @@ body {
   @apply bg-navy-50 text-slate-900 antialiased;
   font-family: var(--font-heebo), system-ui, "Segoe UI", Arial, sans-serif;
   letter-spacing: -0.01em;
+  position: relative;
+  min-height: 100vh;
+}
+
+/* ── App background: soft drifting gold mesh + fine dot texture ───── */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -8%;
+  z-index: -2;
+  background-color: #FAF8F3;
   background-image:
-    radial-gradient(circle at 0% 0%, rgba(201, 162, 39, 0.05), transparent 36%),
-    radial-gradient(circle at 100% 0%, rgba(12, 11, 10, 0.035), transparent 30%);
-  background-attachment: fixed;
+    radial-gradient(38% 46% at 10% 6%, rgba(201, 162, 39, 0.13), transparent 70%),
+    radial-gradient(34% 42% at 92% 10%, rgba(224, 190, 69, 0.11), transparent 70%),
+    radial-gradient(46% 50% at 84% 90%, rgba(28, 26, 23, 0.06), transparent 70%),
+    radial-gradient(40% 44% at 6% 94%, rgba(201, 162, 39, 0.09), transparent 70%);
+  animation: bgDrift 30s ease-in-out infinite alternate;
+}
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(28, 26, 23, 0.05) 1px, transparent 1.4px);
+  background-size: 24px 24px;
+  -webkit-mask-image: radial-gradient(130% 90% at 50% -10%, #000 38%, transparent 92%);
+  mask-image: radial-gradient(130% 90% at 50% -10%, #000 38%, transparent 92%);
+}
+@keyframes bgDrift {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to   { transform: translate3d(1.5%, -2.5%, 0) scale(1.06); }
+}
+@media (prefers-reduced-motion: reduce) {
+  body::before { animation: none; }
 }
 
 /* Premium heading rhythm */
