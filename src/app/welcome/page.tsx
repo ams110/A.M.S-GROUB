@@ -9,7 +9,7 @@ export default function WelcomePage() {
   const { profile, email, ready } = useProfile();
   const [phase, setPhase] = useState<"enter" | "show" | "exit">("enter");
 
-  const dest = profile?.role === "admin" || profile?.role === "super_admin" ? "/admin" : "/products";
+  const dest = profile?.role === "admin" || profile?.role === "super_admin" ? "/admin" : "/home";
   const displayName =
     profile?.company || profile?.full_name || email?.split("@")[0] || "";
 

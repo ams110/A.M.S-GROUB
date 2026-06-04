@@ -5,6 +5,16 @@ import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useProfile, isAdminRole } from "@/lib/auth";
 import { useCart } from "./CartProvider";
+import { openCommandPalette } from "./CommandPalette";
+
+function SearchIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-5 w-5">
+      <circle cx="11" cy="11" r="8" />
+      <path d="m21 21-4.3-4.3" />
+    </svg>
+  );
+}
 
 // ── Icons ────────────────────────────────────────────────────────────────────
 
@@ -122,6 +132,8 @@ export default function Header() {
     ? { href: "/account", label: "חשבון", active: pathname.startsWith("/account"), icon: <UserIcon /> }
     : { href: "/", label: "כניסה", active: pathname === "/", icon: <UserIcon /> };
 
+  const homeHref = isAdmin ? "/admin" : email ? "/home" : "/";
+
   return (
     <>
       {/* ── Top bar ────────────────────────────────────────────────── */}
@@ -129,7 +141,7 @@ export default function Header() {
         <div className="container-app flex h-16 items-center justify-between gap-4">
 
           {/* Logo */}
-          <Link href="/" className="flex shrink-0 items-center gap-2.5 group">
+          <Link href={homeHref} className="flex shrink-0 items-center gap-2.5 group">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/logo.svg?v=2`}
@@ -177,6 +189,14 @@ export default function Header() {
 
           {/* Desktop actions */}
           <div className="hidden items-center gap-3 md:flex">
+            <button
+              onClick={openCommandPalette}
+              title="חיפוש מהיר (⌘K)"
+              className="flex items-center gap-2 rounded-xl border border-white/15 bg-white/8 px-3 py-2 text-sm font-medium text-white/70 transition-all hover:border-gold/40 hover:text-white"
+            >
+              <SearchIcon />
+              <kbd className="rounded border border-white/20 px-1 text-[10px] text-white/50">⌘K</kbd>
+            </button>
             <Link href="/cart" className="relative rounded-xl border border-white/15 bg-white/8 px-4 py-2 text-sm font-semibold text-white transition-all hover:border-gold/40 hover:bg-white/12">
               עגלה
               {count > 0 && (
@@ -199,8 +219,17 @@ export default function Header() {
             )}
           </div>
 
-          {/* Mobile: sign-out / login in top bar */}
-          <div className="flex items-center md:hidden">
+          {/* Mobile: search + sign-out / login in top bar */}
+          <div className="flex items-center gap-2 md:hidden">
+            {email && (
+              <button
+                onClick={openCommandPalette}
+                aria-label="חיפוש"
+                className="rounded-lg border border-white/15 bg-white/8 p-1.5 text-white/70"
+              >
+                <SearchIcon />
+              </button>
+            )}
             {ready && (
               email ? (
                 <button
@@ -228,10 +257,10 @@ export default function Header() {
         <div className="mx-auto max-w-sm overflow-hidden rounded-full border border-white/10 ring-1 ring-gold/15 shadow-pill glass-onyx">
           <div className="grid grid-cols-4">
             <PillItem
-              href={isAdmin ? "/admin" : email ? "/products" : "/"}
+              href={homeHref}
               label="ראשי"
               active={
-                isAdmin ? pathname === "/admin" : email ? pathname === "/products" : pathname === "/"
+                isAdmin ? pathname === "/admin" : email ? pathname === "/home" : pathname === "/"
               }
               icon={<HomeIcon />}
             />
