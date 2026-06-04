@@ -50,17 +50,13 @@ function LoginForm() {
   const [passkeyAvailable, setPasskeyAvailable] = useState(false);
   const [passkeyLoading, setPasskeyLoading]     = useState(false);
 
-  // Already logged in → redirect immediately
+  // Already logged in → go through the welcome screen so it always shows
   useEffect(() => {
     if (!ready) return;
     if (sessionEmail) {
-      router.replace(
-        profile?.role === "admin" || profile?.role === "super_admin"
-          ? "/admin"
-          : "/products"
-      );
+      router.replace("/welcome");
     }
-  }, [ready, sessionEmail, profile, router]);
+  }, [ready, sessionEmail, router]);
 
   // Check passkey availability (only show button if device + hint match)
   useEffect(() => {
