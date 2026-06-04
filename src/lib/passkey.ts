@@ -76,7 +76,9 @@ export async function registerPasskey(): Promise<void> {
   });
   if (!finishRes.ok) {
     const err = await finishRes.json().catch(() => ({}));
-    throw new Error(err.error ?? "Failed to complete registration");
+    // Surface the server's detail (message) when present so failures are
+    // diagnosable instead of a generic "registration failed".
+    throw new Error(err.message || err.error || "Failed to complete registration");
   }
 
   setLocalPasskeyHint(true);
@@ -126,12 +128,19 @@ export async function authenticateWithPasskey(): Promise<void> {
 /** Remove the passkey from the server and local hint. */
 export async function removePasskey(): Promise<void> {
   const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not logged in");
+  // Scope the update to the current user's row (RLS would limit it anyway, but
+  // an explicit filter avoids relying on policy side-effects).
   await supabase
     .from("profiles")
     .update({
       passkey_credential_id: null,
       passkey_public_key: null,
       passkey_counter: 0,
-    });
+    })
+    .eq("id", user.id);
   setLocalPasskeyHint(false);
 }
