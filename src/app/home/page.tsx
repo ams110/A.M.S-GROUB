@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { useProfile } from "@/lib/auth";
+import { useProfile, isAdminRole } from "@/lib/auth";
 import { useCart } from "@/components/CartProvider";
 import { applyEffectivePrices } from "@/lib/pricing";
 import ProductCard from "@/components/ProductCard";
+import ControlCenter from "@/components/ControlCenter";
 import type { Product } from "@/lib/types";
 
 function greeting(h: number) {
@@ -16,7 +17,16 @@ function greeting(h: number) {
   return "לילה טוב";
 }
 
-export default function DealerHome() {
+// Role-aware home (the "ראשי" tab): admins get the live control center,
+// dealers get their personalised landing page.
+export default function HomePage() {
+  const { profile, ready } = useProfile();
+  if (!ready) return <div className="container-app py-20 text-center text-slate-400">טוען…</div>;
+  if (isAdminRole(profile?.role)) return <ControlCenter />;
+  return <DealerHome />;
+}
+
+function DealerHome() {
   const { profile, showPrice } = useProfile();
   const { count } = useCart();
   const [hero, setHero] = useState<{ title: string; subtitle: string; image: string }>({

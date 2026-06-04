@@ -132,7 +132,7 @@ export default function Header() {
     ? { href: "/account", label: "חשבון", active: pathname.startsWith("/account"), icon: <UserIcon /> }
     : { href: "/", label: "כניסה", active: pathname === "/", icon: <UserIcon /> };
 
-  const homeHref = isAdmin ? "/admin" : email ? "/home" : "/";
+  const homeHref = email ? "/home" : "/";
 
   return (
     <>
@@ -259,9 +259,7 @@ export default function Header() {
             <PillItem
               href={homeHref}
               label="ראשי"
-              active={
-                isAdmin ? pathname === "/admin" : email ? pathname === "/home" : pathname === "/"
-              }
+              active={email ? pathname === "/home" : pathname === "/"}
               icon={<HomeIcon />}
             />
             <PillItem
