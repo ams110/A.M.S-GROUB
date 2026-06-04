@@ -68,7 +68,8 @@ function LoginForm() {
     isPlatformAuthenticatorAvailable().then(setPasskeyAvailable);
   }, []);
 
-  if (!ready || sessionEmail) return null;
+  if (sessionEmail) return null;
+  if (!ready) return <div className="fixed inset-0 bg-navy-dark" />;
 
   const supabase = createClient();
 
@@ -118,6 +119,8 @@ function LoginForm() {
             ? "אימייל / שם משתמש או סיסמה שגויים."
             : /confirm/i.test(error.message)
             ? "החשבון טרם אומת. פנו למנהל המערכת."
+            : /fetch|network/i.test(error.message)
+            ? "לא ניתן להתחבר כעת. בדקו את החיבור לאינטרנט ונסו שוב."
             : `שגיאת התחברות: ${error.message}`
         );
         return;
@@ -224,7 +227,7 @@ function LoginForm() {
                   {formError}
                 </div>
               )}
-              <button disabled={loading} className="btn-gold w-full">
+              <button type="submit" disabled={loading} className="btn-gold w-full">
                 {loading ? "מתחבר…" : "כניסה ←"}
               </button>
             </form>
