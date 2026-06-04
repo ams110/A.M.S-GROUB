@@ -6,8 +6,8 @@ import {
 } from "npm:@simplewebauthn/server@9";
 import type { AuthenticationResponseJSON } from "npm:@simplewebauthn/types@9";
 
-const RP_ID  = Deno.env.get("WEBAUTHN_RP_ID")  ?? "ams110.github.io";
-const ORIGIN = Deno.env.get("WEBAUTHN_ORIGIN") ?? "https://ams110.github.io";
+const RP_ID  = Deno.env.get("WEBAUTHN_RP_ID")  ?? "ams-groub.linko.services";
+const ORIGIN = Deno.env.get("WEBAUTHN_ORIGIN") ?? "https://ams-groub.linko.services";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
