@@ -10,6 +10,7 @@ import {
   registerPasskey,
   removePasskey,
 } from "@/lib/passkey";
+import { isPushSupported, isSubscribed, enablePush, disablePush, sendTestPush } from "@/lib/push";
 import { createClient } from "@/lib/supabase/client";
 
 export default function SecurityPage() {
@@ -125,6 +126,78 @@ export default function SecurityPage() {
           <p className="text-xs text-slate-400">
             שים לב: כניסה ביומטרית קיימת ב localStorage אך לא בשרת. יש לרשום מחדש.
           </p>
+        )}
+      </div>
+
+      <PushSection />
+    </div>
+  );
+}
+
+// ── Web Push notifications ────────────────────────────────────────────────────
+function PushSection() {
+  const toast = useToast();
+  const [supported, setSupported] = useState(false);
+  const [on, setOn] = useState(false);
+  const [working, setWorking] = useState(false);
+
+  useEffect(() => {
+    setSupported(isPushSupported());
+    isSubscribed().then(setOn);
+  }, []);
+
+  if (!supported) return null;
+
+  const toggle = async () => {
+    setWorking(true);
+    try {
+      if (on) {
+        await disablePush();
+        setOn(false);
+        toast("ההתראות בוטלו");
+      } else {
+        await enablePush();
+        setOn(true);
+        toast("התראות הופעלו ✓");
+      }
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "פעולה נכשלה", "error");
+    } finally {
+      setWorking(false);
+    }
+  };
+
+  return (
+    <div className="card mt-5 max-w-lg p-6 space-y-4">
+      <div className="flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-light text-brand text-xl">🔔</div>
+        <div>
+          <p className="font-semibold">התראות בדחיפה (Push)</p>
+          <p className="text-sm text-slate-500">קבלו התראה מיידית על הזמנות חדשות ועדכונים — גם כשהאתר סגור.</p>
+        </div>
+      </div>
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          onClick={toggle}
+          disabled={working}
+          className={`btn ${on ? "border border-rose-200 text-rose-600 hover:bg-rose-50" : "btn-primary"} flex items-center gap-2`}
+        >
+          {working ? "רגע…" : on ? "כבה התראות במכשיר זה" : "הפעל התראות במכשיר זה"}
+        </button>
+        {on && (
+          <button
+            onClick={async () => {
+              try {
+                const r = await sendTestPush();
+                toast(r.sent > 0 ? "נשלחה התראת בדיקה ✓" : "אין מנויים פעילים", r.sent > 0 ? "success" : "info");
+              } catch (err) {
+                toast(err instanceof Error ? err.message : "השליחה נכשלה", "error");
+              }
+            }}
+            className="btn-outline text-sm"
+          >
+            שלח התראת בדיקה
+          </button>
         )}
       </div>
     </div>
