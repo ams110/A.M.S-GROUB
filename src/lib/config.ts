@@ -23,6 +23,14 @@ export const SUPABASE_ANON_KEY =
 /** Sub-path the site is served from (e.g. "/Tiandy-store" on GitHub Pages). */
 export const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
+/**
+ * VAPID public key for Web Push. Public by design (the matching private key lives
+ * only server-side, in store.app_config, read by the push-send Edge Function).
+ */
+export const VAPID_PUBLIC_KEY =
+  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ??
+  "BA1zvmWPc124tSPR4J6fTMEH4LL7xC2ajSarB4DfBSTnvL4OuG3S2ZOYbiMBCsvVKVUq485ZV3Hdr0eWjMW5QYA";
+
 /** Prefix a local public asset (in /public) with the deployment base path. */
 export function asset(path: string) {
   return `${BASE_PATH}${path}`;
