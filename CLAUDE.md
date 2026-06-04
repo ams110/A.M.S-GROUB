@@ -141,7 +141,16 @@ supabase/migrations/
   20260604_admin_ops_dashboard.sql            # RPC admin_ops_dashboard(from,to) — اللوحة الغنية (مقارنة/هوامش/توقع/نشاط/هدف)
   20260604_notify_new_order.sql               # trigger يُشعر الأدمن عبر pg_net→push-send عند طلب جديد
   20260604_multi_passkey.sql                  # جدول store.passkey_credentials (متعدد الأجهزة) + RPC list_passkeys/remove_passkey + ترحيل من profiles
+  20260604_accept_my_quote.sql                # RPC accept_my_quote — التاجر يقبل عرض سعره ويحوّله لطلب (تحقق ملكية/صلاحية/مخزون) + wrapper public
 ```
+
+### محرّكات منطق مشتركة (pure logic، بلا React/Supabase، مختبَرة)
+ملفات نقية في `src/lib/` تُعيد استخدامها عدة شاشات — أضف الاختبار في `src/__tests__/lib/`:
+- `ar.ts` — تقادم الديون: مستحق/متأخر/buckets حسب `payment_terms`. تستخدمه: `/admin/dealers`، `ReceivablesPanel` (OpsCenter)، `/cart`، `/checkout`.
+- `margin.ts` — ربح/هامش% + حارس "تحت التكلفة"/"هامش ضعيف" + تسعير جماعي. تستخدمه: `/admin/customer-prices`، `/admin/quotes`، `/admin/products`.
+- `messages.ts` — قوالب واتساب (تذكير دفع، عرض، فاتورة، استرجاع زبون، أمر شراء) فوق `waLink`. تستخدمه: dealers، invoice، quotes، purchase-orders، OpportunitiesPanel.
+- `activity.ts` — كشف الزبائن المتوقّفين والمخزون الميت (recency). تستخدمه: `OpportunitiesPanel` (OpsCenter).
+- `cartFromOrder.ts` — `resolveReorder`: يحوّل عناصر طلب سابق لأسطر سلة. تستخدمه: `/account/order`، `/account/orders`.
 
 ### Edge Functions (`supabase/functions/`)
 - `admin-create-customer` — إنشاء حساب موزّع جديد (service role). يقبل: email, password, full_name, company, phone, customer_type. **لا يضبط** username/credit_limit/payment_terms — يضبطها العميل بعد الإنشاء (معالج `/admin/dealers/new`).
