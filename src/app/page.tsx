@@ -149,7 +149,7 @@ function LoginForm() {
         <div className="relative z-10 flex items-center gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/logo.svg`}
+            src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/logo.svg?v=2`}
             alt="Â.M.Ŝ GROUP"
             className="h-11 w-11 rounded-xl ring-2 ring-gold/50 shadow-gold"
           />
@@ -188,7 +188,7 @@ function LoginForm() {
           <div className="mb-8 text-center lg:hidden">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/logo.svg`}
+              src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/logo.svg?v=2`}
               alt="Â.M.Ŝ GROUP"
               className="mx-auto mb-3 h-16 w-16 rounded-2xl shadow-gold ring-2 ring-gold/50"
             />

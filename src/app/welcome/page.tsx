@@ -139,7 +139,7 @@ export default function WelcomePage() {
             {/* Logo */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/logo.svg`}
+              src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/logo.svg?v=2`}
               alt="Â.M.Ŝ GROUP"
               style={{
                 width: "100%",
