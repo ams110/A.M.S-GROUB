@@ -92,7 +92,7 @@ export default function CommandPalette() {
         .from("products")
         .select("id,name_he,slug,sku")
         .is("deleted_at", null)
-        .ilike("name_he", `%${q}%`)
+        .or(`name_he.ilike.%${q}%,sku.ilike.%${q}%`)
         .limit(6);
       setProducts(
         (data ?? []).map((p: any) => ({
