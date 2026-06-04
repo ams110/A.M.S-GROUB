@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { formatPrice, compactPrice, ORDER_STATUS_HE } from "@/lib/format";
+import Aurora from "@/components/Aurora";
 
 // ── Shape of store.admin_ops_dashboard() ─────────────────────────────────────
 
@@ -207,8 +208,9 @@ export default function OpsCenter() {
     <div className="space-y-6 animate-fade-in" dir="rtl">
       {/* ── Command bar ──────────────────────────────────────────────── */}
       <div className="relative overflow-hidden rounded-3xl bg-onyx-gradient p-5 shadow-onyx sm:p-6">
+        <Aurora />
         <span className="absolute inset-x-0 top-0 h-px hairline-gold" />
-        <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="relative z-10 flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="eyebrow text-gold/80">מרכז שליטה</p>
             <h2 className="mt-1 flex items-center gap-2.5 text-2xl font-extrabold text-white">
@@ -216,7 +218,7 @@ export default function OpsCenter() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400" />
               </span>
-              סקירת פעילות <span className="text-gradient-gold">חיה</span>
+              סקירת פעילות <span className="text-gradient-gold-shimmer">חיה</span>
             </h2>
           </div>
           <LiveClock />
