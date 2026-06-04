@@ -25,7 +25,8 @@ export default function CommandPalette() {
 
   const baseItems = useMemo<Item[]>(() => {
     const nav: Item[] = [
-      { id: "n-home", label: isAdmin ? "לוח ניהול" : "דף הבית", href: isAdmin ? "/admin" : "/home", group: "ניווט" },
+      { id: "n-home", label: "דף הבית", href: "/home", group: "ניווט" },
+      ...(isAdmin ? [{ id: "n-admin", label: "מרכז הניהול", href: "/admin", group: "ניווט" }] : []),
       { id: "n-catalog", label: "קטלוג מוצרים", href: "/products", group: "ניווט" },
       { id: "n-cart", label: "עגלת קניות", href: "/cart", group: "ניווט" },
     ];
