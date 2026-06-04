@@ -45,6 +45,7 @@ export type Profile = {
   credit_limit: number;
   payment_terms: PaymentTerms;
   username: string | null;
+  avatar_url: string | null;
   created_at: string;
 };
 

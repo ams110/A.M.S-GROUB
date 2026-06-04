@@ -133,6 +133,7 @@ export default function Header() {
     : { href: "/", label: "כניסה", active: pathname === "/", icon: <UserIcon /> };
 
   const homeHref = email ? "/home" : "/";
+  const avatarInitial = (profile?.company || profile?.full_name || email || "?").trim().charAt(0).toUpperCase();
 
   return (
     <>
@@ -207,19 +208,35 @@ export default function Header() {
             </Link>
             {ready && (
               email ? (
-                <button
-                  onClick={signOut}
-                  className="rounded-xl border border-white/15 bg-white/8 px-4 py-2 text-sm font-semibold text-white/75 transition-all hover:bg-white/12 hover:text-white"
-                >
-                  יציאה
-                </button>
+                <>
+                  <Link
+                    href="/account/profile"
+                    title="הפרופיל שלי"
+                    className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full ring-1 ring-gold/40 transition hover:ring-gold/70"
+                  >
+                    {profile?.avatar_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <span className="grid h-full w-full place-items-center bg-white/10 text-sm font-bold text-gold">
+                        {avatarInitial}
+                      </span>
+                    )}
+                  </Link>
+                  <button
+                    onClick={signOut}
+                    className="rounded-xl border border-white/15 bg-white/8 px-4 py-2 text-sm font-semibold text-white/75 transition-all hover:bg-white/12 hover:text-white"
+                  >
+                    יציאה
+                  </button>
+                </>
               ) : (
                 <Link href="/" className="btn-gold">כניסת סוחרים</Link>
               )
             )}
           </div>
 
-          {/* Mobile: search + sign-out / login in top bar */}
+          {/* Mobile: search + profile + sign-out / login in top bar */}
           <div className="flex items-center gap-2 md:hidden">
             {email && (
               <button
@@ -229,6 +246,22 @@ export default function Header() {
               >
                 <SearchIcon />
               </button>
+            )}
+            {email && (
+              <Link
+                href="/account/profile"
+                aria-label="הפרופיל שלי"
+                className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full ring-1 ring-gold/40"
+              >
+                {profile?.avatar_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <span className="grid h-full w-full place-items-center bg-white/10 text-xs font-bold text-gold">
+                    {avatarInitial}
+                  </span>
+                )}
+              </Link>
             )}
             {ready && (
               email ? (
