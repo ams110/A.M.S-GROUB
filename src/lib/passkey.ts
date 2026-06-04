@@ -42,10 +42,20 @@ function setLocalPasskeyHint(value: boolean) {
 /** Call this after the user logs in with a password to register their passkey. */
 export async function registerPasskey(): Promise<void> {
   const supabase = createClient();
-  const {
+  let {
     data: { session },
   } = await supabase.auth.getSession();
   if (!session) throw new Error("Not logged in");
+
+  // On the static export there is no middleware refreshing the cookie, so the
+  // access token can be stale by the time the user taps "register". Refresh it
+  // when it is expired or about to expire, otherwise the Edge Function's
+  // getUser() rejects it with "unauthorized".
+  const expiresAtMs = (session.expires_at ?? 0) * 1000;
+  if (!expiresAtMs || expiresAtMs < Date.now() + 60_000) {
+    const { data, error } = await supabase.auth.refreshSession();
+    if (!error && data.session) session = data.session;
+  }
 
   const headers = {
     "Content-Type": "application/json",
