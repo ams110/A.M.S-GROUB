@@ -129,11 +129,19 @@ export default function AdminCustomersPage() {
 
   return (
     <div>
-      <h2 className="mb-4 text-lg font-bold">לקוחות — סוחרים וקבלנים</h2>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-lg font-bold">לקוחות — סוחרים וקבלנים</h2>
+        <Link href="/admin/dealers/new" className="btn-primary whitespace-nowrap">
+          ✨ הוספת לקוח (אשף)
+        </Link>
+      </div>
 
-      {/* Create account */}
-      <form onSubmit={createCustomer} className="card mb-6 space-y-4 p-5">
-        <h3 className="font-bold">פתיחת חשבון ללקוח</h3>
+      {/* Quick create (the full guided flow with WhatsApp lives in /admin/dealers/new) */}
+      <details className="card mb-6 p-5">
+        <summary className="cursor-pointer font-bold text-slate-600">
+          פתיחת חשבון מהירה
+        </summary>
+        <form onSubmit={createCustomer} className="mt-4 space-y-4">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div>
             <label className="label">אימייל *</label>
@@ -204,7 +212,8 @@ export default function AdminCustomersPage() {
         <button disabled={creating} className="btn-primary">
           {creating ? "יוצר…" : "פתיחת חשבון"}
         </button>
-      </form>
+        </form>
+      </details>
 
       {loading ? (
         <p className="text-slate-500">טוען…</p>
