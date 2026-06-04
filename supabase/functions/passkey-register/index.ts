@@ -41,7 +41,9 @@ Deno.serve(async (req) => {
   // Require a valid user JWT for both actions
   const token = req.headers.get("Authorization")?.replace("Bearer ", "") ?? "";
   const { data: { user }, error: userErr } = await admin.auth.getUser(token);
-  if (userErr || !user) return json({ error: "unauthorized" }, 401);
+  if (userErr || !user) {
+    return json({ error: "unauthorized", message: userErr?.message ?? "no user for token" }, 401);
+  }
 
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch { return json({ error: "invalid_json" }, 400); }
