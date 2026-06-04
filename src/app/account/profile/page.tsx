@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useProfile, isAdminRole } from "@/lib/auth";
 import { useToast } from "@/components/Toast";
 import { uploadImage } from "@/lib/storage";
+import BackgroundSwitcher from "@/components/BackgroundSwitcher";
 import {
   formatPrice,
   CUSTOMER_TYPE_HE,
@@ -230,6 +231,9 @@ export default function ProfilePage() {
               {savingPw ? "מעדכן…" : "עדכן סיסמה"}
             </button>
           </section>
+
+          {/* Background theme switcher */}
+          <BackgroundSwitcher />
 
           {/* Admin-only: change email */}
           {isAdmin && (
