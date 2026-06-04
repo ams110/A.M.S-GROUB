@@ -180,7 +180,6 @@ export default function AdminOpsCenter() {
   const [days, setDays] = useState(14);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [now, setNow] = useState<Date>(new Date());
   const firstLoad = useRef(true);
 
   const load = useCallback(async (range: number) => {
@@ -202,14 +201,10 @@ export default function AdminOpsCenter() {
     load(days);
   }, [days, load]);
 
-  // live clock + silent auto-refresh every 60s
+  // silent auto-refresh every 60s (the live clock ticks in its own component)
   useEffect(() => {
-    const clock = setInterval(() => setNow(new Date()), 1000);
     const poll = setInterval(() => load(days), 60_000);
-    return () => {
-      clearInterval(clock);
-      clearInterval(poll);
-    };
+    return () => clearInterval(poll);
   }, [days, load]);
 
   if (loading && !stats) {
@@ -262,14 +257,7 @@ export default function AdminOpsCenter() {
               סקירת פעילות <span className="text-gradient-gold">חיה</span>
             </h2>
           </div>
-          <div className="text-left">
-            <p className="font-mono text-2xl font-bold tabular-nums text-white">
-              {now.toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
-            </p>
-            <p className="text-xs text-white/45">
-              {now.toLocaleDateString("he-IL", { weekday: "long", day: "numeric", month: "long" })}
-            </p>
-          </div>
+          <LiveClock />
         </div>
 
         {/* range selector */}
@@ -547,6 +535,25 @@ export default function AdminOpsCenter() {
 }
 
 // ── Presentational pieces ─────────────────────────────────────────────────────
+
+// Self-contained so its 1-second tick re-renders only itself, not the whole board.
+function LiveClock() {
+  const [now, setNow] = useState<Date>(new Date());
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  return (
+    <div className="text-left">
+      <p className="font-mono text-2xl font-bold tabular-nums text-white">
+        {now.toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+      </p>
+      <p className="text-xs text-white/45">
+        {now.toLocaleDateString("he-IL", { weekday: "long", day: "numeric", month: "long" })}
+      </p>
+    </div>
+  );
+}
 
 function KpiCard({
   label,
