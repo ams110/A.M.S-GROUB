@@ -17,7 +17,7 @@ function Setup({ msg = "שמור", type }: { msg?: string; type?: "success" | "e
 
 describe("ToastProvider", () => {
   beforeEach(() => jest.useFakeTimers());
-  afterEach(() => jest.runOnlyPendingTimers() && jest.useRealTimers());
+  afterEach(() => { jest.runOnlyPendingTimers(); jest.useRealTimers(); });
 
   it("shows a toast after trigger", async () => {
     const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });

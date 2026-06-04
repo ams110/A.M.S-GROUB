@@ -129,6 +129,7 @@ export default function AdminProductsPage() {
                 <td className="p-3">
                   <input
                     type="number"
+                    min="0"
                     value={p.price}
                     onChange={(e) => patch(p.id, { price: Number(e.target.value) })}
                     className="input w-28 py-1"
@@ -137,6 +138,7 @@ export default function AdminProductsPage() {
                 <td className="p-3">
                   <input
                     type="number"
+                    min="0"
                     value={p.stock}
                     onChange={(e) => patch(p.id, { stock: Number(e.target.value) })}
                     className="input w-20 py-1"
@@ -145,6 +147,7 @@ export default function AdminProductsPage() {
                 <td className="p-3">
                   <input
                     type="number"
+                    min="1"
                     value={p.min_order_qty}
                     onChange={(e) =>
                       patch(p.id, { min_order_qty: Number(e.target.value) })

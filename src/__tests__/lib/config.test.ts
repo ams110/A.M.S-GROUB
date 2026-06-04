@@ -1,4 +1,4 @@
-import { asset } from "@/lib/config";
+import { asset, SUPABASE_URL, SUPABASE_ANON_KEY } from "@/lib/config";
 
 describe("asset()", () => {
   const originalEnv = process.env.NEXT_PUBLIC_BASE_PATH;
@@ -35,5 +35,14 @@ describe("asset()", () => {
   it("handles empty path", () => {
     const result = asset("");
     expect(typeof result).toBe("string");
+  });
+});
+
+describe("SUPABASE_URL / SUPABASE_ANON_KEY", () => {
+  it("exports non-empty strings", () => {
+    expect(typeof SUPABASE_URL).toBe("string");
+    expect(SUPABASE_URL.length).toBeGreaterThan(0);
+    expect(typeof SUPABASE_ANON_KEY).toBe("string");
+    expect(SUPABASE_ANON_KEY.length).toBeGreaterThan(0);
   });
 });

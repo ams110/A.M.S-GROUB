@@ -78,7 +78,9 @@ export default function AdminCustomersPage() {
     setRows((r) => r.map((x) => (x.id === id ? { ...x, ...p } : x)));
 
   const saveCredit = async (id: string, credit_limit: number) => {
-    await supabase.from("profiles").update({ credit_limit }).eq("id", id);
+    const { error } = await supabase.from("profiles").update({ credit_limit }).eq("id", id);
+    if (error) toast("שגיאה בשמירת מסגרת האשראי", "error");
+    else toast("מסגרת האשראי עודכנה");
   };
 
   const saveUsername = async (id: string, username: string) => {
@@ -235,6 +237,7 @@ export default function AdminCustomersPage() {
                     <td className="p-3">{p.phone ?? "—"}</td>
                     <td className="p-3">
                       <input
+                        key={`${p.id}_${p.username ?? ""}`}
                         type="text"
                         className="input w-28 py-1 ltr-input"
                         dir="ltr"
