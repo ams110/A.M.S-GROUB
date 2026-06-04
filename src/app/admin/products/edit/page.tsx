@@ -20,6 +20,7 @@ const EMPTY = {
   image_url: "",
   datasheet_url: "",
   sku: "",
+  cost: 0,
   price: 0,
   price_contractor: 0,
   currency: "ILS",
@@ -71,6 +72,7 @@ function ProductForm() {
             image_url: p.image_url ?? "",
             datasheet_url: p.datasheet_url ?? "",
             sku: p.sku ?? "",
+            cost: p.cost ?? 0,
             price: p.price,
             price_contractor: p.price_contractor,
             currency: p.currency,
@@ -272,6 +274,17 @@ function ProductForm() {
 
         {/* Pricing & stock */}
         <div className="card grid gap-4 p-5 sm:grid-cols-3">
+          <div>
+            <label className="label">עלות (לחישוב רווח)</label>
+            <input
+              type="number"
+              step="0.01"
+              className="input"
+              value={form.cost}
+              onChange={(e) => set({ cost: Number(e.target.value) })}
+            />
+            <p className="mt-1 text-xs text-slate-400">עלות הרכש ליחידה. משמשת לחישוב הרווח בלוח הניהול.</p>
+          </div>
           <div>
             <label className="label">מחיר לסוחר</label>
             <input
