@@ -56,9 +56,9 @@ function SettingsIcon() {
   );
 }
 
-// ── Bottom nav item ──────────────────────────────────────────────────────────
+// ── Floating pill nav item ───────────────────────────────────────────────────
 
-function BottomNavItem({
+function PillItem({
   href,
   label,
   active,
@@ -72,24 +72,24 @@ function BottomNavItem({
   badge?: number;
 }) {
   return (
-    <Link
-      href={href}
-      className={`relative flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium transition-colors duration-150 ${
-        active ? "text-gold" : "text-white/45 hover:text-white/80"
-      }`}
-    >
-      {active && (
-        <span className="absolute top-0 h-0.5 w-7 rounded-full bg-gold-gradient" />
-      )}
-      <span className="relative">
+    <Link href={href} className="flex flex-col items-center gap-1 py-2.5 select-none">
+      <span
+        className={`relative grid h-9 w-9 place-items-center rounded-full transition-all duration-200 ${
+          active
+            ? "bg-gold-gradient text-navy-dark shadow-gold"
+            : "text-white/55"
+        }`}
+      >
         {icon}
         {badge != null && badge > 0 && (
-          <span className="absolute -top-1 -right-2 grid h-4 min-w-4 place-items-center rounded-full bg-gold-gradient px-0.5 text-[10px] font-bold text-navy-dark">
+          <span className="absolute -top-1 -right-1 grid h-4 min-w-4 place-items-center rounded-full bg-wine px-0.5 text-[10px] font-bold text-white ring-2 ring-[#0C0B0A]">
             {badge > 99 ? "99+" : badge}
           </span>
         )}
       </span>
-      <span>{label}</span>
+      <span className={`text-[10px] font-semibold ${active ? "text-gold" : "text-white/45"}`}>
+        {label}
+      </span>
     </Link>
   );
 }
@@ -110,7 +110,7 @@ export default function Header() {
   };
 
   const navLinkClass = (active: boolean) =>
-    `relative text-sm font-medium transition-colors duration-150 px-3 py-1.5 rounded-lg ${
+    `text-sm font-medium transition-colors duration-150 px-3 py-1.5 rounded-lg ${
       active
         ? "text-gold bg-white/8"
         : "text-white/65 hover:text-white hover:bg-white/8"
@@ -125,7 +125,7 @@ export default function Header() {
   return (
     <>
       {/* ── Top bar ────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-40 bg-onyx-gradient shadow-onyx print:hidden">
+      <header className="sticky top-0 z-40 glass-onyx print:hidden">
         <div className="container-app flex h-16 items-center justify-between gap-4">
 
           {/* Logo */}
@@ -136,7 +136,7 @@ export default function Header() {
               alt="A.M.S GROUP"
               className="h-9 w-9 rounded-xl ring-1 ring-gold/40 shadow-sm transition-transform duration-200 group-hover:scale-105"
             />
-            <span className="text-lg font-bold tracking-wide text-white">
+            <span className="text-lg font-extrabold tracking-tight text-white">
               Â.M.Ŝ <span className="text-gradient-gold">GROUP</span>
             </span>
           </Link>
@@ -150,18 +150,12 @@ export default function Header() {
               קטלוג
             </Link>
             {email && (
-              <Link
-                href="/account/orders"
-                className={navLinkClass(pathname.startsWith("/account"))}
-              >
+              <Link href="/account/orders" className={navLinkClass(pathname.startsWith("/account"))}>
                 ההזמנות שלי
               </Link>
             )}
             {email && (
-              <Link
-                href="/account/quotes"
-                className={navLinkClass(pathname === "/account/quotes")}
-              >
+              <Link href="/account/quotes" className={navLinkClass(pathname === "/account/quotes")}>
                 הצעות מחיר
               </Link>
             )}
@@ -175,10 +169,7 @@ export default function Header() {
               </Link>
             )}
             {isAdmin && (
-              <Link
-                href="/admin"
-                className={navLinkClass(pathname.startsWith("/admin"))}
-              >
+              <Link href="/admin" className={navLinkClass(pathname.startsWith("/admin"))}>
                 ניהול
               </Link>
             )}
@@ -226,52 +217,39 @@ export default function Header() {
             )}
           </div>
         </div>
-        {/* Gold hairline accent */}
         <div className="h-px w-full hairline-gold" />
       </header>
 
-      {/* ── Mobile bottom nav ──────────────────────────────────────── */}
+      {/* ── Mobile floating pill nav ───────────────────────────────── */}
       <nav
-        className="fixed inset-x-0 bottom-0 z-40 bg-onyx-gradient md:hidden print:hidden"
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        className="fixed inset-x-0 bottom-0 z-40 px-4 md:hidden print:hidden"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.7rem)" }}
       >
-        <div className="h-px w-full hairline-gold" />
-        <div className="grid h-16 grid-cols-4 items-center">
-          <BottomNavItem
-            href={isAdmin ? "/admin" : email ? "/products" : "/"}
-            label="ראשי"
-            active={
-              isAdmin
-                ? pathname === "/admin"
-                : email
-                ? pathname === "/products"
-                : pathname === "/"
-            }
-            icon={<HomeIcon />}
-          />
-          <BottomNavItem
-            href="/products"
-            label="קטלוג"
-            active={pathname.startsWith("/products") || pathname.startsWith("/product")}
-            icon={<GridIcon />}
-          />
-
-          {/* Elevated cart FAB */}
-          <Link href="/cart" className="relative -mt-7 flex flex-col items-center">
-            <span className="grid h-14 w-14 place-items-center rounded-2xl bg-gold-gradient text-navy-dark shadow-gold-lg ring-4 ring-navy-dark transition-transform active:scale-95">
-              <CartIcon />
-              {count > 0 && (
-                <span className="absolute -top-1 right-1 grid h-5 min-w-5 place-items-center rounded-full bg-wine px-1 text-[10px] font-bold text-white ring-2 ring-navy-dark">
-                  {count > 99 ? "99+" : count}
-                </span>
-              )}
-            </span>
-            <span className={`mt-0.5 text-[11px] font-semibold ${pathname === "/cart" ? "text-gold" : "text-white/60"}`}>
-              עגלה
-            </span>
-          </Link>
-
-          <BottomNavItem {...fourthTab} />
+        <div className="mx-auto max-w-sm overflow-hidden rounded-full border border-white/10 ring-1 ring-gold/15 shadow-pill glass-onyx">
+          <div className="grid grid-cols-4">
+            <PillItem
+              href={isAdmin ? "/admin" : email ? "/products" : "/"}
+              label="ראשי"
+              active={
+                isAdmin ? pathname === "/admin" : email ? pathname === "/products" : pathname === "/"
+              }
+              icon={<HomeIcon />}
+            />
+            <PillItem
+              href="/products"
+              label="קטלוג"
+              active={pathname.startsWith("/products") || pathname.startsWith("/product")}
+              icon={<GridIcon />}
+            />
+            <PillItem
+              href="/cart"
+              label="עגלה"
+              active={pathname === "/cart"}
+              icon={<CartIcon />}
+              badge={count}
+            />
+            <PillItem {...fourthTab} />
+          </div>
         </div>
       </nav>
     </>

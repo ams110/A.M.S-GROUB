@@ -28,24 +28,25 @@ export default function ProductCard({
           <span className="absolute top-2 right-2 badge bg-wine text-white shadow-sm">אזל</span>
         )}
       </div>
-      <div className="space-y-1 p-4">
+      <div className="space-y-1.5 p-4">
         {product.short_desc_he && (
-          <p className="text-xs font-medium text-brand">{product.short_desc_he}</p>
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-brand">{product.short_desc_he}</p>
         )}
-        <h3 className="line-clamp-2 text-sm font-semibold text-slate-800">
+        <h3 className="line-clamp-2 min-h-[2.5rem] text-sm font-semibold leading-snug text-slate-800">
           {product.name_he}
         </h3>
         <div className="flex items-center justify-between pt-2">
           {showPrice ? (
-            <span className="text-base font-extrabold text-brand-dark">
+            <span className="text-lg font-extrabold tracking-tight text-navy-dark">
               {formatPrice(product.price, product.currency)}
             </span>
           ) : (
             <span className="text-xs font-medium text-slate-400">מחיר לסוחרים</span>
           )}
           {showPrice && product.stock > 0 && (
-            <span className="badge bg-emerald-50 text-emerald-700">
-              במלאי: {product.stock}
+            <span className="badge gap-1 bg-emerald-50 text-emerald-700">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              במלאי
             </span>
           )}
         </div>

@@ -71,7 +71,7 @@ function Catalog() {
         href="/products"
         onClick={() => setSidebarOpen(false)}
         className={`block rounded-lg px-3 py-2 text-sm ${
-          !category ? "bg-brand text-white" : "hover:bg-slate-100"
+          !category ? "bg-gold-gradient font-semibold text-navy-dark shadow-gold" : "text-slate-600 hover:bg-gold-50 hover:text-navy"
         }`}
       >
         כל הקטגוריות
@@ -82,7 +82,7 @@ function Catalog() {
           href={`/products?category=${c.slug}`}
           onClick={() => setSidebarOpen(false)}
           className={`block rounded-lg px-3 py-2 text-sm ${
-            category === c.slug ? "bg-brand text-white" : "hover:bg-slate-100"
+            category === c.slug ? "bg-gold-gradient font-semibold text-navy-dark shadow-gold" : "text-slate-600 hover:bg-gold-50 hover:text-navy"
           }`}
         >
           {c.name_he}
@@ -93,19 +93,22 @@ function Catalog() {
 
   return (
     <div className="container-app py-8">
-      <h1 className="mb-4 text-2xl font-bold text-navy-dark">
-        קטלוג <span className="text-gradient-gold">מוצרים</span>
-      </h1>
+      <div className="mb-6">
+        <p className="eyebrow mb-1.5">Tiandy · קטלוג רשמי</p>
+        <h1 className="text-3xl font-extrabold tracking-tight text-navy-dark">
+          קטלוג <span className="text-gradient-gold">מוצרים</span>
+        </h1>
+      </div>
 
       {!showPrice && (
-        <p className="mb-5 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <p className="mb-5 rounded-xl border border-amber-200/60 bg-amber-50 px-4 py-3 text-sm text-amber-800">
           המחירים וההזמנה זמינים לסוחרים מאושרים בלבד.{" "}
           <Link href="/login" className="font-semibold underline">כניסה</Link>.
         </p>
       )}
 
       {/* Search + filters bar */}
-      <div className="mb-6 flex flex-wrap items-center gap-3">
+      <div className="card mb-6 flex flex-wrap items-center gap-3 p-3">
         <form onSubmit={handleSearch} className="flex flex-1 gap-2 min-w-0">
           <input
             value={search}
@@ -155,9 +158,14 @@ function Catalog() {
         </div>
       )}
 
-      <div className="grid gap-8 md:grid-cols-[200px_1fr]">
+      <div className="grid gap-8 md:grid-cols-[220px_1fr]">
         {/* Desktop sidebar */}
-        <aside className="hidden md:block">{navLinks}</aside>
+        <aside className="hidden md:block">
+          <div className="card sticky top-20 p-3">
+            <p className="eyebrow mb-2 px-1">קטגוריות</p>
+            {navLinks}
+          </div>
+        </aside>
 
         {/* Grid */}
         <div>

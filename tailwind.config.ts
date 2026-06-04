@@ -43,13 +43,18 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ["system-ui", "Segoe UI", "Arial", "sans-serif"],
+        sans: ["var(--font-heebo)", "system-ui", "Segoe UI", "Arial", "sans-serif"],
+      },
+      letterSpacing: {
+        tightish: "-0.01em",
       },
       boxShadow: {
+        soft: "0 1px 2px rgba(12,11,10,0.04), 0 8px 24px -12px rgba(12,11,10,0.12)",
         gold: "0 4px 24px rgba(201,162,39,0.28)",
         "gold-lg": "0 10px 40px rgba(201,162,39,0.35)",
         navy: "0 4px 24px rgba(12,11,10,0.30)",
         onyx: "0 10px 40px rgba(12,11,10,0.45)",
+        pill: "0 8px 30px rgba(12,11,10,0.35), 0 2px 8px rgba(12,11,10,0.25)",
       },
       backgroundImage: {
         "gold-gradient": "linear-gradient(135deg, #E0BE45 0%, #C9A227 50%, #9C7C18 100%)",
