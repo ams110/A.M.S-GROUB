@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { formatPrice, PO_STATUS_HE } from "@/lib/format";
 import { computeSalesVelocity, suggestReplenishment } from "@/lib/replenish";
 import { purchaseOrderMessage, waMessageLink } from "@/lib/messages";
+import { WizardStepper } from "@/components/WizardStepper";
 import type {
   Product,
   PurchaseOrder,
@@ -15,6 +16,7 @@ import type {
 type Line = { product_id: string; qty: number; unit_cost: number };
 
 const DAY = 24 * 60 * 60 * 1000;
+const PO_STEPS = ["ספק", "פריטים", "סיכום"];
 
 export default function AdminPurchaseOrdersPage() {
   const supabase = createClient();
@@ -28,6 +30,7 @@ export default function AdminPurchaseOrdersPage() {
 
   // New PO.
   const [showForm, setShowForm] = useState(false);
+  const [formStep, setFormStep] = useState(0);
   const [supplierId, setSupplierId] = useState("");
   const [poNumber, setPoNumber] = useState("");
   const [notes, setNotes] = useState("");
@@ -98,6 +101,7 @@ export default function AdminPurchaseOrdersPage() {
       }))
     );
     setShowForm(true);
+    setFormStep(1); // jump straight to the (pre-filled) items step
     setError(null);
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -194,11 +198,38 @@ export default function AdminPurchaseOrdersPage() {
     if (itemsErr) return setError(`שמירת שורות נכשלה: ${itemsErr.message}`);
 
     setShowForm(false);
+    setFormStep(0);
     setSupplierId("");
     setPoNumber("");
     setNotes("");
     setLines([{ product_id: "", qty: 1, unit_cost: 0 }]);
     load();
+  };
+
+  // Form helpers (review step + wizard nav).
+  const formValidLines = lines.filter((l) => l.product_id && l.qty > 0);
+  const formTotal = formValidLines.reduce((s, l) => s + l.qty * l.unit_cost, 0);
+
+  const nextPoStep = () => {
+    setError(null);
+    if (formStep === 1 && formValidLines.length === 0)
+      return setError("נא להוסיף לפחות שורה אחת עם מוצר וכמות.");
+    setFormStep((s) => s + 1);
+  };
+
+  const onPoSubmit = (e: React.FormEvent) => {
+    if (formStep < 2) {
+      e.preventDefault();
+      nextPoStep();
+    } else {
+      save(e);
+    }
+  };
+
+  const openForm = () => {
+    setError(null);
+    setFormStep(0);
+    setShowForm((v) => !v);
   };
 
   const receive = async (po: PurchaseOrder) => {
@@ -225,7 +256,7 @@ export default function AdminPurchaseOrdersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold">הזמנות רכש</h2>
-        <button onClick={() => setShowForm((v) => !v)} className="btn-primary">
+        <button onClick={openForm} className={showForm ? "btn-outline" : "btn-gold"}>
           {showForm ? "ביטול" : "+ הזמנת רכש חדשה"}
         </button>
       </div>
@@ -311,7 +342,20 @@ export default function AdminPurchaseOrdersPage() {
       )}
 
       {showForm && (
-        <form onSubmit={save} className="card space-y-4 p-5">
+        <form onSubmit={onPoSubmit} className="card space-y-5 p-5">
+          <WizardStepper
+            steps={PO_STEPS}
+            current={formStep}
+            onStepClick={(i) => {
+              if (i <= formStep) setFormStep(i);
+              else if (i === 1) setFormStep(1);
+              else if (i === 2 && formValidLines.length) setFormStep(2);
+            }}
+          />
+
+          <div key={formStep} className="animate-fade-up space-y-4">
+          {/* Step 0 — supplier & meta */}
+          {formStep === 0 && (
           <div className="grid gap-4 sm:grid-cols-3">
             <div>
               <label className="label">ספק</label>
@@ -345,7 +389,10 @@ export default function AdminPurchaseOrdersPage() {
               />
             </div>
           </div>
+          )}
 
+          {/* Step 1 — line items */}
+          {formStep === 1 && (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-slate-600">שורות</span>
@@ -397,10 +444,54 @@ export default function AdminPurchaseOrdersPage() {
               </div>
             ))}
           </div>
+          )}
 
-          <button disabled={saving} className="btn-primary">
-            {saving ? "שומר…" : "יצירת הזמנת רכש"}
-          </button>
+          {/* Step 2 — review */}
+          {formStep === 2 && (
+          <div className="rounded-2xl border border-gold/20 bg-gold-50/40 p-4">
+            <p className="eyebrow mb-2">סיכום ההזמנה</p>
+            <dl className="space-y-1.5 text-sm">
+              <div className="flex justify-between border-b border-gold/10 py-1">
+                <dt className="text-slate-500">ספק</dt>
+                <dd className="font-medium text-navy-dark">{supplierName(supplierId)}</dd>
+              </div>
+              <div className="flex justify-between border-b border-gold/10 py-1">
+                <dt className="text-slate-500">מס׳ הזמנה</dt>
+                <dd className="font-medium text-navy-dark">{poNumber || "אוטומטי"}</dd>
+              </div>
+              <div className="flex justify-between border-b border-gold/10 py-1">
+                <dt className="text-slate-500">מספר פריטים</dt>
+                <dd className="font-medium text-navy-dark">{formValidLines.length}</dd>
+              </div>
+              <div className="flex justify-between py-1 text-base">
+                <dt className="font-bold">עלות כוללת</dt>
+                <dd className="font-bold text-brand-dark">{formatPrice(formTotal)}</dd>
+              </div>
+            </dl>
+          </div>
+          )}
+          </div>
+
+          {/* Wizard nav */}
+          <div className="flex items-center justify-between border-t border-slate-100 pt-4">
+            <button
+              type="button"
+              onClick={() => (formStep === 0 ? setShowForm(false) : setFormStep((s) => s - 1))}
+              className="btn-outline"
+              disabled={saving}
+            >
+              {formStep === 0 ? "ביטול" : "→ הקודם"}
+            </button>
+            {formStep < 2 ? (
+              <button type="submit" className="btn-gold">
+                הבא ←
+              </button>
+            ) : (
+              <button disabled={saving} className="btn-gold">
+                {saving ? "שומר…" : "✓ יצירת הזמנת רכש"}
+              </button>
+            )}
+          </div>
         </form>
       )}
 

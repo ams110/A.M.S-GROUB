@@ -6,10 +6,13 @@ import { createClient } from "@/lib/supabase/client";
 import { formatPrice, QUOTE_STATUS_HE } from "@/lib/format";
 import { computeMargin, recommendPrice } from "@/lib/margin";
 import { quoteMessage, waMessageLink } from "@/lib/messages";
+import { WizardStepper } from "@/components/WizardStepper";
 import { BASE_PATH } from "@/lib/config";
 import type { Product, Profile, Quote, QuoteItem } from "@/lib/types";
 
 type Line = { product_id: string; qty: number; unit_price: number };
+
+const QUOTE_STEPS = ["לקוח", "פריטים", "סיכום"];
 
 export default function AdminQuotesPage() {
   const supabase = createClient();
@@ -23,6 +26,7 @@ export default function AdminQuotesPage() {
 
   // New quote.
   const [showForm, setShowForm] = useState(false);
+  const [formStep, setFormStep] = useState(0);
   const [customerId, setCustomerId] = useState("");
   const [validUntil, setValidUntil] = useState("");
   const [notes, setNotes] = useState("");
@@ -169,11 +173,39 @@ export default function AdminQuotesPage() {
     if (iErr) return setError(`שמירת שורות נכשלה: ${iErr.message}`);
 
     setShowForm(false);
+    setFormStep(0);
     setCustomerId("");
     setValidUntil("");
     setNotes("");
     setLines([{ product_id: "", qty: 1, unit_price: 0 }]);
     load();
+  };
+
+  // Form total (valid lines) — shown in the review step.
+  const formValidLines = lines.filter((l) => l.product_id && l.qty > 0);
+  const formTotal = formValidLines.reduce((s, l) => s + l.unit_price * l.qty, 0);
+
+  const nextQuoteStep = () => {
+    setError(null);
+    if (formStep === 0 && !customerId) return setError("נא לבחור לקוח.");
+    if (formStep === 1 && formValidLines.length === 0)
+      return setError("נא להוסיף לפחות שורה אחת.");
+    setFormStep((s) => s + 1);
+  };
+
+  const onQuoteSubmit = (e: React.FormEvent) => {
+    if (formStep < 2) {
+      e.preventDefault();
+      nextQuoteStep();
+    } else {
+      save(e);
+    }
+  };
+
+  const openForm = () => {
+    setError(null);
+    setFormStep(0);
+    setShowForm((v) => !v);
   };
 
   const setStatus = async (q: Quote, status: Quote["status"]) => {
@@ -199,7 +231,7 @@ export default function AdminQuotesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold">הצעות מחיר</h2>
-        <button onClick={() => setShowForm((v) => !v)} className="btn-primary">
+        <button onClick={openForm} className={showForm ? "btn-outline" : "btn-gold"}>
           {showForm ? "ביטול" : "+ הצעת מחיר חדשה"}
         </button>
       </div>
@@ -207,7 +239,21 @@ export default function AdminQuotesPage() {
       {error && <p className="rounded bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
 
       {showForm && (
-        <form onSubmit={save} className="card space-y-4 p-5">
+        <form onSubmit={onQuoteSubmit} className="card space-y-5 p-5">
+          <WizardStepper
+            steps={QUOTE_STEPS}
+            current={formStep}
+            onStepClick={(i) => {
+              // Allow jumping back, or forward only once prerequisites are met.
+              if (i <= formStep) setFormStep(i);
+              else if (i === 1 && customerId) setFormStep(1);
+              else if (i === 2 && customerId && formValidLines.length) setFormStep(2);
+            }}
+          />
+
+          <div key={formStep} className="animate-fade-up space-y-4">
+          {/* Step 0 — customer & terms */}
+          {formStep === 0 && (
           <div className="grid gap-4 sm:grid-cols-3">
             <div>
               <label className="label">לקוח</label>
@@ -243,7 +289,10 @@ export default function AdminQuotesPage() {
               />
             </div>
           </div>
+          )}
 
+          {/* Step 1 — line items */}
+          {formStep === 1 && (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-slate-600">שורות</span>
@@ -326,10 +375,56 @@ export default function AdminQuotesPage() {
               );
             })}
           </div>
+          )}
 
-          <button disabled={saving} className="btn-primary">
-            {saving ? "שומר…" : "יצירת הצעת מחיר"}
-          </button>
+          {/* Step 2 — review */}
+          {formStep === 2 && (
+          <div className="rounded-2xl border border-gold/20 bg-gold-50/40 p-4">
+            <p className="eyebrow mb-2">סיכום ההצעה</p>
+            <dl className="space-y-1.5 text-sm">
+              <div className="flex justify-between border-b border-gold/10 py-1">
+                <dt className="text-slate-500">לקוח</dt>
+                <dd className="font-medium text-navy-dark">{customerName(customerId)}</dd>
+              </div>
+              <div className="flex justify-between border-b border-gold/10 py-1">
+                <dt className="text-slate-500">בתוקף עד</dt>
+                <dd className="font-medium text-navy-dark">
+                  {validUntil ? new Date(validUntil).toLocaleDateString("he-IL") : "—"}
+                </dd>
+              </div>
+              <div className="flex justify-between border-b border-gold/10 py-1">
+                <dt className="text-slate-500">מספר פריטים</dt>
+                <dd className="font-medium text-navy-dark">{formValidLines.length}</dd>
+              </div>
+              <div className="flex justify-between py-1 text-base">
+                <dt className="font-bold">סה״כ</dt>
+                <dd className="font-bold text-brand-dark">{formatPrice(formTotal)}</dd>
+              </div>
+            </dl>
+          </div>
+          )}
+          </div>
+
+          {/* Wizard nav */}
+          <div className="flex items-center justify-between border-t border-slate-100 pt-4">
+            <button
+              type="button"
+              onClick={() => (formStep === 0 ? setShowForm(false) : setFormStep((s) => s - 1))}
+              className="btn-outline"
+              disabled={saving}
+            >
+              {formStep === 0 ? "ביטול" : "→ הקודם"}
+            </button>
+            {formStep < 2 ? (
+              <button type="submit" className="btn-gold">
+                הבא ←
+              </button>
+            ) : (
+              <button disabled={saving} className="btn-gold">
+                {saving ? "שומר…" : "✓ יצירת הצעת מחיר"}
+              </button>
+            )}
+          </div>
         </form>
       )}
 
