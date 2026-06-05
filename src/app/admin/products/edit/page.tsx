@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useProfile } from "@/lib/auth";
 import { uploadImage } from "@/lib/storage";
 import { slugify } from "@/lib/slug";
 import { asset } from "@/lib/config";
@@ -43,6 +44,7 @@ function ProductForm() {
   const id = useSearchParams().get("id");
   const isEdit = !!id;
   const supabase = createClient();
+  const { isSuperAdmin } = useProfile();
 
   const [form, setForm] = useState({ ...EMPTY });
   const [specs, setSpecs] = useState<SpecRow[]>([]);
@@ -133,8 +135,11 @@ function ProductForm() {
       specs.filter((s) => s.key.trim()).map((s) => [s.key.trim(), s.value])
     );
 
+    // `cost` is masked from the public.products view (super-admin only) and is
+    // not writable through it — persist it separately via a guarded RPC below.
+    const { cost, ...rest } = form;
     const payload = {
-      ...form,
+      ...rest,
       slug: (form.slug || slugify(form.name_he)).trim(),
       category_id: form.category_id || null,
       sku: form.sku || null,
@@ -147,9 +152,16 @@ function ProductForm() {
     };
 
     setSaving(true);
-    const { error } = isEdit
-      ? await supabase.from("products").update(payload).eq("id", id)
-      : await supabase.from("products").insert(payload);
+    const { data: saved, error } = isEdit
+      ? await supabase.from("products").update(payload).eq("id", id).select("id").single()
+      : await supabase.from("products").insert(payload).select("id").single();
+
+    // Cost is super-admin-only; write it through the guarded RPC. Regular admins
+    // never touch it (the field stays as-is in the DB).
+    if (!error && isSuperAdmin) {
+      const savedId = (saved as { id: string } | null)?.id ?? id;
+      if (savedId) await supabase.rpc("admin_set_product_cost", { p_id: savedId, p_cost: cost });
+    }
     setSaving(false);
 
     if (error) {
