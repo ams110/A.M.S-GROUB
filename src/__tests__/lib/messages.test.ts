@@ -3,6 +3,7 @@ import {
   quoteMessage,
   invoiceMessage,
   winBackMessage,
+  reorderReminderMessage,
   waMessageLink,
   waPhone,
 } from "@/lib/messages";
@@ -69,5 +70,22 @@ describe("waMessageLink", () => {
   });
   it("re-exports waPhone", () => {
     expect(waPhone("0501234567")).toBe("972501234567");
+  });
+});
+
+describe("reorderReminderMessage", () => {
+  it("lists the customer's usual products with quantities", () => {
+    const msg = reorderReminderMessage({
+      name: "דנה",
+      products: [
+        { name_he: "מצלמת כיפה", typicalQty: 5 },
+        { name_he: "כבל רשת", typicalQty: 10 },
+      ],
+      loginUrl: "https://example.com/",
+    });
+    expect(msg).toContain("דנה");
+    expect(msg).toContain("מצלמת כיפה");
+    expect(msg).toContain("5 יח׳");
+    expect(msg).toContain("https://example.com/");
   });
 });

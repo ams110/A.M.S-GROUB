@@ -7,6 +7,7 @@ import { formatPrice, compactPrice, ORDER_STATUS_HE } from "@/lib/format";
 import Aurora from "@/components/Aurora";
 import ReceivablesPanel from "@/components/ReceivablesPanel";
 import OpportunitiesPanel from "@/components/OpportunitiesPanel";
+import ReorderRemindersPanel from "@/components/ReorderRemindersPanel";
 
 // ── Shape of store.admin_ops_dashboard() ─────────────────────────────────────
 
@@ -426,6 +427,9 @@ export default function OpsCenter() {
 
       {/* ── Growth opportunities: win-back + dead stock ──────────────── */}
       <OpportunitiesPanel />
+
+      {/* ── Proactive reorder reminders ──────────────────────────────── */}
+      <ReorderRemindersPanel />
 
       {/* ── Top products + Activity ──────────────────────────────────── */}
       <div className="grid gap-4 lg:grid-cols-2">
