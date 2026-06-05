@@ -24,7 +24,13 @@ import {
   type RiskLevel,
 } from "@/lib/customer360";
 import { termDays } from "@/lib/ar";
-import { paymentReminderMessage, winBackMessage, waMessageLink } from "@/lib/messages";
+import { isDue } from "@/lib/reorder";
+import {
+  paymentReminderMessage,
+  winBackMessage,
+  reorderReminderMessage,
+  waMessageLink,
+} from "@/lib/messages";
 import {
   CUSTOMER_TYPE_HE,
   PAYMENT_TERMS_HE,
@@ -142,6 +148,24 @@ function CustomerFile() {
         )
       : null;
 
+  // Products this customer is due to reorder, by their own cadence.
+  const dueProducts = topProducts.filter((p) => isDue(p, 1));
+  const reorderLink =
+    customer.phone && dueProducts.length > 0
+      ? waMessageLink(
+          customer.phone,
+          reorderReminderMessage({
+            name: customer.full_name || customer.company || undefined,
+            products: dueProducts.map((p) => ({
+              name_he: p.name_he,
+              typicalQty: p.typicalQty,
+              avgIntervalDays: p.avgIntervalDays,
+            })),
+            loginUrl,
+          })
+        )
+      : null;
+
   return (
     <div className="space-y-6">
       <Link href="/admin/dealers" className="text-sm text-brand hover:underline">
@@ -167,6 +191,11 @@ function CustomerFile() {
           {reminderLink && (
             <a href={reminderLink} target="_blank" rel="noopener noreferrer" className="btn-primary gap-1.5">
               💬 תזכורת תשלום
+            </a>
+          )}
+          {reorderLink && (
+            <a href={reorderLink} target="_blank" rel="noopener noreferrer" className="btn-primary gap-1.5">
+              🔁 תזכורת חידוש
             </a>
           )}
           {winBackLink && (
@@ -260,7 +289,14 @@ function CustomerFile() {
               <tbody>
                 {topProducts.map((p) => (
                   <tr key={p.product_id} className="border-b border-white/5">
-                    <td className="py-2 font-medium text-slate-200">{p.name_he}</td>
+                    <td className="py-2 font-medium text-slate-200">
+                      {p.name_he}
+                      {isDue(p, 1) && (
+                        <span className="mr-2 rounded-full bg-sky-500/15 px-1.5 py-0.5 text-[10px] font-bold text-sky-300 ring-1 ring-sky-500/30">
+                          🔁 לחידוש
+                        </span>
+                      )}
+                    </td>
                     <td className="py-2">{p.timesOrdered}</td>
                     <td className="py-2">{p.typicalQty}</td>
                     <td className="py-2 text-slate-400">לפני {p.daysSinceLast} ימים</td>

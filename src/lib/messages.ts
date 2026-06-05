@@ -116,6 +116,26 @@ export function winBackMessage(opts: {
   return lines.join("\n");
 }
 
+/**
+ * Proactive nudge: the customer is due to reorder items they buy on a cycle.
+ * Lists their usual products (with the typical quantity) and a link to order.
+ */
+export function reorderReminderMessage(opts: {
+  name?: string;
+  products: { name_he: string; typicalQty?: number; avgIntervalDays?: number | null }[];
+  loginUrl?: string;
+}): string {
+  const hi = opts.name ? `שלום ${opts.name} 👋` : "שלום 👋";
+  const lines = [hi, "", "כנראה שהגיע הזמן לחדש מלאי של הפריטים שאתה מזמין בקביעות:"];
+  for (const p of opts.products) {
+    const qty = p.typicalQty && p.typicalQty > 0 ? ` — בערך ${p.typicalQty} יח׳` : "";
+    lines.push(`• ${p.name_he}${qty}`);
+  }
+  if (opts.loginUrl) lines.push("", `להזמנה מהירה בקליק: ${opts.loginUrl}`);
+  lines.push("", "נשמח לעמוד לרשותך 🤝", SIGN);
+  return lines.join("\n");
+}
+
 /** Purchase order to send to a supplier (item list + quantities). */
 export function purchaseOrderMessage(opts: {
   supplierName?: string;
