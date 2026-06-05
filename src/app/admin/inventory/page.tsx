@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { STOCK_REASON_HE, formatPrice, compactPrice } from "@/lib/format";
+import { matchProductByCode } from "@/lib/barcode";
+import BarcodeScanner from "@/components/BarcodeScanner";
 import type { Product, StockMovement, StockReason } from "@/lib/types";
 
 export default function AdminInventoryPage() {
@@ -19,6 +21,20 @@ export default function AdminInventoryPage() {
   const [qty, setQty] = useState(1);
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
+  const [scanMsg, setScanMsg] = useState<string | null>(null);
+
+  // Scan a box → select that product in the movement form, ready to adjust.
+  const handleScan = (code: string) => {
+    setShowScanner(false);
+    const hit = matchProductByCode(products, code);
+    if (hit) {
+      setProductId(hit.id);
+      setScanMsg(`נבחר: ${hit.name_he}`);
+    } else {
+      setScanMsg(`לא נמצא מוצר לקוד "${code}".`);
+    }
+  };
 
   const productName = useMemo(() => {
     const m = new Map(products.map((p) => [p.id, p]));
@@ -81,6 +97,9 @@ export default function AdminInventoryPage() {
 
   return (
     <div className="space-y-8">
+      {showScanner && (
+        <BarcodeScanner onDetect={handleScan} onClose={() => setShowScanner(false)} />
+      )}
       <h2 className="text-lg font-bold">מלאי ומחסן</h2>
 
       {/* Valuation */}
@@ -145,18 +164,33 @@ export default function AdminInventoryPage() {
         <form onSubmit={submit} className="card grid gap-4 p-5 sm:grid-cols-2 lg:grid-cols-5">
           <div className="lg:col-span-2">
             <label className="label">מוצר</label>
-            <select
-              className="input"
-              value={productId}
-              onChange={(e) => setProductId(e.target.value)}
-            >
-              <option value="">— בחרו מוצר —</option>
-              {products.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name_he} (מלאי: {p.stock})
-                </option>
-              ))}
-            </select>
+            <div className="flex gap-2">
+              <select
+                className="input min-w-0 flex-1"
+                value={productId}
+                onChange={(e) => {
+                  setProductId(e.target.value);
+                  setScanMsg(null);
+                }}
+              >
+                <option value="">— בחרו מוצר —</option>
+                {products.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name_he} (מלאי: {p.stock})
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => setShowScanner(true)}
+                className="btn-outline shrink-0"
+                aria-label="סריקת ברקוד"
+                title="סריקת ברקוד / QR"
+              >
+                📷
+              </button>
+            </div>
+            {scanMsg && <p className="mt-1 text-xs text-slate-500">{scanMsg}</p>}
           </div>
           <div>
             <label className="label">פעולה</label>

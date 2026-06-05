@@ -19,6 +19,7 @@ export type Product = {
   is_featured: boolean;
   sort: number;
   sku: string | null;
+  barcode: string | null;
   cost: number;
   price: number;
   price_contractor: number;

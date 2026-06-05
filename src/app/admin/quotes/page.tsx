@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { formatPrice, QUOTE_STATUS_HE } from "@/lib/format";
-import { computeMargin } from "@/lib/margin";
+import { computeMargin, recommendPrice } from "@/lib/margin";
 import { quoteMessage, waMessageLink } from "@/lib/messages";
 import { BASE_PATH } from "@/lib/config";
 import type { Product, Profile, Quote, QuoteItem } from "@/lib/types";
@@ -87,8 +87,8 @@ export default function AdminQuotesPage() {
     );
   };
 
-  // Suggested price for a product given the selected customer's type.
-  const suggestPrice = (productId: string) => {
+  // The catalogue list price for the selected customer's type.
+  const listPriceFor = (productId: string) => {
     const p = products.find((x) => x.id === productId);
     if (!p) return 0;
     const cust = customers.find((c) => c.id === customerId);
@@ -96,11 +96,38 @@ export default function AdminQuotesPage() {
     return p.price;
   };
 
+  // The unit price this customer last saw for a product, from their most recent
+  // quote — the anchor we don't want to silently move on them.
+  const lastPaidFor = (productId: string): number | null => {
+    if (!customerId) return null;
+    const quoteTime = new Map(quotes.map((q) => [q.id, new Date(q.created_at).getTime()]));
+    let best: { t: number; price: number } | null = null;
+    for (const it of items) {
+      if (it.product_id !== productId) continue;
+      const q = quotes.find((x) => x.id === it.quote_id);
+      if (q?.customer_id !== customerId) continue;
+      const t = quoteTime.get(it.quote_id) ?? 0;
+      if (!best || t > best.t) best = { t, price: Number(it.unit_price) };
+    }
+    return best?.price ?? null;
+  };
+
+  // History-aware recommendation: keep the customer's anchor, never below a
+  // healthy margin floor, else fall back to list / cost-plus.
+  const recommendFor = (productId: string) => {
+    const p = products.find((x) => x.id === productId);
+    return recommendPrice({
+      cost: p?.cost ?? 0,
+      listPrice: listPriceFor(productId),
+      lastPaid: lastPaidFor(productId),
+    });
+  };
+
   const setLine = (i: number, patch: Partial<Line>) =>
     setLines((l) => l.map((row, j) => (j === i ? { ...row, ...patch } : row)));
 
   const onPickProduct = (i: number, productId: string) =>
-    setLine(i, { product_id: productId, unit_price: suggestPrice(productId) });
+    setLine(i, { product_id: productId, unit_price: productId ? recommendFor(productId).price : 0 });
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -231,6 +258,8 @@ export default function AdminQuotesPage() {
             {lines.map((l, i) => {
               const prod = products.find((x) => x.id === l.product_id);
               const m = prod ? computeMargin(l.unit_price, prod.cost) : null;
+              const rec = prod ? recommendFor(l.product_id) : null;
+              const recOff = rec && Math.abs(rec.price - l.unit_price) > 0.5;
               return (
               <div key={i}>
                 <div className="grid grid-cols-[1fr_90px_120px_auto] gap-2">
@@ -270,17 +299,29 @@ export default function AdminQuotesPage() {
                     ✕
                   </button>
                 </div>
-                {m && m.known && (
-                  <p className="mt-0.5 pr-1 text-xs">
-                    {m.belowCost ? (
-                      <span className="font-bold text-rose-600">מתחת לעלות ({formatPrice(prod!.cost)}) ⚠</span>
-                    ) : (
-                      <span className={m.thin ? "text-amber-600" : "text-slate-400"}>
-                        מרווח {m.marginPct.toFixed(0)}%{m.thin && " — נמוך ⚠"}
-                      </span>
-                    )}
-                  </p>
-                )}
+                <div className="mt-0.5 flex flex-wrap items-center gap-2 pr-1 text-xs">
+                  {m && m.known && (
+                    <span>
+                      {m.belowCost ? (
+                        <span className="font-bold text-rose-600">מתחת לעלות ({formatPrice(prod!.cost)}) ⚠</span>
+                      ) : (
+                        <span className={m.thin ? "text-amber-600" : "text-slate-400"}>
+                          מרווח {m.marginPct.toFixed(0)}%{m.thin && " — נמוך ⚠"}
+                        </span>
+                      )}
+                    </span>
+                  )}
+                  {rec && recOff && (
+                    <button
+                      type="button"
+                      onClick={() => setLine(i, { unit_price: rec.price })}
+                      title={rec.reason}
+                      className="rounded-full bg-gold-50 px-2 py-0.5 font-semibold text-gold-dark ring-1 ring-gold/30 hover:bg-gold-100"
+                    >
+                      💡 מומלץ {formatPrice(rec.price)}
+                    </button>
+                  )}
+                </div>
               </div>
               );
             })}

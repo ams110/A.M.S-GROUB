@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { uploadImage } from "@/lib/storage";
 import { slugify } from "@/lib/slug";
 import { asset } from "@/lib/config";
+import BarcodeScanner from "@/components/BarcodeScanner";
 import type { Category, Product } from "@/lib/types";
 
 type SpecRow = { key: string; value: string };
@@ -20,6 +21,7 @@ const EMPTY = {
   image_url: "",
   datasheet_url: "",
   sku: "",
+  barcode: "",
   cost: 0,
   price: 0,
   price_contractor: 0,
@@ -46,6 +48,7 @@ function ProductForm() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [scanBarcode, setScanBarcode] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -72,6 +75,7 @@ function ProductForm() {
             image_url: p.image_url ?? "",
             datasheet_url: p.datasheet_url ?? "",
             sku: p.sku ?? "",
+            barcode: p.barcode ?? "",
             cost: p.cost ?? 0,
             price: p.price,
             price_contractor: p.price_contractor,
@@ -129,6 +133,7 @@ function ProductForm() {
       slug: (form.slug || slugify(form.name_he)).trim(),
       category_id: form.category_id || null,
       sku: form.sku || null,
+      barcode: form.barcode || null,
       short_desc_he: form.short_desc_he || null,
       description_he: form.description_he || null,
       image_url: form.image_url || null,
@@ -210,7 +215,39 @@ function ProductForm() {
                 onChange={(e) => set({ sku: e.target.value })}
               />
             </div>
+            <div>
+              <label className="label">ברקוד (EAN/UPC)</label>
+              <div className="flex gap-2">
+                <input
+                  className="input min-w-0 flex-1"
+                  value={form.barcode}
+                  onChange={(e) => set({ barcode: e.target.value })}
+                  placeholder="לסריקה מהיר בקופה/מלאי"
+                  inputMode="numeric"
+                />
+                <button
+                  type="button"
+                  onClick={() => setScanBarcode(true)}
+                  className="btn-outline shrink-0"
+                  aria-label="סריקת ברקוד"
+                  title="סריקת ברקוד"
+                >
+                  📷
+                </button>
+              </div>
+            </div>
           </div>
+
+          {scanBarcode && (
+            <BarcodeScanner
+              title="סריקת ברקוד מוצר"
+              onClose={() => setScanBarcode(false)}
+              onDetect={(code) => {
+                set({ barcode: code.trim() });
+                setScanBarcode(false);
+              }}
+            />
+          )}
 
           <div>
             <label className="label">תיאור קצר</label>
