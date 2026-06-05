@@ -30,6 +30,7 @@ export default function AdminLayout({
 
   const navLinks = [
     { href: "/admin",                  label: "סקירה",        exact: true },
+    { href: "/admin/insights",         label: "✨ תובנות" },
     { href: "/admin/orders",           label: "הזמנות" },
     { href: "/admin/quotes",           label: "הצעות מחיר" },
     { href: "/admin/dealers",          label: "לקוחות" },

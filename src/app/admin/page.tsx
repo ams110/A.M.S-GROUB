@@ -75,6 +75,23 @@ export default function AdminHub() {
       {/* Daily briefing — what needs doing today, at a glance */}
       <DailyBriefing />
 
+      {/* Insights journey — guided, question-by-question tour of the business */}
+      <Link
+        href="/admin/insights"
+        className="group relative flex items-center gap-4 overflow-hidden rounded-2xl border border-gold/30 bg-gradient-to-l from-gold/15 via-gold/5 to-transparent p-5 transition hover:border-gold/50 hover:shadow-gold"
+      >
+        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gold-gradient text-2xl shadow-gold">
+          ✨
+        </span>
+        <div className="min-w-0 flex-1">
+          <h3 className="font-bold text-navy-dark">מסע התובנות</h3>
+          <p className="mt-0.5 text-xs text-slate-500">
+            סיור מודרך, שאלה־אחר־שאלה, על מצב העסק — עם פעולה בלחיצה אחת
+          </p>
+        </div>
+        <span className="text-gold transition group-hover:-translate-x-1">←</span>
+      </Link>
+
       {/* Quick actions — start the common flows in one tap */}
       <div className="flex flex-wrap gap-2.5">
         {quickActions.map((a) => (
