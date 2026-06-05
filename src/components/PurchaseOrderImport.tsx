@@ -10,6 +10,7 @@ import {
 } from "@/lib/importPO";
 import type { Product, Supplier } from "@/lib/types";
 import { formatPrice } from "@/lib/format";
+import Portal from "@/components/Portal";
 
 /**
  * Import a purchase order from an Excel/CSV file: upload → map columns →
@@ -80,7 +81,8 @@ export default function PurchaseOrderImport({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-4">
+    <Portal>
+    <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-4">
       <div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-t-3xl bg-white p-5 sm:rounded-3xl">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-lg font-bold">ייבוא הזמנת רכש מאקסל</h3>
@@ -213,6 +215,7 @@ export default function PurchaseOrderImport({
         )}
       </div>
     </div>
+    </Portal>
   );
 }
 

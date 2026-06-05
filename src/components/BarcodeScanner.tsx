@@ -12,6 +12,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { SCAN_FORMATS } from "@/lib/barcode";
+import Portal from "@/components/Portal";
 
 // The native API isn't in TS's lib yet; describe just what we use.
 type DetectedBarcode = { rawValue: string };
@@ -107,6 +108,7 @@ export default function BarcodeScanner({
   };
 
   return (
+    <Portal>
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
       onClick={onClose}
@@ -169,5 +171,6 @@ export default function BarcodeScanner({
         </form>
       </div>
     </div>
+    </Portal>
   );
 }
