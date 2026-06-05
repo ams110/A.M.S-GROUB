@@ -20,6 +20,7 @@ export default function CheckoutPage() {
 
   const [method, setMethod] = useState<PaymentMethod>("bank_transfer");
   const [outstanding, setOutstanding] = useState(0);
+  const [minOrder, setMinOrder] = useState(0);
   const [form, setForm] = useState({
     ship_name: "",
     ship_phone: "",
@@ -56,14 +57,17 @@ export default function CheckoutPage() {
       }
 
       // Current outstanding balance (sum of this customer's unpaid orders).
-      const { data: orders } = await supabase
-        .from("orders")
-        .select("total,payment_status");
+      const [{ data: orders }, { data: settings }] = await Promise.all([
+        supabase.from("orders").select("total,payment_status"),
+        supabase.from("settings").select("key,value").in("key", ["min_order_value"]),
+      ]);
       setOutstanding(
         ((orders ?? []) as { total: number; payment_status: string }[])
           .filter((o) => o.payment_status !== "paid")
           .reduce((s, o) => s + Number(o.total), 0)
       );
+      const min = Number(settings?.find((s) => s.key === "min_order_value")?.value || 0);
+      setMinOrder(Number.isFinite(min) ? min : 0);
       setLoading(false);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -79,6 +83,10 @@ export default function CheckoutPage() {
     setError(null);
     if (!form.ship_name || !form.ship_phone || !form.ship_address) {
       setError("נא למלא שם, טלפון וכתובת למשלוח.");
+      return;
+    }
+    if (minOrder > 0 && subtotal < minOrder) {
+      setError(`סכום הזמנה מינימלי הוא ${formatPrice(minOrder)}.`);
       return;
     }
     setSubmitting(true);
@@ -217,7 +225,8 @@ export default function CheckoutPage() {
             )}
             {method === "card" && (
               <p className="mt-3 rounded bg-slate-50 p-3 text-xs text-slate-600">
-                סליקת אשראי מאובטחת. ההזמנה תיווצר במצב “ממתין לתשלום” עד להשלמת הסליקה.
+                תשלום בכרטיס אשראי — נציג ייצור איתכם קשר להשלמת הסליקה. ההזמנה תיווצר
+                במצב “ממתין לתשלום”.
               </p>
             )}
             {method === "cod" && (

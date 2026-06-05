@@ -5,19 +5,49 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useProfile } from "@/lib/auth";
+import { useCart } from "@/components/CartProvider";
+import { useToast } from "@/components/Toast";
+import { resolveReorder } from "@/lib/cartFromOrder";
 import {
   formatPrice,
   ORDER_STATUS_HE,
   PAYMENT_STATUS_HE,
   PROFILE_STATUS_HE,
 } from "@/lib/format";
-import type { Order } from "@/lib/types";
+import type { Order, OrderItem } from "@/lib/types";
 
 export default function MyOrdersPage() {
   const router = useRouter();
   const { profile, ready, userId } = useProfile();
+  const cart = useCart();
+  const toast = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reorderingId, setReorderingId] = useState<string | null>(null);
+
+  // One-tap reorder straight from the list (shares logic with order detail).
+  const reorder = async (orderId: string) => {
+    setReorderingId(orderId);
+    try {
+      const supabase = createClient();
+      const { data: items } = await supabase
+        .from("order_items")
+        .select("product_id,qty")
+        .eq("order_id", orderId);
+      const { addable, skipped } = await resolveReorder(supabase, (items as OrderItem[]) ?? []);
+      if (addable.length === 0) {
+        toast("אף אחד מהמוצרים אינו זמין כעת להזמנה", "info");
+        return;
+      }
+      for (const a of addable) cart.add(a.line, a.qty);
+      toast(skipped > 0 ? `נוספו ${addable.length} פריטים · ${skipped} אינם זמינים` : `נוספו ${addable.length} פריטים לעגלה`);
+      router.push("/cart");
+    } catch {
+      toast("ההזמנה החוזרת נכשלה", "error");
+    } finally {
+      setReorderingId(null);
+    }
+  };
 
   // Redirect guests to login (RLS already blocks data; this is UX only).
   useEffect(() => {
@@ -92,9 +122,18 @@ export default function MyOrdersPage() {
                     {formatPrice(o.total, o.currency)}
                   </td>
                   <td className="p-3">
-                    <Link href={`/account/order?id=${o.id}`} className="text-brand hover:underline">
-                      פרטים
-                    </Link>
+                    <div className="flex items-center gap-3">
+                      <Link href={`/account/order?id=${o.id}`} className="text-brand hover:underline">
+                        פרטים
+                      </Link>
+                      <button
+                        onClick={() => reorder(o.id)}
+                        disabled={reorderingId === o.id}
+                        className="font-medium text-emerald-700 hover:underline disabled:opacity-50"
+                      >
+                        {reorderingId === o.id ? "מוסיף…" : "הזמן שוב"}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

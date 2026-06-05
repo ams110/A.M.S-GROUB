@@ -8,6 +8,7 @@ import { useProfile } from "@/lib/auth";
 import { applyEffectivePrices } from "@/lib/pricing";
 import { asset } from "@/lib/config";
 import AddToCart from "@/components/AddToCart";
+import ProductCard from "@/components/ProductCard";
 import { formatPrice } from "@/lib/format";
 import type { Product } from "@/lib/types";
 
@@ -16,6 +17,7 @@ function ProductDetail() {
   const { showPrice } = useProfile();
 
   const [product, setProduct] = useState<Product | null>(null);
+  const [related, setRelated] = useState<Product[]>([]);
   const [loading, setLoading] = useState(slug !== "");
 
   useEffect(() => {
@@ -23,6 +25,7 @@ function ProductDetail() {
     const supabase = createClient();
     (async () => {
       setLoading(true);
+      setRelated([]);
       const { data } = await supabase
         .from("products")
         .select("*")
@@ -32,6 +35,19 @@ function ProductDetail() {
       const prod = (data as Product) ?? null;
       setProduct(prod ? (await applyEffectivePrices(supabase, [prod]))[0] : null);
       setLoading(false);
+
+      // Related: same category, still orderable, excluding this product.
+      if (prod?.category_id) {
+        const { data: rel } = await supabase
+          .from("products")
+          .select("*")
+          .eq("category_id", prod.category_id)
+          .neq("id", prod.id)
+          .is("deleted_at", null)
+          .order("sort")
+          .limit(4);
+        setRelated(await applyEffectivePrices(supabase, (rel as Product[]) ?? []));
+      }
     })();
   }, [slug]);
 
@@ -100,6 +116,15 @@ function ProductDetail() {
             </p>
           )}
 
+          {showPrice && product.is_orderable && product.stock > 0 && product.stock <= 5 && (
+            <p className="mb-3 inline-block rounded-lg bg-amber-50 px-3 py-1.5 text-sm font-semibold text-amber-700">
+              ⚡ נותרו {product.stock} במלאי — מומלץ להזדרז
+            </p>
+          )}
+          {showPrice && product.stock > 5 && (
+            <p className="mb-3 text-sm font-medium text-emerald-600">✓ במלאי</p>
+          )}
+
           <div className="mb-6 max-w-sm">
             <AddToCart
               canOrder={showPrice}
@@ -146,6 +171,20 @@ function ProductDetail() {
           )}
         </div>
       </div>
+
+      {related.length > 0 && (
+        <section className="mt-12">
+          <div className="mb-4 flex items-end justify-between">
+            <h2 className="text-xl font-extrabold tracking-tight text-navy-dark">מוצרים דומים</h2>
+            <Link href="/products" className="text-sm font-semibold text-brand hover:underline">לקטלוג ←</Link>
+          </div>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+            {related.map((p) => (
+              <ProductCard key={p.id} product={p} showPrice={showPrice} />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

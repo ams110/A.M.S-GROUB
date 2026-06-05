@@ -12,6 +12,7 @@ const KNOWN = [
   "hero_image_url",
   "bank_details",
   "vat_rate",
+  "min_order_value",
   "business_name",
   "business_tax_id",
   "business_address",
@@ -125,6 +126,24 @@ export default function AdminSettingsPage() {
               />
             </div>
           </div>
+        </div>
+      </div>
+
+      <div className="card space-y-3 p-5">
+        <h3 className="font-bold">מדיניות הזמנה</h3>
+        <div>
+          <label className="label">סכום הזמנה מינימלי (₪)</label>
+          <input
+            type="number"
+            step="1"
+            className="input max-w-[160px]"
+            placeholder="0 = ללא מינימום"
+            value={values.min_order_value ?? ""}
+            onChange={(e) => set("min_order_value", e.target.value)}
+          />
+          <p className="mt-1 text-xs text-slate-400">
+            לקוחות לא יוכלו לבצע הזמנה מתחת לסכום זה. השאירו ריק או 0 לביטול.
+          </p>
         </div>
       </div>
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { STOCK_REASON_HE } from "@/lib/format";
+import { STOCK_REASON_HE, formatPrice, compactPrice } from "@/lib/format";
 import type { Product, StockMovement, StockReason } from "@/lib/types";
 
 export default function AdminInventoryPage() {
@@ -48,6 +48,11 @@ export default function AdminInventoryPage() {
     (p) => p.reorder_point > 0 && p.stock <= p.reorder_point
   );
 
+  // Inventory valuation: what the stock cost us vs. its retail (dealer) value.
+  const costValue = products.reduce((s, p) => s + p.stock * (Number(p.cost) || 0), 0);
+  const retailValue = products.reduce((s, p) => s + p.stock * (Number(p.price) || 0), 0);
+  const totalUnits = products.reduce((s, p) => s + p.stock, 0);
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -77,6 +82,26 @@ export default function AdminInventoryPage() {
   return (
     <div className="space-y-8">
       <h2 className="text-lg font-bold">מלאי ומחסן</h2>
+
+      {/* Valuation */}
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="card p-4">
+          <p className="text-xs text-slate-500">שווי מלאי לפי עלות</p>
+          <p className="mt-1 text-2xl font-extrabold text-navy-dark" title={formatPrice(costValue)}>
+            {compactPrice(costValue)}
+          </p>
+        </div>
+        <div className="card p-4">
+          <p className="text-xs text-slate-500">שווי מלאי לפי מחירון</p>
+          <p className="mt-1 text-2xl font-extrabold text-navy-dark" title={formatPrice(retailValue)}>
+            {compactPrice(retailValue)}
+          </p>
+        </div>
+        <div className="card p-4">
+          <p className="text-xs text-slate-500">סה״כ יחידות במלאי</p>
+          <p className="mt-1 text-2xl font-extrabold text-navy-dark">{totalUnits.toLocaleString("he-IL")}</p>
+        </div>
+      </section>
 
       {/* Low stock */}
       <section>

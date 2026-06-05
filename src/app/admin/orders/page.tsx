@@ -10,7 +10,7 @@ import {
   PAYMENT_METHOD_HE,
   PAYMENT_STATUS_HE,
 } from "@/lib/format";
-import type { Order, OrderStatus, PaymentStatus } from "@/lib/types";
+import type { Order, OrderStatus, PaymentStatus, Profile } from "@/lib/types";
 
 const STATUSES: OrderStatus[] = [
   "pending", "confirmed", "paid", "shipped", "delivered", "cancelled",
@@ -22,20 +22,35 @@ export default function AdminOrdersPage() {
   const supabase = createClient();
   const toast = useToast();
   const [rows, setRows] = useState<Order[]>([]);
+  const [names, setNames] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [filterStatus, setFilterStatus] = useState<OrderStatus | "">("");
+  const [filterPay, setFilterPay] = useState<PaymentStatus | "">("");
+  const [search, setSearch] = useState("");
 
   const load = async () => {
-    const { data } = await supabase
-      .from("orders")
-      .select("*")
-      .order("created_at", { ascending: false });
+    const [{ data }, { data: profs }] = await Promise.all([
+      supabase.from("orders").select("*").order("created_at", { ascending: false }),
+      supabase.from("profiles").select("id,full_name,company"),
+    ]);
     setRows((data as Order[]) ?? []);
+    setNames(
+      Object.fromEntries(
+        ((profs as Pick<Profile, "id" | "full_name" | "company">[]) ?? []).map((p) => [
+          p.id,
+          p.company || p.full_name || "—",
+        ])
+      )
+    );
     setLoading(false);
   };
 
   useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Who placed the order: the dealer's company/name, falling back to the
+  // shipping name captured on the order itself.
+  const customerOf = (o: Order) => names[o.dealer_id] || o.ship_name || "—";
 
   const update = async (id: string, patch: Partial<Order>) => {
     setRows((r) => r.map((o) => (o.id === id ? { ...o, ...patch } : o)));
@@ -47,9 +62,16 @@ export default function AdminOrdersPage() {
     }
   };
 
-  const filtered = filterStatus
-    ? rows.filter((o) => o.status === filterStatus)
-    : rows;
+  const q = search.trim().toLowerCase();
+  const filtered = rows.filter((o) => {
+    if (filterStatus && o.status !== filterStatus) return false;
+    if (filterPay && o.payment_status !== filterPay) return false;
+    if (q) {
+      const hay = `${o.order_number} ${customerOf(o)} ${o.ship_name ?? ""} ${o.ship_phone ?? ""} ${o.po_number ?? ""}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const page_rows = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
@@ -59,16 +81,34 @@ export default function AdminOrdersPage() {
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-lg font-bold">הזמנות</h2>
-        <select
-          value={filterStatus}
-          onChange={(e) => { setFilterStatus(e.target.value as OrderStatus | ""); setPage(0); }}
-          className="input w-auto"
-        >
-          <option value="">כל הסטטוסים</option>
-          {STATUSES.map((s) => (
-            <option key={s} value={s}>{ORDER_STATUS_HE[s]}</option>
-          ))}
-        </select>
+        <div className="flex flex-1 flex-wrap items-center justify-end gap-2">
+          <input
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setPage(0); }}
+            placeholder="חיפוש לפי לקוח, מס׳ הזמנה או טלפון…"
+            className="input min-w-[200px] flex-1 sm:max-w-xs"
+          />
+          <select
+            value={filterStatus}
+            onChange={(e) => { setFilterStatus(e.target.value as OrderStatus | ""); setPage(0); }}
+            className="input w-auto"
+          >
+            <option value="">כל הסטטוסים</option>
+            {STATUSES.map((s) => (
+              <option key={s} value={s}>{ORDER_STATUS_HE[s]}</option>
+            ))}
+          </select>
+          <select
+            value={filterPay}
+            onChange={(e) => { setFilterPay(e.target.value as PaymentStatus | ""); setPage(0); }}
+            className="input w-auto"
+          >
+            <option value="">כל התשלומים</option>
+            {PAY_STATUSES.map((s) => (
+              <option key={s} value={s}>{PAYMENT_STATUS_HE[s]}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <p className="mb-3 text-sm text-slate-500">
@@ -81,6 +121,7 @@ export default function AdminOrdersPage() {
           <thead className="border-b border-slate-200 text-slate-500">
             <tr>
               <th className="p-3">מספר</th>
+              <th className="p-3">לקוח</th>
               <th className="p-3">תאריך</th>
               <th className="p-3">סכום</th>
               <th className="p-3">אמצעי</th>
@@ -93,6 +134,7 @@ export default function AdminOrdersPage() {
             {page_rows.map((o) => (
               <tr key={o.id} className="border-b border-slate-100">
                 <td className="p-3 font-mono text-xs">{o.order_number}</td>
+                <td className="p-3 font-medium text-navy-dark">{customerOf(o)}</td>
                 <td className="p-3">{new Date(o.created_at).toLocaleDateString("he-IL")}</td>
                 <td className="p-3 font-bold text-brand-dark">{formatPrice(o.total, o.currency)}</td>
                 <td className="p-3">{PAYMENT_METHOD_HE[o.payment_method]}</td>
@@ -124,7 +166,7 @@ export default function AdminOrdersPage() {
             ))}
             {page_rows.length === 0 && (
               <tr>
-                <td colSpan={7} className="p-6 text-center text-slate-400">אין הזמנות.</td>
+                <td colSpan={8} className="p-6 text-center text-slate-400">אין הזמנות.</td>
               </tr>
             )}
           </tbody>
@@ -139,8 +181,11 @@ export default function AdminOrdersPage() {
         {page_rows.map((o) => (
           <div key={o.id} className="card p-4 space-y-3">
             <div className="flex items-start justify-between gap-2">
-              <span className="font-mono text-xs text-slate-500">{o.order_number}</span>
-              <span className="text-xs text-slate-400">
+              <div className="min-w-0">
+                <p className="truncate font-semibold text-navy-dark">{customerOf(o)}</p>
+                <span className="font-mono text-xs text-slate-500">{o.order_number}</span>
+              </div>
+              <span className="shrink-0 text-xs text-slate-400">
                 {new Date(o.created_at).toLocaleDateString("he-IL")}
               </span>
             </div>

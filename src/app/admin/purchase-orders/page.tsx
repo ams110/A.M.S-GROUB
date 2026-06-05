@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { formatPrice, PO_STATUS_HE } from "@/lib/format";
 import { computeSalesVelocity, suggestReplenishment } from "@/lib/replenish";
+import { purchaseOrderMessage, waMessageLink } from "@/lib/messages";
 import type {
   Product,
   PurchaseOrder,
@@ -138,6 +139,22 @@ export default function AdminPurchaseOrdersPage() {
 
   const poTotal = (poId: string) =>
     (itemsByPo.get(poId) ?? []).reduce((s, it) => s + it.qty * it.unit_cost, 0);
+
+  // WhatsApp the purchase order to its supplier (item list + quantities).
+  const poWaLink = (po: PurchaseOrder): string | null => {
+    const sup = suppliers.find((s) => s.id === po.supplier_id);
+    if (!sup?.phone) return null;
+    const productName = new Map(products.map((p) => [p.id, p.name_he]));
+    const lines = (itemsByPo.get(po.id) ?? []).map((it) => ({
+      name: productName.get(it.product_id) ?? "—",
+      qty: it.qty,
+    }));
+    if (lines.length === 0) return null;
+    return waMessageLink(
+      sup.phone,
+      purchaseOrderMessage({ supplierName: sup.name, poNumber: po.po_number, lines, notes: po.notes })
+    );
+  };
 
   const setLine = (i: number, p: Partial<Line>) =>
     setLines((l) => l.map((row, j) => (j === i ? { ...row, ...p } : row)));
@@ -424,23 +441,33 @@ export default function AdminPurchaseOrdersPage() {
                   </span>
                 </td>
                 <td className="p-3">
-                  {po.status !== "received" && po.status !== "cancelled" && (
-                    <div className="flex gap-3">
-                      <button
-                        onClick={() => receive(po)}
-                        disabled={busyId === po.id}
-                        className="text-emerald-700 hover:underline"
-                      >
-                        {busyId === po.id ? "קולט…" : "קליטה למלאי"}
-                      </button>
-                      <button
-                        onClick={() => cancel(po)}
-                        className="text-rose-700 hover:underline"
-                      >
-                        ביטול
-                      </button>
-                    </div>
-                  )}
+                  <div className="flex flex-wrap gap-3">
+                    {(() => {
+                      const link = poWaLink(po);
+                      return link ? (
+                        <a href={link} target="_blank" rel="noopener noreferrer" className="text-emerald-700 hover:underline">
+                          שלח לספק
+                        </a>
+                      ) : null;
+                    })()}
+                    {po.status !== "received" && po.status !== "cancelled" && (
+                      <>
+                        <button
+                          onClick={() => receive(po)}
+                          disabled={busyId === po.id}
+                          className="text-emerald-700 hover:underline"
+                        >
+                          {busyId === po.id ? "קולט…" : "קליטה למלאי"}
+                        </button>
+                        <button
+                          onClick={() => cancel(po)}
+                          className="text-rose-700 hover:underline"
+                        >
+                          ביטול
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}

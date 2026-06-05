@@ -1,12 +1,47 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
 import { useCart } from "@/components/CartProvider";
 import { formatPrice } from "@/lib/format";
 import { asset } from "@/lib/config";
+import { computeReceivables, termDays, type AROrder } from "@/lib/ar";
+import type { Profile } from "@/lib/types";
 
 export default function CartPage() {
   const { lines, subtotal, setQty, remove, count } = useCart();
+
+  const [creditLimit, setCreditLimit] = useState(0);
+  const [outstanding, setOutstanding] = useState(0);
+  const [minOrder, setMinOrder] = useState(0);
+
+  // Pull the dealer's credit headroom and the store's minimum-order rule so the
+  // cart can warn *before* the checkout step.
+  useEffect(() => {
+    const supabase = createClient();
+    (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      const [{ data: settings }, profRes, ordersRes] = await Promise.all([
+        supabase.from("settings").select("key,value").in("key", ["min_order_value"]),
+        user ? supabase.from("profiles").select("*").eq("id", user.id).single() : Promise.resolve({ data: null }),
+        user
+          ? supabase.from("orders").select("total,payment_status,status,created_at")
+          : Promise.resolve({ data: [] }),
+      ]);
+      const min = Number(settings?.find((s) => s.key === "min_order_value")?.value || 0);
+      setMinOrder(Number.isFinite(min) ? min : 0);
+
+      const p = profRes.data as Profile | null;
+      if (p) {
+        setCreditLimit(p.credit_limit || 0);
+        const r = computeReceivables((ordersRes.data as AROrder[]) ?? [], termDays(p.payment_terms));
+        setOutstanding(r.outstanding);
+      }
+    })();
+  }, []);
 
   if (count === 0) {
     return (
@@ -19,6 +54,9 @@ export default function CartPage() {
       </div>
     );
   }
+
+  const belowMin = minOrder > 0 && subtotal < minOrder;
+  const overCredit = creditLimit > 0 && outstanding + subtotal > creditLimit;
 
   return (
     <div className="container-app py-10">
@@ -73,9 +111,30 @@ export default function CartPage() {
             <span className="text-brand-dark">{formatPrice(subtotal)}</span>
           </div>
           <p className="text-xs text-slate-400">המחיר ללא מע״מ ולא כולל משלוח.</p>
-          <Link href="/checkout" className="btn-primary w-full">
-            מעבר לתשלום
-          </Link>
+
+          {belowMin && (
+            <div className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              סכום הזמנה מינימלי הוא {formatPrice(minOrder)}. חסרים{" "}
+              <strong>{formatPrice(minOrder - subtotal)}</strong> כדי להמשיך.
+            </div>
+          )}
+
+          {overCredit && (
+            <div className="rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-700">
+              ⚠ ההזמנה חורגת ממסגרת האשראי ({formatPrice(creditLimit)}). חוב נוכחי:{" "}
+              {formatPrice(outstanding)}. ייתכן שתידרש אישור היבואן.
+            </div>
+          )}
+
+          {belowMin ? (
+            <button disabled className="btn-primary w-full cursor-not-allowed opacity-50">
+              מעבר לתשלום
+            </button>
+          ) : (
+            <Link href="/checkout" className="btn-primary w-full">
+              מעבר לתשלום
+            </Link>
+          )}
         </aside>
       </div>
     </div>

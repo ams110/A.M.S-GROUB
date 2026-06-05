@@ -40,7 +40,8 @@ function Catalog() {
 
       let query = supabase.from("products").select("*").is("deleted_at", null).order("sort");
       if (categoryId) query = query.eq("category_id", categoryId);
-      if (q) query = query.ilike("name_he", `%${q}%`);
+      // Dealers search by model/SKU as often as by name — match both.
+      if (q) query = query.or(`name_he.ilike.%${q}%,sku.ilike.%${q}%`);
 
       const { data } = await query;
       setProducts(await applyEffectivePrices(supabase, (data as Product[]) ?? []));
@@ -113,7 +114,7 @@ function Catalog() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="חיפוש מוצר…"
+            placeholder="חיפוש לפי שם או מק״ט…"
             className="input min-w-0 flex-1"
           />
           <button type="submit" className="btn-primary shrink-0">חפש</button>

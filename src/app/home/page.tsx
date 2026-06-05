@@ -9,7 +9,8 @@ import { applyEffectivePrices } from "@/lib/pricing";
 import ProductCard from "@/components/ProductCard";
 import OpsCenter from "@/components/OpsCenter";
 import Aurora from "@/components/Aurora";
-import type { Product } from "@/lib/types";
+import { buildReorderSuggestions, isDue } from "@/lib/reorder";
+import type { Order, OrderItem, Product } from "@/lib/types";
 
 function greeting(h: number) {
   if (h < 12) return "בוקר טוב";
@@ -37,6 +38,7 @@ function DealerHome() {
   });
   const [featured, setFeatured] = useState<Product[]>([]);
   const [stats, setStats] = useState<{ orders: number; quotes: number }>({ orders: 0, quotes: 0 });
+  const [dueCount, setDueCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -57,6 +59,21 @@ function DealerHome() {
       setFeatured(await applyEffectivePrices(supabase, (featRes.data as Product[]) ?? []));
       setStats({ orders: ordersRes.count ?? 0, quotes: quotesRes.count ?? 0 });
       setLoading(false);
+
+      // "Time to reorder": how many regularly-bought items are due a refill.
+      const { data: orders } = await supabase
+        .from("orders")
+        .select("id,created_at")
+        .order("created_at", { ascending: false });
+      const orderList = (orders as Pick<Order, "id" | "created_at">[]) ?? [];
+      if (orderList.length) {
+        const { data: items } = await supabase
+          .from("order_items")
+          .select("order_id,product_id,name_he,sku,qty,unit_price")
+          .in("order_id", orderList.map((o) => o.id));
+        const suggestions = buildReorderSuggestions(orderList, (items as OrderItem[]) ?? []);
+        setDueCount(suggestions.filter(isDue).length);
+      }
     })();
   }, []);
 
@@ -86,6 +103,23 @@ function DealerHome() {
           </div>
         </div>
       </section>
+
+      {/* ── Time to reorder nudge ─────────────────────────────── */}
+      {dueCount > 0 && (
+        <Link
+          href="/account/reorder"
+          className="flex items-center justify-between gap-4 rounded-2xl border border-gold/30 bg-gold-50 px-5 py-4 transition hover:brightness-[0.98]"
+        >
+          <div className="flex items-center gap-3">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-gold-gradient text-xl text-navy-dark shadow-gold">🔁</span>
+            <div>
+              <p className="font-bold text-navy-dark">הגיע הזמן לחדש מלאי</p>
+              <p className="text-sm text-slate-600">{dueCount} מוצרים שאתה מזמין בקביעות ממתינים להזמנה חוזרת</p>
+            </div>
+          </div>
+          <span className="shrink-0 text-sm font-bold text-gold-dark">להזמנה חוזרת ←</span>
+        </Link>
+      )}
 
       {/* ── Quick stats ───────────────────────────────────────── */}
       <section className="grid grid-cols-3 gap-3 sm:gap-4">

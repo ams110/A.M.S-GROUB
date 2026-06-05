@@ -2,8 +2,11 @@
 
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useCart } from "@/components/CartProvider";
+import { useToast } from "@/components/Toast";
+import { resolveReorder } from "@/lib/cartFromOrder";
 import {
   formatPrice,
   ORDER_STATUS_HE,
@@ -14,6 +17,9 @@ import type { Order, OrderItem } from "@/lib/types";
 
 function OrderDetail() {
   const params = useSearchParams();
+  const router = useRouter();
+  const cart = useCart();
+  const toast = useToast();
   const id = params.get("id") ?? "";
   const isNew = params.get("new") === "1";
 
@@ -21,6 +27,30 @@ function OrderDetail() {
   const [lines, setLines] = useState<OrderItem[]>([]);
   const [bank, setBank] = useState<string | undefined>();
   const [loading, setLoading] = useState(true);
+  const [reordering, setReordering] = useState(false);
+
+  // "Order the same again": pull the current catalogue rows for this order's
+  // products, apply the dealer's pricing, add whatever is still orderable to
+  // the cart (capped at stock / min qty) and go to the cart.
+  const reorder = async () => {
+    if (!lines.length) return;
+    setReordering(true);
+    try {
+      const supabase = createClient();
+      const { addable, skipped } = await resolveReorder(supabase, lines);
+      if (addable.length === 0) {
+        toast("אף אחד מהמוצרים אינו זמין כעת להזמנה", "info");
+        setReordering(false);
+        return;
+      }
+      for (const a of addable) cart.add(a.line, a.qty);
+      toast(skipped > 0 ? `נוספו ${addable.length} פריטים · ${skipped} אינם זמינים` : `נוספו ${addable.length} פריטים לעגלה`);
+      router.push("/cart");
+    } catch {
+      toast("ההזמנה החוזרת נכשלה", "error");
+      setReordering(false);
+    }
+  };
 
   useEffect(() => {
     if (!id) {
@@ -85,6 +115,15 @@ function OrderDetail() {
       <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-2xl font-bold">הזמנה {o.order_number}</h1>
         <div className="flex items-center gap-3">
+          {lines.length > 0 && (
+            <button
+              onClick={reorder}
+              disabled={reordering}
+              className="btn-gold py-1.5 text-sm disabled:opacity-50"
+            >
+              {reordering ? "מוסיף…" : "🔁 הזמן שוב"}
+            </button>
+          )}
           <Link href={`/invoice?order=${o.id}`} className="text-sm text-brand hover:underline">
             חשבונית מס
           </Link>
