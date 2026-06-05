@@ -7,6 +7,7 @@ import { formatPrice, QUOTE_STATUS_HE } from "@/lib/format";
 import { computeMargin, recommendPrice } from "@/lib/margin";
 import { quoteMessage, waMessageLink } from "@/lib/messages";
 import { WizardStepper } from "@/components/WizardStepper";
+import { ReviewCard, ReviewItem } from "@/components/ReviewSummary";
 import { BASE_PATH } from "@/lib/config";
 import type { Product, Profile, Quote, QuoteItem } from "@/lib/types";
 
@@ -379,29 +380,15 @@ export default function AdminQuotesPage() {
 
           {/* Step 2 — review */}
           {formStep === 2 && (
-          <div className="rounded-2xl border border-gold/20 bg-gold-50/40 p-4">
-            <p className="eyebrow mb-2">סיכום ההצעה</p>
-            <dl className="space-y-1.5 text-sm">
-              <div className="flex justify-between border-b border-gold/10 py-1">
-                <dt className="text-slate-500">לקוח</dt>
-                <dd className="font-medium text-navy-dark">{customerName(customerId)}</dd>
-              </div>
-              <div className="flex justify-between border-b border-gold/10 py-1">
-                <dt className="text-slate-500">בתוקף עד</dt>
-                <dd className="font-medium text-navy-dark">
-                  {validUntil ? new Date(validUntil).toLocaleDateString("he-IL") : "—"}
-                </dd>
-              </div>
-              <div className="flex justify-between border-b border-gold/10 py-1">
-                <dt className="text-slate-500">מספר פריטים</dt>
-                <dd className="font-medium text-navy-dark">{formValidLines.length}</dd>
-              </div>
-              <div className="flex justify-between py-1 text-base">
-                <dt className="font-bold">סה״כ</dt>
-                <dd className="font-bold text-brand-dark">{formatPrice(formTotal)}</dd>
-              </div>
-            </dl>
-          </div>
+          <ReviewCard title="סיכום ההצעה">
+            <ReviewItem label="לקוח" value={customerName(customerId)} />
+            <ReviewItem
+              label="בתוקף עד"
+              value={validUntil ? new Date(validUntil).toLocaleDateString("he-IL") : "—"}
+            />
+            <ReviewItem label="מספר פריטים" value={String(formValidLines.length)} />
+            <ReviewItem label="סה״כ" value={formatPrice(formTotal)} strong />
+          </ReviewCard>
           )}
           </div>
 

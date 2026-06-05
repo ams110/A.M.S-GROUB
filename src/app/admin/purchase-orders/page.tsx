@@ -6,6 +6,7 @@ import { formatPrice, PO_STATUS_HE } from "@/lib/format";
 import { computeSalesVelocity, suggestReplenishment } from "@/lib/replenish";
 import { purchaseOrderMessage, waMessageLink } from "@/lib/messages";
 import { WizardStepper } from "@/components/WizardStepper";
+import { ReviewCard, ReviewItem } from "@/components/ReviewSummary";
 import type {
   Product,
   PurchaseOrder,
@@ -448,27 +449,12 @@ export default function AdminPurchaseOrdersPage() {
 
           {/* Step 2 — review */}
           {formStep === 2 && (
-          <div className="rounded-2xl border border-gold/20 bg-gold-50/40 p-4">
-            <p className="eyebrow mb-2">סיכום ההזמנה</p>
-            <dl className="space-y-1.5 text-sm">
-              <div className="flex justify-between border-b border-gold/10 py-1">
-                <dt className="text-slate-500">ספק</dt>
-                <dd className="font-medium text-navy-dark">{supplierName(supplierId)}</dd>
-              </div>
-              <div className="flex justify-between border-b border-gold/10 py-1">
-                <dt className="text-slate-500">מס׳ הזמנה</dt>
-                <dd className="font-medium text-navy-dark">{poNumber || "אוטומטי"}</dd>
-              </div>
-              <div className="flex justify-between border-b border-gold/10 py-1">
-                <dt className="text-slate-500">מספר פריטים</dt>
-                <dd className="font-medium text-navy-dark">{formValidLines.length}</dd>
-              </div>
-              <div className="flex justify-between py-1 text-base">
-                <dt className="font-bold">עלות כוללת</dt>
-                <dd className="font-bold text-brand-dark">{formatPrice(formTotal)}</dd>
-              </div>
-            </dl>
-          </div>
+          <ReviewCard title="סיכום ההזמנה">
+            <ReviewItem label="ספק" value={supplierName(supplierId)} />
+            <ReviewItem label="מס׳ הזמנה" value={poNumber || "אוטומטי"} />
+            <ReviewItem label="מספר פריטים" value={String(formValidLines.length)} />
+            <ReviewItem label="עלות כוללת" value={formatPrice(formTotal)} strong />
+          </ReviewCard>
           )}
           </div>
 
