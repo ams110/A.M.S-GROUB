@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useProfile } from "@/lib/auth";
+import DailyBriefing from "@/components/DailyBriefing";
 
 type Section = {
   href: string;
@@ -70,6 +71,9 @@ export default function AdminHub() {
           <Link href="/home" className="font-semibold text-brand hover:underline">דף הבית</Link>.
         </p>
       </div>
+
+      {/* Daily briefing — what needs doing today, at a glance */}
+      <DailyBriefing />
 
       {/* Quick actions — start the common flows in one tap */}
       <div className="flex flex-wrap gap-2.5">

@@ -356,6 +356,7 @@ export default function AdminCustomersPage() {
                           {p.status !== "rejected" && (
                             <button onClick={() => setStatus(p.id, "rejected")} className="text-rose-700 hover:underline">דחייה</button>
                           )}
+                          <Link href={`/admin/customer?id=${p.id}`} className="font-semibold text-gold-dark hover:underline">תיק לקוח</Link>
                           <Link href={`/admin/customer-prices?customer=${p.id}`} className="text-brand hover:underline">מחירים</Link>
                           {(() => {
                             const link = remindLink(p);
@@ -424,6 +425,7 @@ export default function AdminCustomersPage() {
                     {p.status !== "rejected" && (
                       <button onClick={() => setStatus(p.id, "rejected")} className="btn-outline py-1 text-xs text-rose-700 border-rose-300">דחייה</button>
                     )}
+                    <Link href={`/admin/customer?id=${p.id}`} className="btn-outline py-1 text-xs text-gold-dark border-gold/40">תיק לקוח</Link>
                     <Link href={`/admin/customer-prices?customer=${p.id}`} className="btn-outline py-1 text-xs">מחירים</Link>
                     {(() => {
                       const link = remindLink(p);

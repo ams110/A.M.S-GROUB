@@ -6,7 +6,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useProfile } from "@/lib/auth";
 import { applyEffectivePrices } from "@/lib/pricing";
+import { matchProductByCode } from "@/lib/barcode";
 import ProductCard from "@/components/ProductCard";
+import BarcodeScanner from "@/components/BarcodeScanner";
 import type { Category, Product } from "@/lib/types";
 
 type SortKey = "default" | "name" | "price-asc" | "price-desc";
@@ -25,6 +27,7 @@ function Catalog() {
   const [inStockOnly, setInStockOnly] = useState(false);
   const [search, setSearch] = useState(q ?? "");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -55,6 +58,19 @@ function Catalog() {
     if (search) url.set("q", search);
     if (category) url.set("category", category);
     router.push(`/products?${url.toString()}`);
+  };
+
+  // A scanned barcode/SKU jumps straight to the product when we can resolve it
+  // against the loaded catalogue; otherwise it falls back to a full search.
+  const handleScan = (code: string) => {
+    setShowScanner(false);
+    const hit = matchProductByCode(products, code);
+    if (hit) {
+      router.push(`/product?slug=${hit.slug}`);
+    } else {
+      setSearch(code);
+      router.push(`/products?q=${encodeURIComponent(code.trim())}`);
+    }
   };
 
   const sorted = [...products]
@@ -120,6 +136,18 @@ function Catalog() {
           <button type="submit" className="btn-primary shrink-0">חפש</button>
         </form>
 
+        {/* Barcode / QR scan — straight from the box to the catalogue */}
+        <button
+          type="button"
+          onClick={() => setShowScanner(true)}
+          className="btn-outline shrink-0 gap-1.5"
+          aria-label="סריקת ברקוד"
+          title="סריקת ברקוד / QR"
+        >
+          <span aria-hidden>📷</span>
+          <span className="hidden sm:inline">סריקה</span>
+        </button>
+
         {/* Mobile category toggle */}
         <button
           onClick={() => setSidebarOpen((v) => !v)}
@@ -157,6 +185,10 @@ function Catalog() {
         <div className="mb-4 rounded-xl border border-slate-200 bg-white p-3 md:hidden">
           {navLinks}
         </div>
+      )}
+
+      {showScanner && (
+        <BarcodeScanner onDetect={handleScan} onClose={() => setShowScanner(false)} />
       )}
 
       <div className="grid gap-8 md:grid-cols-[220px_1fr]">

@@ -59,3 +59,52 @@ export function priceFromMarkup(cost: number, markupPct: number): number {
   const next = (Number(cost) || 0) * (1 + (Number(markupPct) || 0) / 100);
   return Math.max(0, Math.round(next * 100) / 100);
 }
+
+export type PriceRecommendation = {
+  /** The suggested unit price. */
+  price: number;
+  /** Why this price was chosen (Hebrew, for a tooltip/chip). */
+  reason: string;
+};
+
+/**
+ * Recommend a selling price for one product & customer. Order of preference:
+ *   1. The price this customer paid most recently for this item (their anchor —
+ *      stay consistent, never silently raise on them).
+ *   2. The catalogue list price for their type.
+ *   3. A cost-plus floor that guarantees a healthy target margin.
+ * The result is never below the cost-plus floor when a cost is known, so a
+ * remembered/list price that quietly loses money gets pulled up to break-even+.
+ */
+export function recommendPrice(opts: {
+  cost: number;
+  listPrice: number;
+  /** The unit price on this customer's most recent order/quote of this item. */
+  lastPaid?: number | null;
+  /** Healthy margin to fall back to when nothing else is known. Default 25%. */
+  targetMarginPct?: number;
+}): PriceRecommendation {
+  const target = opts.targetMarginPct ?? 25;
+  const cost = Number(opts.cost) || 0;
+  // cost-plus floor: price s.t. margin% == target  →  cost / (1 − target/100)
+  const floor = cost > 0 && target < 100 ? Math.round((cost / (1 - target / 100)) * 100) / 100 : 0;
+
+  if (opts.lastPaid && opts.lastPaid > 0) {
+    const price = Math.max(opts.lastPaid, floor);
+    return {
+      price,
+      reason:
+        floor > opts.lastPaid
+          ? "המחיר האחרון של הלקוח הועלה לרצפת רווחיות"
+          : "המחיר האחרון ששילם הלקוח",
+    };
+  }
+  if (opts.listPrice > 0) {
+    const price = Math.max(opts.listPrice, floor);
+    return {
+      price,
+      reason: floor > opts.listPrice ? "מחיר מחירון הועלה לרצפת רווחיות" : "מחיר מחירון",
+    };
+  }
+  return { price: floor, reason: `מבוסס עלות + ${target}% רווח` };
+}
