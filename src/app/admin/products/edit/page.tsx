@@ -9,6 +9,7 @@ import { slugify } from "@/lib/slug";
 import { asset } from "@/lib/config";
 import BarcodeScanner from "@/components/BarcodeScanner";
 import { WizardStepper } from "@/components/WizardStepper";
+import { ReviewCard, ReviewItem } from "@/components/ReviewSummary";
 import type { Category, Product } from "@/lib/types";
 
 type SpecRow = { key: string; value: string };
@@ -489,9 +490,8 @@ function ProductForm() {
           ))}
 
           {/* Review summary before save */}
-          <div className="mt-2 rounded-2xl border border-gold/20 bg-gold-50/40 p-4">
-            <p className="eyebrow mb-2">סיכום</p>
-            <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
+          <div className="mt-2">
+            <ReviewCard title="סיכום">
               <ReviewItem label="שם" value={form.name_he || "—"} />
               <ReviewItem
                 label="קטגוריה"
@@ -501,7 +501,7 @@ function ProductForm() {
               <ReviewItem label="מחיר לסוחר" value={`₪${Number(form.price).toLocaleString()}`} />
               <ReviewItem label="מלאי" value={String(form.stock)} />
               <ReviewItem label="ניתן להזמנה" value={form.is_orderable ? "כן" : "לא"} />
-            </dl>
+            </ReviewCard>
           </div>
         </div>
         )}
@@ -533,20 +533,6 @@ function ProductForm() {
           )}
         </div>
       </form>
-    </div>
-  );
-}
-
-function ReviewItem({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
-  return (
-    <div className="flex items-center justify-between gap-2 border-b border-gold/10 py-1 last:border-0">
-      <dt className="shrink-0 text-xs text-slate-500">{label}</dt>
-      <dd
-        className={`truncate font-medium text-navy-dark ${mono ? "ltr-input" : ""}`}
-        dir={mono ? "ltr" : undefined}
-      >
-        {value}
-      </dd>
     </div>
   );
 }

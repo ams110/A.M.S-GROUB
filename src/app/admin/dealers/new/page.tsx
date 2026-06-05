@@ -7,6 +7,8 @@ import QRCode from "qrcode";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/Toast";
 import { WizardStepper, CheckIcon } from "@/components/WizardStepper";
+import { RefreshIcon, StoreIcon, HelmetIcon, WhatsAppIcon } from "@/components/icons";
+import { ReviewCard, ReviewItem } from "@/components/ReviewSummary";
 import Confetti from "@/components/Confetti";
 import { BASE_PATH } from "@/lib/config";
 import { genPassword, waLink, welcomeMessage } from "@/lib/onboarding";
@@ -408,21 +410,18 @@ export default function NewDealerWizard() {
             )}
 
             {/* Review summary — what's about to be created */}
-            <div className="rounded-2xl border border-gold/20 bg-gold-50/40 p-4">
-              <p className="eyebrow mb-2">סיכום לפני יצירה</p>
-              <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
-                <ReviewItem label="סוג" value={form.customer_type === "dealer" ? "סוחר" : "קבלן"} />
-                <ReviewItem label="שם" value={form.full_name || form.company || "—"} />
-                <ReviewItem label="אימייל" value={form.email || "—"} mono />
-                <ReviewItem label="טלפון" value={form.phone || "—"} mono />
-                {form.customer_type === "dealer" && (
-                  <>
-                    <ReviewItem label="מסגרת אשראי" value={`₪${form.credit_limit.toLocaleString()}`} />
-                    <ReviewItem label="תנאי תשלום" value={PAYMENT_TERMS_HE[form.payment_terms]} />
-                  </>
-                )}
-              </dl>
-            </div>
+            <ReviewCard title="סיכום לפני יצירה">
+              <ReviewItem label="סוג" value={form.customer_type === "dealer" ? "סוחר" : "קבלן"} />
+              <ReviewItem label="שם" value={form.full_name || form.company || "—"} />
+              <ReviewItem label="אימייל" value={form.email || "—"} mono />
+              <ReviewItem label="טלפון" value={form.phone || "—"} mono />
+              {form.customer_type === "dealer" && (
+                <>
+                  <ReviewItem label="מסגרת אשראי" value={`₪${form.credit_limit.toLocaleString()}`} />
+                  <ReviewItem label="תנאי תשלום" value={PAYMENT_TERMS_HE[form.payment_terms]} />
+                </>
+              )}
+            </ReviewCard>
 
             {error && (
               <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>
@@ -488,20 +487,6 @@ function CredRow({ label, value, mono }: { label: string; value: string; mono?: 
   );
 }
 
-function ReviewItem({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
-  return (
-    <div className="flex items-center justify-between gap-2 border-b border-gold/10 py-1 last:border-0">
-      <dt className="shrink-0 text-xs text-slate-500">{label}</dt>
-      <dd
-        className={`truncate font-medium text-navy-dark ${mono ? "ltr-input" : ""}`}
-        dir={mono ? "ltr" : undefined}
-      >
-        {value}
-      </dd>
-    </div>
-  );
-}
-
 /** Password strength meter (length + character variety → 0..4). */
 function PasswordStrength({ value }: { value: string }) {
   const score = useMemo(() => {
@@ -535,41 +520,3 @@ function PasswordStrength({ value }: { value: string }) {
   );
 }
 
-/* ───────────────────────── Icons ───────────────────────── */
-
-function RefreshIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6" />
-    </svg>
-  );
-}
-
-function StoreIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M3 9l1.5-5h15L21 9" />
-      <path d="M3 9h18v2a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0V9z" />
-      <path d="M5 13v7h14v-7" />
-      <path d="M9 20v-4h6v4" />
-    </svg>
-  );
-}
-
-function HelmetIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M4 16a8 8 0 0 1 16 0" />
-      <path d="M12 4a8 8 0 0 0-2 .26V8a2 2 0 0 0 4 0V4.26A8 8 0 0 0 12 4z" />
-      <path d="M2 16h20v2a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-2z" />
-    </svg>
-  );
-}
-
-function WhatsAppIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden>
-      <path d="M.057 24l1.687-6.163a11.867 11.867 0 01-1.587-5.946C.16 5.335 5.495 0 12.05 0a11.82 11.82 0 018.413 3.488 11.82 11.82 0 013.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 01-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884a9.86 9.86 0 001.523 5.26l-.999 3.648 3.965-1.607zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.247-.694.247-1.289.173-1.413z" />
-    </svg>
-  );
-}
