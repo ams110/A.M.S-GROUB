@@ -135,23 +135,34 @@ export default function NewDealerWizard() {
     const hasPhone = done.phone.replace(/\D/g, "").length >= 9;
 
     return (
-      <div className="mx-auto max-w-xl animate-fade-in">
+      <div className="mx-auto max-w-xl animate-fade-up">
         <div className="card overflow-hidden">
-          <div className="bg-gradient-to-l from-emerald-500 to-emerald-600 px-6 py-8 text-center text-white">
-            <div className="mx-auto mb-3 grid h-16 w-16 place-items-center rounded-full bg-white/20 text-4xl">
-              ✓
+          {/* Golden hero */}
+          <div className="relative overflow-hidden bg-gold-gradient px-6 py-9 text-center text-navy-dark">
+            <div className="pointer-events-none absolute inset-0 opacity-20 [background:radial-gradient(120px_60px_at_20%_0%,#fff,transparent),radial-gradient(160px_80px_at_90%_120%,#fff,transparent)]" />
+            <div className="animate-pop-in mx-auto mb-3 grid h-20 w-20 place-items-center rounded-full bg-navy-dark/10 text-4xl shadow-gold ring-4 ring-white/30">
+              <CheckIcon />
             </div>
-            <h2 className="text-xl font-extrabold">החשבון מוכן!</h2>
-            <p className="mt-1 text-sm text-white/90">
+            <h2 className="text-2xl font-extrabold tracking-tight">החשבון מוכן! 🎉</h2>
+            <p className="mt-1 text-sm font-medium text-navy-dark/75">
               נותר רק לשלוח ל{done.name || "לקוח"} את פרטי הכניסה.
             </p>
           </div>
 
           <div className="space-y-4 p-6">
+            {/* Credentials */}
             <div className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-200">
               <CredRow label="כתובת כניסה" value={done.loginUrl} mono />
               <CredRow label="שם משתמש" value={done.login} mono />
               <CredRow label="סיסמה" value={done.password} mono />
+            </div>
+
+            {/* WhatsApp message preview */}
+            <div>
+              <p className="eyebrow mb-2">תצוגה מקדימה של ההודעה</p>
+              <div className="relative rounded-2xl rounded-tr-sm border border-emerald-500/20 bg-emerald-500/5 p-4 text-sm leading-relaxed text-slate-700">
+                <span className="whitespace-pre-line">{msg}</span>
+              </div>
             </div>
 
             <button
@@ -191,7 +202,7 @@ export default function NewDealerWizard() {
               >
                 + לקוח נוסף
               </button>
-              <Link href="/admin/dealers" className="btn-primary flex-1 text-center">
+              <Link href="/admin/dealers" className="btn-gold flex-1 text-center">
                 סיום
               </Link>
             </div>
@@ -211,42 +222,43 @@ export default function NewDealerWizard() {
         </Link>
       </div>
 
-      {/* Stepper */}
+      {/* Glowing stepper */}
       <div className="mb-6 flex items-center">
         {STEPS.map((label, i) => (
           <div key={label} className="flex flex-1 items-center last:flex-none">
             <div className="flex flex-col items-center">
               <div
-                className={`grid h-9 w-9 place-items-center rounded-full text-sm font-bold transition-all ${
+                className={`grid h-10 w-10 place-items-center rounded-full text-sm font-bold transition-all duration-300 ${
                   i < step
-                    ? "bg-emerald-500 text-white"
+                    ? "bg-gold/85 text-navy-dark"
                     : i === step
-                    ? "bg-gold-gradient text-navy-dark shadow-gold"
-                    : "bg-slate-100 text-slate-400"
+                    ? "bg-gold-gradient text-navy-dark ring-2 ring-gold/40 animate-gold-pulse"
+                    : "border border-white/12 bg-white/[0.06] text-slate-400"
                 }`}
               >
-                {i < step ? "✓" : i + 1}
+                {i < step ? <CheckIcon small /> : i + 1}
               </div>
               <span
-                className={`mt-1 text-[11px] ${
-                  i === step ? "font-semibold text-navy-dark" : "text-slate-400"
+                className={`mt-1.5 text-[11px] transition-colors ${
+                  i === step ? "font-semibold text-brand" : "text-slate-400"
                 }`}
               >
                 {label}
               </span>
             </div>
             {i < STEPS.length - 1 && (
-              <div
-                className={`mx-1 h-0.5 flex-1 rounded ${
-                  i < step ? "bg-emerald-400" : "bg-slate-200"
-                }`}
-              />
+              <div className="mx-1 h-1 flex-1 overflow-hidden rounded-full bg-white/10">
+                <div
+                  className="h-full rounded-full bg-gold-gradient transition-all duration-500"
+                  style={{ width: i < step ? "100%" : "0%" }}
+                />
+              </div>
             )}
           </div>
         ))}
       </div>
 
-      <div className="card animate-fade-in p-6">
+      <div key={step} className="card animate-fade-up p-6">
         {/* Step 0 — account type */}
         {step === 0 && (
           <div className="space-y-4">
@@ -254,24 +266,34 @@ export default function NewDealerWizard() {
             <div className="grid grid-cols-2 gap-4">
               {(
                 [
-                  { v: "dealer", t: "סוחר", d: "מחיר סיטונאי, מסגרת אשראי ותנאי תשלום", icon: "🏪" },
-                  { v: "contractor", t: "קבלן", d: "מחיר קבלן מותאם לפרויקטים", icon: "👷" },
+                  { v: "dealer", t: "סוחר", d: "מחיר סיטונאי, מסגרת אשראי ותנאי תשלום", icon: <StoreIcon /> },
+                  { v: "contractor", t: "קבלן", d: "מחיר קבלן מותאם לפרויקטים", icon: <HelmetIcon /> },
                 ] as const
-              ).map((o) => (
-                <button
-                  key={o.v}
-                  onClick={() => set({ customer_type: o.v })}
-                  className={`rounded-2xl border-2 p-5 text-center transition-all ${
-                    form.customer_type === o.v
-                      ? "border-gold bg-gold-50 shadow-gold"
-                      : "border-slate-200 hover:border-gold/40 hover:bg-gold-50/40"
-                  }`}
-                >
-                  <div className="text-3xl">{o.icon}</div>
-                  <div className="mt-2 font-bold text-navy-dark">{o.t}</div>
-                  <div className="mt-1 text-xs text-slate-500">{o.d}</div>
-                </button>
-              ))}
+              ).map((o) => {
+                const active = form.customer_type === o.v;
+                return (
+                  <button
+                    key={o.v}
+                    onClick={() => set({ customer_type: o.v })}
+                    className={`group relative rounded-2xl border p-5 text-center backdrop-blur transition-all duration-200 hover:-translate-y-0.5 ${
+                      active
+                        ? "border-gold bg-gold-50 shadow-gold ring-1 ring-gold/40"
+                        : "border-white/10 bg-white/[0.04] hover:border-gold/40 hover:bg-gold-50/40"
+                    }`}
+                  >
+                    {active && (
+                      <span className="animate-pop-in absolute right-3 top-3 grid h-6 w-6 place-items-center rounded-full bg-gold-gradient text-navy-dark shadow-gold">
+                        <CheckIcon small />
+                      </span>
+                    )}
+                    <div className={`mx-auto grid h-14 w-14 place-items-center rounded-2xl transition-colors ${active ? "text-gold-dark" : "text-slate-400 group-hover:text-gold-dark"}`}>
+                      {o.icon}
+                    </div>
+                    <div className="mt-2 font-bold text-navy-dark">{o.t}</div>
+                    <div className="mt-1 text-xs text-slate-500">{o.d}</div>
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
@@ -353,12 +375,10 @@ export default function NewDealerWizard() {
                     className="btn-outline shrink-0 px-3"
                     title="יצירת סיסמה"
                   >
-                    🎲
+                    <RefreshIcon />
                   </button>
                 </div>
-                {form.password.length < 6 && (
-                  <p className="mt-1 text-xs text-rose-600">לפחות 6 תווים</p>
-                )}
+                <PasswordStrength value={form.password} />
               </div>
             </div>
 
@@ -390,6 +410,23 @@ export default function NewDealerWizard() {
               </div>
             )}
 
+            {/* Review summary — what's about to be created */}
+            <div className="rounded-2xl border border-gold/20 bg-gold-50/40 p-4">
+              <p className="eyebrow mb-2">סיכום לפני יצירה</p>
+              <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
+                <ReviewItem label="סוג" value={form.customer_type === "dealer" ? "סוחר" : "קבלן"} />
+                <ReviewItem label="שם" value={form.full_name || form.company || "—"} />
+                <ReviewItem label="אימייל" value={form.email || "—"} mono />
+                <ReviewItem label="טלפון" value={form.phone || "—"} mono />
+                {form.customer_type === "dealer" && (
+                  <>
+                    <ReviewItem label="מסגרת אשראי" value={`₪${form.credit_limit.toLocaleString()}`} />
+                    <ReviewItem label="תנאי תשלום" value={PAYMENT_TERMS_HE[form.payment_terms]} />
+                  </>
+                )}
+              </dl>
+            </div>
+
             {error && (
               <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>
             )}
@@ -412,7 +449,7 @@ export default function NewDealerWizard() {
               type="button"
               onClick={() => setStep((s) => s + 1)}
               disabled={(step === 0 && !canNext0) || (step === 1 && !canNext1)}
-              className="btn-primary"
+              className="btn-gold"
             >
               הבא ←
             </button>
@@ -421,7 +458,7 @@ export default function NewDealerWizard() {
               type="button"
               onClick={create}
               disabled={creating || !canCreate}
-              className="btn-primary"
+              className="btn-gold"
             >
               {creating ? "יוצר…" : "✓ יצירת חשבון"}
             </button>
@@ -431,6 +468,8 @@ export default function NewDealerWizard() {
     </div>
   );
 }
+
+/* ───────────────────────── Pieces ───────────────────────── */
 
 function CredRow({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   const toast = useToast();
@@ -449,6 +488,93 @@ function CredRow({ label, value, mono }: { label: string; value: string; mono?: 
         {value}
       </button>
     </div>
+  );
+}
+
+function ReviewItem({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+  return (
+    <div className="flex items-center justify-between gap-2 border-b border-gold/10 py-1 last:border-0">
+      <dt className="shrink-0 text-xs text-slate-500">{label}</dt>
+      <dd
+        className={`truncate font-medium text-navy-dark ${mono ? "ltr-input" : ""}`}
+        dir={mono ? "ltr" : undefined}
+      >
+        {value}
+      </dd>
+    </div>
+  );
+}
+
+/** Password strength meter (length + character variety → 0..4). */
+function PasswordStrength({ value }: { value: string }) {
+  const score = useMemo(() => {
+    let s = 0;
+    if (value.length >= 6) s++;
+    if (value.length >= 10) s++;
+    if (/[A-Z]/.test(value) && /[a-z]/.test(value)) s++;
+    if (/\d/.test(value) || /[^A-Za-z0-9]/.test(value)) s++;
+    return Math.min(s, 4);
+  }, [value]);
+
+  if (value.length < 6) {
+    return <p className="mt-1 text-xs text-rose-600">לפחות 6 תווים</p>;
+  }
+  const labels = ["חלשה", "בינונית", "טובה", "חזקה מאוד"];
+  const colors = ["bg-rose-400", "bg-amber-400", "bg-lime-400", "bg-emerald-500"];
+  return (
+    <div className="mt-2">
+      <div className="flex gap-1">
+        {[0, 1, 2, 3].map((i) => (
+          <span
+            key={i}
+            className={`h-1.5 flex-1 rounded-full transition-colors ${
+              i < score ? colors[score - 1] : "bg-white/12"
+            }`}
+          />
+        ))}
+      </div>
+      <p className="mt-1 text-xs text-slate-500">חוזק סיסמה: {labels[Math.max(0, score - 1)]}</p>
+    </div>
+  );
+}
+
+/* ───────────────────────── Icons ───────────────────────── */
+
+function CheckIcon({ small }: { small?: boolean }) {
+  const s = small ? 14 : 32;
+  return (
+    <svg viewBox="0 0 24 24" width={s} height={s} fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  );
+}
+
+function RefreshIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6" />
+    </svg>
+  );
+}
+
+function StoreIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M3 9l1.5-5h15L21 9" />
+      <path d="M3 9h18v2a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0V9z" />
+      <path d="M5 13v7h14v-7" />
+      <path d="M9 20v-4h6v4" />
+    </svg>
+  );
+}
+
+function HelmetIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M4 16a8 8 0 0 1 16 0" />
+      <path d="M12 4a8 8 0 0 0-2 .26V8a2 2 0 0 0 4 0V4.26A8 8 0 0 0 12 4z" />
+      <path d="M2 16h20v2a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-2z" />
+    </svg>
   );
 }
 
