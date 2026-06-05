@@ -56,17 +56,27 @@ export default function ProductCard({
           )}
         </div>
         {margin && (
-          <div className="mt-1.5 flex items-center justify-between rounded-lg bg-slate-50 px-2 py-1 text-[11px]">
-            <span className="text-slate-500">עלות {formatPrice(product.cost, product.currency)}</span>
-            <span
-              className={`font-semibold ${
-                margin.belowCost ? "text-rose-600" : margin.thin ? "text-amber-600" : "text-emerald-600"
-              }`}
-            >
-              {margin.belowCost
-                ? "הפסד ⚠"
-                : `רווח ${formatPrice(product.price - product.cost, product.currency)} · ${margin.marginPct.toFixed(0)}%`}
-            </span>
+          <div className="mt-1.5 space-y-0.5 rounded-lg bg-slate-50 px-2 py-1.5 text-[11px]">
+            <div className="flex items-center justify-between">
+              <span className="text-slate-500">מחיר מכירה</span>
+              <span className="font-semibold text-navy-dark">{formatPrice(product.price, product.currency)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-500">עלות</span>
+              <span className="font-medium text-slate-600">{formatPrice(product.cost, product.currency)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-500">רווח</span>
+              <span
+                className={`font-semibold ${
+                  margin.belowCost ? "text-rose-600" : margin.thin ? "text-amber-600" : "text-emerald-600"
+                }`}
+              >
+                {margin.belowCost
+                  ? "הפסד ⚠"
+                  : `${formatPrice(product.price - product.cost, product.currency)} (${margin.marginPct.toFixed(0)}%)`}
+              </span>
+            </div>
           </div>
         )}
       </div>

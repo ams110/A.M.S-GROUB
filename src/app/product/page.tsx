@@ -109,21 +109,31 @@ function ProductDetail() {
                 מחיר לסוחרים מאושרים
               </span>
             )}
-            {/* Cost is masked to super admins only, so this line is self-gating. */}
+            {/* Cost is masked to super admins only, so this block is self-gating. */}
             {product.cost > 0 && (() => {
               const m = computeMargin(product.price, product.cost);
               return (
-                <div className="mt-2 inline-flex items-center gap-3 rounded-lg bg-slate-50 px-3 py-1.5 text-sm">
-                  <span className="text-slate-500">עלות {formatPrice(product.cost, product.currency)}</span>
-                  <span
-                    className={`font-semibold ${
-                      m.belowCost ? "text-rose-600" : m.thin ? "text-amber-600" : "text-emerald-600"
-                    }`}
-                  >
-                    {m.belowCost
-                      ? "הפסד ⚠"
-                      : `רווח ${formatPrice(product.price - product.cost, product.currency)} · ${m.marginPct.toFixed(0)}%`}
-                  </span>
+                <div className="mt-3 max-w-xs space-y-1 rounded-xl bg-slate-50 px-4 py-3 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500">מחיר מכירה</span>
+                    <span className="font-bold text-navy-dark">{formatPrice(product.price, product.currency)}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500">עלות</span>
+                    <span className="font-medium text-slate-600">{formatPrice(product.cost, product.currency)}</span>
+                  </div>
+                  <div className="flex items-center justify-between border-t border-slate-200 pt-1">
+                    <span className="text-slate-500">רווח</span>
+                    <span
+                      className={`font-bold ${
+                        m.belowCost ? "text-rose-600" : m.thin ? "text-amber-600" : "text-emerald-600"
+                      }`}
+                    >
+                      {m.belowCost
+                        ? "הפסד ⚠"
+                        : `${formatPrice(product.price - product.cost, product.currency)} (${m.marginPct.toFixed(0)}%)`}
+                    </span>
+                  </div>
                 </div>
               );
             })()}
