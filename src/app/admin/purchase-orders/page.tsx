@@ -7,6 +7,7 @@ import { computeSalesVelocity, suggestReplenishment } from "@/lib/replenish";
 import { purchaseOrderMessage, waMessageLink } from "@/lib/messages";
 import { WizardStepper } from "@/components/WizardStepper";
 import { ReviewCard, ReviewItem } from "@/components/ReviewSummary";
+import PurchaseOrderImport from "@/components/PurchaseOrderImport";
 import type {
   Product,
   PurchaseOrder,
@@ -31,6 +32,7 @@ export default function AdminPurchaseOrdersPage() {
 
   // New PO.
   const [showForm, setShowForm] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [formStep, setFormStep] = useState(0);
   const [supplierId, setSupplierId] = useState("");
   const [poNumber, setPoNumber] = useState("");
@@ -257,10 +259,32 @@ export default function AdminPurchaseOrdersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold">הזמנות רכש</h2>
-        <button onClick={openForm} className={showForm ? "btn-outline" : "btn-gold"}>
-          {showForm ? "ביטול" : "+ הזמנת רכש חדשה"}
-        </button>
+        <div className="flex gap-2">
+          <button onClick={() => setShowImport(true)} className="btn-outline">
+            ⬆ ייבוא מאקסל
+          </button>
+          <button onClick={openForm} className={showForm ? "btn-outline" : "btn-gold"}>
+            {showForm ? "ביטול" : "+ הזמנת רכש חדשה"}
+          </button>
+        </div>
       </div>
+
+      {showImport && (
+        <PurchaseOrderImport
+          products={products}
+          suppliers={suppliers}
+          onClose={() => setShowImport(false)}
+          onConfirm={(importedLines, importedSupplier) => {
+            setLines(importedLines);
+            if (importedSupplier) setSupplierId(importedSupplier);
+            setShowImport(false);
+            setShowForm(true);
+            setFormStep(1); // jump to the (pre-filled) items step
+            setError(null);
+            if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+        />
+      )}
 
       {error && (
         <p className="rounded bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>
