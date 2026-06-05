@@ -5,8 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useCart } from "@/components/CartProvider";
+import { WizardStepper } from "@/components/WizardStepper";
 import { formatPrice, PAYMENT_METHOD_HE } from "@/lib/format";
 import type { PaymentMethod, Profile } from "@/lib/types";
+
+const STEPS = ["משלוח", "תשלום"];
 
 export default function CheckoutPage() {
   const { lines, subtotal, count, clear } = useCart();
@@ -19,6 +22,7 @@ export default function CheckoutPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [method, setMethod] = useState<PaymentMethod>("bank_transfer");
+  const [step, setStep] = useState(0);
   const [outstanding, setOutstanding] = useState(0);
   const [minOrder, setMinOrder] = useState(0);
   const [form, setForm] = useState({
@@ -125,6 +129,16 @@ export default function CheckoutPage() {
   }
 
   const notApproved = !profile || profile.status !== "approved";
+  const shipOk = !!(form.ship_name && form.ship_phone && form.ship_address);
+
+  const goToPayment = () => {
+    setError(null);
+    if (!shipOk) {
+      setError("נא למלא שם, טלפון וכתובת למשלוח.");
+      return;
+    }
+    setStep(1);
+  };
 
   return (
     <div className="container-app py-10">
@@ -140,7 +154,12 @@ export default function CheckoutPage() {
 
       <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
         <div className="space-y-6">
-          {/* Shipping */}
+          {/* Glowing stepper */}
+          <WizardStepper steps={STEPS} current={step} onStepClick={step > 0 ? setStep : undefined} />
+
+          <div key={step} className="animate-fade-up space-y-6">
+          {/* Step 0 — Shipping */}
+          {step === 0 && (
           <section className="card p-5">
             <h2 className="mb-4 text-lg font-bold">פרטי משלוח</h2>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -195,9 +214,16 @@ export default function CheckoutPage() {
                 />
               </div>
             </div>
+            <div className="mt-5 flex justify-end border-t border-slate-100 pt-4">
+              <button type="button" onClick={goToPayment} className="btn-gold">
+                המשך לתשלום ←
+              </button>
+            </div>
           </section>
+          )}
 
-          {/* Payment */}
+          {/* Step 1 — Payment */}
+          {step === 1 && (
           <section className="card p-5">
             <h2 className="mb-4 text-lg font-bold">אמצעי תשלום</h2>
             <div className="space-y-3">
@@ -234,7 +260,18 @@ export default function CheckoutPage() {
                 תשלום במזומן בעת מסירת הסחורה.
               </p>
             )}
+            <div className="mt-5 border-t border-slate-100 pt-4">
+              <button
+                type="button"
+                onClick={() => setStep(0)}
+                className="text-sm text-brand hover:underline"
+              >
+                → חזרה לפרטי המשלוח
+              </button>
+            </div>
           </section>
+          )}
+          </div>
         </div>
 
         {/* Summary */}
@@ -277,13 +314,19 @@ export default function CheckoutPage() {
             <p className="rounded bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>
           )}
 
-          <button
-            onClick={placeOrder}
-            disabled={submitting || notApproved}
-            className="btn-primary w-full"
-          >
-            {submitting ? "מבצע הזמנה…" : "אישור וביצוע הזמנה"}
-          </button>
+          {step === 0 ? (
+            <button onClick={goToPayment} className="btn-gold w-full">
+              המשך לתשלום ←
+            </button>
+          ) : (
+            <button
+              onClick={placeOrder}
+              disabled={submitting || notApproved}
+              className="btn-gold w-full"
+            >
+              {submitting ? "מבצע הזמנה…" : "✓ אישור וביצוע הזמנה"}
+            </button>
+          )}
         </aside>
       </div>
     </div>
