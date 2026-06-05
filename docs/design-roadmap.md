@@ -88,8 +88,8 @@
 - ✅ `<Confetti>` — كونفيتي CSS بلا مكتبة (شاشات النجاح).
 - ✅ `<ReviewCard>` + `<ReviewItem>` (`ReviewSummary.tsx`) — بطاقة الملخّص الموحّدة. استبدلت التكرار في `dealers/new`/`products/edit` ووحّدت صفوف `quotes`/`purchase-orders`.
 - ✅ `components/icons.tsx` — تجميع أيقونات SVG (`CheckIcon`, `RefreshIcon`, `StoreIcon`, `HelmetIcon`, `WhatsAppIcon`) في مكان واحد بدل تكرارها في الصفحات.
-- ☐ `<GlassCard>` — بطاقة زجاجية داكنة بحدّ ذهبي (حالياً inline في كروت الاختيار — لم تُستخرج بعد).
-- ☐ `<SuccessScreen>` — شاشة نجاح ذهبية موحّدة (حالياً inline في `dealers/new` — استخدام واحد فقط، استخراجها مؤجّل حتى تتكرّر).
+- ✅ `<ChoiceCard>` (`ChoiceCard.tsx`) — كرت الاختيار الزجاجي الذهبي (pick-one-of-N). مستخرَج من كروت النوع في `dealers/new` وجاهز لأي خطوة اختيار مستقبلية.
+- ✅ `<SuccessHero>` (`SuccessHero.tsx`) — رأس شاشة النجاح الذهبي (✓ نابض + عنوان + سطر فرعي). مستخرَج من `dealers/new`؛ جاهز لأي شاشة نجاح قادمة.
 
 ---
 

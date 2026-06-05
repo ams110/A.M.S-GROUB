@@ -6,9 +6,11 @@ import { useRouter } from "next/navigation";
 import QRCode from "qrcode";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/Toast";
-import { WizardStepper, CheckIcon } from "@/components/WizardStepper";
+import { WizardStepper } from "@/components/WizardStepper";
 import { RefreshIcon, StoreIcon, HelmetIcon, WhatsAppIcon } from "@/components/icons";
 import { ReviewCard, ReviewItem } from "@/components/ReviewSummary";
+import { ChoiceCard } from "@/components/ChoiceCard";
+import { SuccessHero } from "@/components/SuccessHero";
 import Confetti from "@/components/Confetti";
 import { BASE_PATH } from "@/lib/config";
 import { genPassword, waLink, welcomeMessage } from "@/lib/onboarding";
@@ -156,17 +158,10 @@ export default function NewDealerWizard() {
       <div className="mx-auto max-w-xl animate-fade-up">
         <Confetti />
         <div className="card overflow-hidden">
-          {/* Golden hero */}
-          <div className="relative overflow-hidden bg-gold-gradient px-6 py-9 text-center text-navy-dark">
-            <div className="pointer-events-none absolute inset-0 opacity-20 [background:radial-gradient(120px_60px_at_20%_0%,#fff,transparent),radial-gradient(160px_80px_at_90%_120%,#fff,transparent)]" />
-            <div className="animate-pop-in mx-auto mb-3 grid h-20 w-20 place-items-center rounded-full bg-navy-dark/10 text-4xl shadow-gold ring-4 ring-white/30">
-              <CheckIcon />
-            </div>
-            <h2 className="text-2xl font-extrabold tracking-tight">החשבון מוכן! 🎉</h2>
-            <p className="mt-1 text-sm font-medium text-navy-dark/75">
-              נותר רק לשלוח ל{done.name || "לקוח"} את פרטי הכניסה.
-            </p>
-          </div>
+          <SuccessHero
+            title="החשבון מוכן! 🎉"
+            subtitle={<>נותר רק לשלוח ל{done.name || "לקוח"} את פרטי הכניסה.</>}
+          />
 
           <div className="space-y-4 p-6">
             {/* Credentials + QR */}
@@ -268,31 +263,16 @@ export default function NewDealerWizard() {
                   { v: "dealer", t: "סוחר", d: "מחיר סיטונאי, מסגרת אשראי ותנאי תשלום", icon: <StoreIcon /> },
                   { v: "contractor", t: "קבלן", d: "מחיר קבלן מותאם לפרויקטים", icon: <HelmetIcon /> },
                 ] as const
-              ).map((o) => {
-                const active = form.customer_type === o.v;
-                return (
-                  <button
-                    key={o.v}
-                    onClick={() => set({ customer_type: o.v })}
-                    className={`group relative rounded-2xl border p-5 text-center backdrop-blur transition-all duration-200 hover:-translate-y-0.5 ${
-                      active
-                        ? "border-gold bg-gold-50 shadow-gold ring-1 ring-gold/40"
-                        : "border-white/10 bg-white/[0.04] hover:border-gold/40 hover:bg-gold-50/40"
-                    }`}
-                  >
-                    {active && (
-                      <span className="animate-pop-in absolute right-3 top-3 grid h-6 w-6 place-items-center rounded-full bg-gold-gradient text-navy-dark shadow-gold">
-                        <CheckIcon size={14} />
-                      </span>
-                    )}
-                    <div className={`mx-auto grid h-14 w-14 place-items-center rounded-2xl transition-colors ${active ? "text-gold-dark" : "text-slate-400 group-hover:text-gold-dark"}`}>
-                      {o.icon}
-                    </div>
-                    <div className="mt-2 font-bold text-navy-dark">{o.t}</div>
-                    <div className="mt-1 text-xs text-slate-500">{o.d}</div>
-                  </button>
-                );
-              })}
+              ).map((o) => (
+                <ChoiceCard
+                  key={o.v}
+                  active={form.customer_type === o.v}
+                  onClick={() => set({ customer_type: o.v })}
+                  icon={o.icon}
+                  title={o.t}
+                  description={o.d}
+                />
+              ))}
             </div>
           </div>
         )}
