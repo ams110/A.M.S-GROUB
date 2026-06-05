@@ -44,7 +44,13 @@ export default function AdminCustomersPage() {
 
   const load = async () => {
     const [{ data }, { data: orders }] = await Promise.all([
-      supabase.from("profiles").select("*").order("created_at", { ascending: false }),
+      // Customers only (dealers + contractors all carry role "dealer").
+      // Admins/super-admins are managed in /admin/admins, not here.
+      supabase
+        .from("profiles")
+        .select("*")
+        .eq("role", "dealer")
+        .order("created_at", { ascending: false }),
       supabase.from("orders").select("dealer_id,total,payment_status,status,created_at"),
     ]);
     const profs = (data as Profile[]) ?? [];
