@@ -41,7 +41,15 @@ function Catalog() {
         ? categoryList.find((c) => c.slug === category)?.id ?? null
         : null;
 
-      let query = supabase.from("products").select("*").is("deleted_at", null).order("sort");
+      // Only catalogue products that are available (is_orderable). Admins hide a
+      // product from the storefront by unchecking "למכירה" in /admin/products,
+      // and restore it the same way — without deleting the row.
+      let query = supabase
+        .from("products")
+        .select("*")
+        .is("deleted_at", null)
+        .eq("is_orderable", true)
+        .order("sort");
       if (categoryId) query = query.eq("category_id", categoryId);
       // Dealers search by model/SKU as often as by name — match both.
       if (q) query = query.or(`name_he.ilike.%${q}%,sku.ilike.%${q}%`);

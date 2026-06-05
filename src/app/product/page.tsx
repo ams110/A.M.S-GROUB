@@ -126,22 +126,30 @@ function ProductDetail() {
           )}
 
           <div className="mb-6 max-w-sm">
-            <AddToCart
-              canOrder={showPrice}
-              line={{
-                product_id: product.id,
-                slug: product.slug,
-                name_he: product.name_he,
-                price: product.price,
-                image_url: product.image_url,
-                min_order_qty: product.min_order_qty,
-                stock: product.stock,
-              }}
-            />
-            {showPrice && product.min_order_qty > 1 && (
-              <p className="mt-2 text-xs text-slate-500">
-                כמות מינימום להזמנה: {product.min_order_qty}
-              </p>
+            {showPrice && !product.is_orderable ? (
+              <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-500">
+                מוצר זה אינו זמין כעת
+              </div>
+            ) : (
+              <>
+                <AddToCart
+                  canOrder={showPrice}
+                  line={{
+                    product_id: product.id,
+                    slug: product.slug,
+                    name_he: product.name_he,
+                    price: product.price,
+                    image_url: product.image_url,
+                    min_order_qty: product.min_order_qty,
+                    stock: product.stock,
+                  }}
+                />
+                {showPrice && product.min_order_qty > 1 && (
+                  <p className="mt-2 text-xs text-slate-500">
+                    כמות מינימום להזמנה: {product.min_order_qty}
+                  </p>
+                )}
+              </>
             )}
           </div>
 

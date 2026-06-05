@@ -160,7 +160,7 @@ export default function AdminProductsPage() {
           </thead>
           <tbody>
             {filtered.map((p) => (
-              <tr key={p.id} className="border-b border-slate-100">
+              <tr key={p.id} className={`border-b border-slate-100 ${p.is_orderable ? "" : "bg-slate-50/70 opacity-60"}`}>
                 <td className="p-3">
                   <div className="flex items-center gap-3">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -222,6 +222,7 @@ export default function AdminProductsPage() {
                     type="checkbox"
                     checked={p.is_orderable}
                     onChange={(e) => patch(p.id, { is_orderable: e.target.checked })}
+                    title="מסומן = מוצג בקטלוג וזמין להזמנה. בטל כדי להסתיר מהקטלוג (ניתן להחזיר בכל עת)."
                   />
                 </td>
                 <td className="p-3">
