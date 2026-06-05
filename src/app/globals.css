@@ -246,6 +246,20 @@ h1, h2, h3 {
   60%  { opacity: 1; transform: scale(1.12); }
   100% { transform: scale(1); }
 }
+/* One-shot confetti fall */
+@keyframes confetti-fall {
+  0%   { opacity: 1; transform: translate3d(0, -10px, 0) rotate(0deg); }
+  100% { opacity: 0; transform: translate3d(var(--drift, 0), 105vh, 0) rotate(var(--rot, 360deg)); }
+}
+.confetti-piece {
+  border-radius: 1px;
+  animation-name: confetti-fall;
+  animation-timing-function: cubic-bezier(0.3, 0.7, 0.5, 1);
+  animation-fill-mode: forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .confetti-piece { display: none; }
+}
 
 .animate-fade-up   { animation: fade-up   0.45s cubic-bezier(0.16, 1, 0.3, 1) both; }
 .animate-fade-in   { animation: fade-in   0.3s ease-out both; }

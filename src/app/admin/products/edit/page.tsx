@@ -8,9 +8,12 @@ import { uploadImage } from "@/lib/storage";
 import { slugify } from "@/lib/slug";
 import { asset } from "@/lib/config";
 import BarcodeScanner from "@/components/BarcodeScanner";
+import { WizardStepper } from "@/components/WizardStepper";
 import type { Category, Product } from "@/lib/types";
 
 type SpecRow = { key: string; value: string };
+
+const STEPS = ["פרטים", "תמונה", "תמחור", "מפרט"];
 
 const EMPTY = {
   name_he: "",
@@ -49,6 +52,7 @@ function ProductForm() {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [scanBarcode, setScanBarcode] = useState(false);
+  const [step, setStep] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -160,8 +164,22 @@ function ProductForm() {
 
   if (loading) return <p className="text-slate-500">טוען…</p>;
 
+  const canNext = step !== 0 || form.name_he.trim().length > 0;
+  const isLast = step === STEPS.length - 1;
+
+  const onFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isLast) {
+      submit(e);
+    } else if (canNext) {
+      setStep((s) => s + 1);
+    } else {
+      setError("נא להזין שם מוצר.");
+    }
+  };
+
   return (
-    <div className="max-w-3xl">
+    <div className="mx-auto max-w-3xl">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-lg font-bold">{isEdit ? "עריכת מוצר" : "מוצר חדש"}</h2>
         <Link href="/admin/products" className="text-sm text-brand hover:underline">
@@ -169,7 +187,13 @@ function ProductForm() {
         </Link>
       </div>
 
-      <form onSubmit={submit} className="space-y-5">
+      {/* Glowing stepper — clickable in edit mode (all data already loaded) */}
+      <WizardStepper steps={STEPS} current={step} onStepClick={isEdit ? setStep : undefined} />
+
+      <form onSubmit={onFormSubmit} className="space-y-5">
+        {/* Step 0 — basics */}
+        <div key={step} className="animate-fade-up space-y-5">
+        {step === 0 && (
         <div className="card space-y-4 p-5">
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
@@ -267,8 +291,10 @@ function ProductForm() {
             />
           </div>
         </div>
+        )}
 
-        {/* Media */}
+        {/* Step 1 — Media */}
+        {step === 1 && (
         <div className="card space-y-3 p-5">
           <h3 className="font-bold">תמונה</h3>
           <div className="flex items-center gap-4">
@@ -308,8 +334,10 @@ function ProductForm() {
             />
           </div>
         </div>
+        )}
 
-        {/* Pricing & stock */}
+        {/* Step 2 — Pricing & stock */}
+        {step === 2 && (
         <div className="card grid gap-4 p-5 sm:grid-cols-3">
           <div>
             <label className="label">עלות (לחישוב רווח)</label>
@@ -410,8 +438,10 @@ function ProductForm() {
             </label>
           </div>
         </div>
+        )}
 
-        {/* Specs */}
+        {/* Step 3 — Specs + review */}
+        {step === 3 && (
         <div className="card space-y-3 p-5">
           <div className="flex items-center justify-between">
             <h3 className="font-bold">מפרט טכני</h3>
@@ -457,21 +487,66 @@ function ProductForm() {
               </button>
             </div>
           ))}
+
+          {/* Review summary before save */}
+          <div className="mt-2 rounded-2xl border border-gold/20 bg-gold-50/40 p-4">
+            <p className="eyebrow mb-2">סיכום</p>
+            <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
+              <ReviewItem label="שם" value={form.name_he || "—"} />
+              <ReviewItem
+                label="קטגוריה"
+                value={categories.find((c) => c.id === form.category_id)?.name_he || "ללא"}
+              />
+              <ReviewItem label="מק״ט" value={form.sku || "—"} mono />
+              <ReviewItem label="מחיר לסוחר" value={`₪${Number(form.price).toLocaleString()}`} />
+              <ReviewItem label="מלאי" value={String(form.stock)} />
+              <ReviewItem label="ניתן להזמנה" value={form.is_orderable ? "כן" : "לא"} />
+            </dl>
+          </div>
+        </div>
+        )}
         </div>
 
         {error && (
           <p className="rounded bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>
         )}
 
-        <div className="flex gap-3">
-          <button disabled={saving || uploading} className="btn-primary">
-            {saving ? "שומר…" : isEdit ? "שמירת שינויים" : "יצירת מוצר"}
+        {/* Wizard nav */}
+        <div className="flex items-center justify-between gap-3 border-t border-slate-100 pt-5">
+          <button
+            type="button"
+            onClick={() => (step === 0 ? router.push("/admin/products") : setStep((s) => s - 1))}
+            className="btn-outline"
+            disabled={saving}
+          >
+            {step === 0 ? "ביטול" : "→ הקודם"}
           </button>
-          <Link href="/admin/products" className="btn-outline">
-            ביטול
-          </Link>
+
+          {isLast ? (
+            <button disabled={saving || uploading} className="btn-gold">
+              {saving ? "שומר…" : isEdit ? "שמירת שינויים" : "✓ יצירת מוצר"}
+            </button>
+          ) : (
+            <button type="submit" disabled={!canNext} className="btn-gold">
+              הבא ←
+            </button>
+          )}
         </div>
       </form>
+    </div>
+  );
+}
+
+function ReviewItem({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+  return (
+    <div className="flex items-center justify-between gap-2 border-b border-gold/10 py-1 last:border-0">
+      <dt className="shrink-0 text-xs text-slate-500">{label}</dt>
+      <dd
+        className={`truncate font-medium text-navy-dark ${mono ? "ltr-input" : ""}`}
+        dir={mono ? "ltr" : undefined}
+      >
+        {value}
+      </dd>
     </div>
   );
 }
