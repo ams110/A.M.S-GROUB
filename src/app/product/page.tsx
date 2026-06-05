@@ -10,6 +10,7 @@ import { asset } from "@/lib/config";
 import AddToCart from "@/components/AddToCart";
 import ProductCard from "@/components/ProductCard";
 import { formatPrice } from "@/lib/format";
+import { computeMargin } from "@/lib/margin";
 import type { Product } from "@/lib/types";
 
 function ProductDetail() {
@@ -108,6 +109,24 @@ function ProductDetail() {
                 מחיר לסוחרים מאושרים
               </span>
             )}
+            {/* Cost is masked to super admins only, so this line is self-gating. */}
+            {product.cost > 0 && (() => {
+              const m = computeMargin(product.price, product.cost);
+              return (
+                <div className="mt-2 inline-flex items-center gap-3 rounded-lg bg-slate-50 px-3 py-1.5 text-sm">
+                  <span className="text-slate-500">עלות {formatPrice(product.cost, product.currency)}</span>
+                  <span
+                    className={`font-semibold ${
+                      m.belowCost ? "text-rose-600" : m.thin ? "text-amber-600" : "text-emerald-600"
+                    }`}
+                  >
+                    {m.belowCost
+                      ? "הפסד ⚠"
+                      : `רווח ${formatPrice(product.price - product.cost, product.currency)} · ${m.marginPct.toFixed(0)}%`}
+                  </span>
+                </div>
+              );
+            })()}
           </div>
 
           {product.description_he && (
