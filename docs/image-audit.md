@@ -60,7 +60,7 @@
 | 1 | Super Lite | 18 | ✅ مكتملة (18 🔁) | محادثة 2026-06-05 / batch-UGQ63 |
 | 2 | מצלמות IP — جزء أ (C32/C34) | 15 | ✅ مكتملة (10 🔁 · 5 ✅) | batch-SpT0e / 2026-06-06 |
 | 3 | מצלמות IP — جزء ب (C34/C35) | 15 | 🚧 جارية (TC-C35UV ✅) | PR #81 |
-| 4 | מצלמות IP — جزء ج (C35/C38) | 17 | ⬜ لم تبدأ | — |
+| 4 | מצלמות IP — جزء ج (C35/C38) | 17 | ✅ مكتملة (7 🔁 · 10 ✅) | batch-Hd6vS / 2026-06-06 |
 | 5 | מצלמות PTZ | 12 | ⬜ لم تبدأ | — |
 | 6 | מצלמות אלחוטיות — جزء أ | 10 | ⬜ لم تبدأ | — |
 | 7 | מצלמות אלחוטיות — جزء ب | 9 | ⬜ لم تبدأ | — |
@@ -68,7 +68,7 @@
 | 9 | סדרת AK | 10 | ⬜ لم تبدأ | — |
 | 10 | מתגי PoE | 8 | ⬜ لم تبدأ | — |
 
-**الإجمالي:** 124 منتج · **مصحّح حتى الآن:** 29 (TC-C35UV + Super Lite 18 + دفعة 2: 10)
+**الإجمالي:** 124 منتج · **مصحّح حتى الآن:** 36 (TC-C35UV + Super Lite 18 + دفعة 2: 10 + دفعة 4: 7)
 
 > **خلاصة دفعة 1 (Super Lite):** الصور الثلاث المشتركة كانت كلها **بالشكل الخاطئ**. التحقق تمّ بصرياً مقابل صور المنتجات الرسمية وكتالوج en.tiandy.com:
 > - `88/2e/dc` = صورة **turret** رسمية (C320N) — كانت على عائلة GN/GS وهي **bullet** ⇒ نُقلت لعائلة HN/HS (turret).
@@ -145,23 +145,23 @@
 ### Batch 4 — מצלמות IP جزء ج (17)
 | ✔ | SKU | الاسم | الصورة الحالية | الصورة الصحيحة / ملاحظات |
 |---|---|---|---|---|
-| ⬜ | TC-C35WS-3ERA-4 | 3ERA-4 | `66/0c/76` | |
-| ⬜ | TC-C35WS-3LRA-28 | 3LRA-28 | `66/0c/76` | |
-| ⬜ | TC-C35WS-3LRA-4 | 3LRA-4 | `66/0c/76` | |
-| ⬜ | TC-C35XS-3ERA-28 | 3ERA-28 | `66/0c/76` | |
-| ⬜ | TC-C382V | Spec:W/E/Y/S/H/2.8mm | `e5/81/fb` 🔴 | |
-| ⬜ | TC-C385N-2ANA-28 | 2ANA-28 | `79/48/f4` | |
-| ⬜ | TC-C386V-4LHA-28 | 4LHA-28 | `e5/81/fb` 🔴 | |
-| ⬜ | TC-C38ES-2 | I5/E/Y/C/2.8mm/V4.0 | `e5/81/fb` 🔴 | |
-| ⬜ | TC-C38KS-3ERA-28 | 3ERA-28 | `cd/04/a3` | |
-| ⬜ | TC-C38MS-3LHA-27135 | 3LHA-27135 | `53/d1/e3` | |
-| ⬜ | TC-C38RN-2ANA-28 | 2ANA-28 | `1c/c7/c7` | |
-| ⬜ | TC-C38US-3LHA-27135 | 3LHA-27135 | `53/d1/e3` | |
-| ⬜ | TC-C38US-3LRA-28 | 3LRA-28 | `66/0c/76` | |
-| ⬜ | TC-C38US-3LRA-4 | 3LRA-4 | `66/0c/76` | |
-| ⬜ | TC-C38WS-3LRA-28 | 3LRA-28 | `66/0c/76` | |
-| ⬜ | TC-C38WS-3LRA-4 | 3LRA-4 | `66/0c/76` | |
-| ⬜ | TC-C38XS-3LRA-28 | 3LRA-28 | `66/0c/76` | |
+| ✅ | TC-C35WS-3ERA-4 | 3ERA-4 | `66/0c/76` | صحيحة — WS هو **bullet** (Color Maker)، الصورة bullet مطابقة للشكل |
+| ✅ | TC-C35WS-3LRA-28 | 3LRA-28 | `66/0c/76` | صحيحة — bullet |
+| ✅ | TC-C35WS-3LRA-4 | 3LRA-4 | `66/0c/76` | صحيحة — bullet |
+| 🔁 | TC-C35XS-3ERA-28 | 3ERA-28 | `66/0c/76` 🔴 | `3f/28/5b` — كانت bullet؛ XS هو **turret** (en.tiandy/Amazon: "Fixed IR/Color Maker Turret") |
+| 🔁 | TC-C382V | Spec:W/E/Y/S/H/2.8mm | `e5/81/fb` 🔴 | `27/f1/dc` — كانت turret ثنائي؛ 382V هو **Polar Day Panoramic bullet** (صورة en.tiandy الرسمية) |
+| ✅ | TC-C385N-2ANA-28 | 2ANA-28 | `79/48/f4` | صحيحة — Dual-2MP Panoramic Bullet الرسمية (مطابقة en.tiandy) |
+| 🔁 | TC-C386V-4LHA-28 | 4LHA-28 | `e5/81/fb` 🔴 | `79/48/f4` — كانت turret ثنائي؛ 386V هو **Dual-4MP Panoramic Bullet** (نفس هيكل 385N، صورة en.tiandy الرسمية) |
+| 🔁 | TC-C38ES-2 | I5/E/Y/C/2.8mm/V4.0 | `e5/81/fb` 🔴 | `cd/04/a3` — كانت turret ثنائي؛ ES = **bullet** (مثل دفعة 2). ⚠️ موجود بالـ DB فقط لا في الـ seed |
+| 🔁 | TC-C38KS-3ERA-28 | 3ERA-28 | `cd/04/a3` 🔴 | `c4/ef/3d` — كانت bullet؛ KS هو **vandal dome** (en.tiandy/Amazon: "Vandal/IR Dome") |
+| 🔁 | TC-C38MS-3LHA-27135 | 3LHA-27135 | `53/d1/e3` 🔴 | `04/3f/05` — كانت bullet motorized؛ MS هو **motorized IR dome** (en.tiandy/Amazon: "Motorized IR Dome") |
+| ✅ | TC-C38RN-2ANA-28 | 2ANA-28 | `1c/c7/c7` | صحيحة — Dual Panoramic Bullet (الشكل مطابق) |
+| ✅ | TC-C38US-3LHA-27135 | 3LHA-27135 | `53/d1/e3` | صحيحة — US هو **motorized bullet** (seglobaltech: "Motorized ... Bullet")، الصورة motorized bullet |
+| ✅ | TC-C38US-3LRA-28 | 3LRA-28 | `66/0c/76` | صحيحة — bullet |
+| ✅ | TC-C38US-3LRA-4 | 3LRA-4 | `66/0c/76` | صحيحة — bullet |
+| ✅ | TC-C38WS-3LRA-28 | 3LRA-28 | `66/0c/76` | صحيحة — bullet |
+| ✅ | TC-C38WS-3LRA-4 | 3LRA-4 | `66/0c/76` | صحيحة — bullet |
+| 🔁 | TC-C38XS-3LRA-28 | 3LRA-28 | `66/0c/76` 🔴 | `3f/28/5b` — كانت bullet؛ XS هو **turret** (8MP Color Maker Turret الرسمية) |
 
 ### Batch 5 — מצלמות PTZ (12)
 | ✔ | SKU | الاسم | الصورة الحالية | الصورة الصحيحة / ملاحظات |
