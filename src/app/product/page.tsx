@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useProfile } from "@/lib/auth";
 import { applyEffectivePrices } from "@/lib/pricing";
-import { asset } from "@/lib/config";
+import { productImage } from "@/lib/config";
 import AddToCart from "@/components/AddToCart";
 import ProductCard from "@/components/ProductCard";
 import { formatPrice } from "@/lib/format";
@@ -80,7 +80,7 @@ function ProductDetail() {
           <div className="aspect-square bg-slate-100">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={product.image_url ?? asset("/placeholder.svg")}
+              src={productImage(product.image_url)}
               alt={product.name_he}
               className="h-full w-full object-cover"
             />

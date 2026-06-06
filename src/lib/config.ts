@@ -35,3 +35,23 @@ export const VAPID_PUBLIC_KEY =
 export function asset(path: string) {
   return `${BASE_PATH}${path}`;
 }
+
+/**
+ * Resolve a product image URL for display.
+ *
+ * Product photos come from Tiandy's CDN (bsg-i.nbxc.com), an Alibaba-Cloud host
+ * that is slow or intermittently unreachable from some regions (e.g. Israel), so
+ * direct hotlinks sometimes fail to load in the catalog. We route those through
+ * images.weserv.nl — a free, Cloudflare-backed image proxy/CDN — which fetches
+ * the source once and serves it from a globally reliable edge, also downscaling
+ * the (often multi-megapixel) originals to trim bandwidth. Non-Tiandy URLs
+ * (Supabase uploads, etc.) and a null url (→ placeholder) pass through unchanged.
+ */
+export function productImage(url: string | null | undefined) {
+  if (!url) return asset("/placeholder.svg");
+  if (url.includes("bsg-i.nbxc.com")) {
+    const src = url.replace(/^https?:\/\//, "");
+    return `https://images.weserv.nl/?url=ssl:${src}&w=1000&q=82`;
+  }
+  return url;
+}

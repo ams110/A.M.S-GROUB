@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/Toast";
-import { asset } from "@/lib/config";
+import { productImage } from "@/lib/config";
 import { formatPrice } from "@/lib/format";
 import { computeMargin, applyPctChange } from "@/lib/margin";
 import type { Product } from "@/lib/types";
@@ -165,7 +165,7 @@ export default function AdminProductsPage() {
                   <div className="flex items-center gap-3">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={p.image_url ?? asset("/placeholder.svg")}
+                      src={productImage(p.image_url)}
                       alt=""
                       className="h-10 w-10 rounded object-cover"
                     />

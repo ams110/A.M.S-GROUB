@@ -5,7 +5,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useCart } from "@/components/CartProvider";
 import { formatPrice } from "@/lib/format";
-import { asset } from "@/lib/config";
+import { productImage } from "@/lib/config";
 import { computeReceivables, termDays, type AROrder } from "@/lib/ar";
 import type { Profile } from "@/lib/types";
 
@@ -68,7 +68,7 @@ export default function CartPage() {
             <div key={l.product_id} className="card flex items-center gap-4 p-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={l.image_url ?? asset("/placeholder.svg")}
+                src={productImage(l.image_url)}
                 alt={l.name_he}
                 className="h-20 w-20 rounded-lg object-cover"
               />

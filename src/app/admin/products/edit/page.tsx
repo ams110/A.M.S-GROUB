@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useProfile } from "@/lib/auth";
 import { uploadImage } from "@/lib/storage";
 import { slugify } from "@/lib/slug";
-import { asset } from "@/lib/config";
+import { productImage } from "@/lib/config";
 import BarcodeScanner from "@/components/BarcodeScanner";
 import { WizardStepper } from "@/components/WizardStepper";
 import { ReviewCard, ReviewItem } from "@/components/ReviewSummary";
@@ -313,7 +313,7 @@ function ProductForm() {
           <div className="flex items-center gap-4">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={form.image_url || asset("/placeholder.svg")}
+              src={productImage(form.image_url)}
               alt=""
               className="h-24 w-24 rounded-lg border border-slate-200 object-cover"
             />
