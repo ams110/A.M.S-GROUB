@@ -62,13 +62,13 @@
 | 3 | מצלמות IP — جزء ب (C34/C35) | 15 | 🚧 جارية (TC-C35UV ✅) | PR #81 |
 | 4 | מצלמות IP — جزء ج (C35/C38) | 17 | ✅ مكتملة (7 🔁 · 10 ✅) | batch-Hd6vS / 2026-06-06 |
 | 5 | מצלמות PTZ | 12 | ✅ مكتملة (11 ✅ · 1 ❓) | batch-uceKh / 2026-06-06 |
-| 6 | מצלמות אלחוטיות — جزء أ | 10 | ⬜ لم تبدأ | — |
+| 6 | מצלמות אלחוטיות — جزء أ | 10 | ✅ مكتملة (4 🔁 · 6 ✅) | batch-jJ98C / 2026-06-06 |
 | 7 | מצלמות אלחוטיות — جزء ب | 9 | ⬜ لم تبدأ | — |
 | 8 | מערכות NVR | 10 | ⬜ لم تبدأ | — |
 | 9 | סדרת AK | 10 | ⬜ لم تبدأ | — |
 | 10 | מתגי PoE | 8 | ⬜ لم تبدأ | — |
 
-**الإجمالي:** 124 منتج · **مصحّح حتى الآن:** 36 (TC-C35UV + Super Lite 18 + دفعة 2: 10 + دفعة 4: 7)
+**الإجمالي:** 124 منتج · **مصحّح حتى الآن:** 40 (TC-C35UV + Super Lite 18 + دفعة 2: 10 + دفعة 4: 7 + دفعة 6: 4)
 
 > **خلاصة دفعة 1 (Super Lite):** الصور الثلاث المشتركة كانت كلها **بالشكل الخاطئ**. التحقق تمّ بصرياً مقابل صور المنتجات الرسمية وكتالوج en.tiandy.com:
 > - `88/2e/dc` = صورة **turret** رسمية (C320N) — كانت على عائلة GN/GS وهي **bullet** ⇒ نُقلت لعائلة HN/HS (turret).
@@ -182,16 +182,16 @@
 ### Batch 6 — מצלמות אלחוטיות جزء أ (10)
 | ✔ | SKU | الاسم | الصورة الحالية | الصورة الصحيحة / ملاحظات |
 |---|---|---|---|---|
-| ⬜ | TC-C32CN | I3W/U/WIFI/2.8mm/V4.0 | `aa/06/1c` | |
-| ⬜ | TC-C34CN-9ATA-28 | 9ATA-28 | `aa/06/1c` | |
-| ⬜ | TC-C34QN | I5W/WIFI/Eu/2.8mm/V4.0 | `18/bb/52` 🔴 | (موجود بـ IP أيضاً) |
-| ⬜ | TC-C34QN-2 | I5W/WIFI/Eu/4mm/V4.0 | `18/bb/52` 🔴 | |
-| ⬜ | TC-H322A | I2W/WIFI/Eu/4mm | `44/34/f6` | |
-| ⬜ | TC-H322N-9DA-4 | 9DA-4 | `a7/ac/29` | |
-| ⬜ | TC-H332A | I2W/WIFI/Eu/4mm | `1e/5b/c6` | |
-| ⬜ | TC-H332N-9DA-4 | 9DA-4 | `a7/ac/29` | |
-| ⬜ | TC-H333D-9DB-4 | 9DB-4 | `0a/20/24` | |
-| ⬜ | TC-H333K | AK/I5W/WIFI/Eu/4mm | `8b/6c/ca` | |
+| 🔁 | TC-C32CN | I3W/U/WIFI/2.8mm/V4.0 | `aa/06/1c` 🔴 | `5b/e9/4c` — كانت تستخدم صورة C34CN؛ هذه صورة C32CN الرسمية (battery WiFi camera، en.tiandy/wireless) |
+| ✅ | TC-C34CN-9ATA-28 | 9ATA-28 | `aa/06/1c` | صحيحة — `aa/06/1c` هي صورة C34CN الرسمية (battery WiFi، مطابقة en.tiandy/wireless) |
+| 🔁 | TC-C34QN | I5W/WIFI/Eu/2.8mm/V4.0 | `18/bb/52` 🔴 | `e8/5d/cd` — كانت صورة 324S العامة؛ QN هو **Color Maker Wi-Fi bullet** (صورة en.tiandy/wireless الرسمية) |
+| 🔁 | TC-C34QN-2 | I5W/WIFI/Eu/4mm/V4.0 | `18/bb/52` 🔴 | `e8/5d/cd` — Wi-Fi bullet (نفس QN) |
+| ✅ | TC-H322A | I2W/WIFI/Eu/4mm | `44/34/f6` | صحيحة — indoor PT WiFi (مطابقة en.tiandy/wireless لـ H322A) |
+| ✅ | TC-H322N-9DA-4 | 9DA-4 | `a7/ac/29` | صحيحة — indoor PT WiFi (صورة H322N الرسمية، en.tiandy/wireless) |
+| ✅ | TC-H332A | I2W/WIFI/Eu/4mm | `1e/5b/c6` | صحيحة — indoor PT WiFi (مطابقة en.tiandy/wireless لـ H332A) |
+| ✅ | TC-H332N-9DA-4 | 9DA-4 | `a7/ac/29` | صحيحة — H332N يشارك نفس صورة H322N رسمياً على en.tiandy/wireless (نفس الهيكل) |
+| ✅ | TC-H333D-9DB-4 | 9DB-4 | `0a/20/24` | صحيحة — outdoor Color Maker PT (صورة H333D الرسمية، en.tiandy/wireless) |
+| 🔁 | TC-H333K | AK/I5W/WIFI/Eu/4mm | `8b/6c/ca` 🔴 | `91/c3/2f` — كانت صورة كاميرا سولار/4G؛ H333K هو **Wi-Fi PT camera** بهوائيين (صورة en.tiandy/wireless الرسمية) |
 
 ### Batch 7 — מצלמות אלחוטיות جزء ب (9)
 | ✔ | SKU | الاسم | الصورة الحالية | الصورة الصحيحة / ملاحظات |
