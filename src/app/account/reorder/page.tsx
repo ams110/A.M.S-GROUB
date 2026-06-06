@@ -9,6 +9,7 @@ import { applyEffectivePrices } from "@/lib/pricing";
 import { useCart } from "@/components/CartProvider";
 import { useToast } from "@/components/Toast";
 import { formatPrice } from "@/lib/format";
+import { productImage } from "@/lib/config";
 import { buildReorderSuggestions, isDue, type ReorderSuggestion } from "@/lib/reorder";
 import type { Order, OrderItem, Product } from "@/lib/types";
 
@@ -184,7 +185,7 @@ export default function ReorderPage() {
 
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={r.product?.image_url || `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/placeholder.svg`}
+                    src={productImage(r.product?.image_url)}
                     alt=""
                     className="h-12 w-12 shrink-0 rounded-lg object-cover ring-1 ring-slate-100"
                   />

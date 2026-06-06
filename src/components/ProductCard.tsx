@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Product } from "@/lib/types";
 import { formatPrice } from "@/lib/format";
 import { computeMargin } from "@/lib/margin";
-import { asset } from "@/lib/config";
+import { productImage } from "@/lib/config";
 
 export default function ProductCard({
   product,
@@ -23,7 +23,7 @@ export default function ProductCard({
       <div className="relative aspect-square overflow-hidden bg-slate-100">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={product.image_url ?? asset("/placeholder.svg")}
+          src={productImage(product.image_url)}
           alt={product.name_he}
           loading="lazy"
           decoding="async"
