@@ -27,10 +27,12 @@ function CustomerPrices() {
   useEffect(() => {
     (async () => {
       setLoading(true);
+      // Customers only — admins/super-admins are staff, not buyers.
+      // (".neq admin" used to let super_admin leak in as a "trader".)
       const { data: profs } = await supabase
         .from("profiles")
         .select("*")
-        .neq("role", "admin")
+        .eq("role", "dealer")
         .order("full_name");
       const list = (profs as Profile[]) ?? [];
       setCustomers(list);

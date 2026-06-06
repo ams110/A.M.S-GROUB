@@ -53,7 +53,10 @@ export default function AdminQuotesPage() {
   const load = async () => {
     const [{ data: profs }, { data: prods }, { data: qs }, { data: qis }] =
       await Promise.all([
-        supabase.from("profiles").select("*").neq("role", "admin").order("full_name"),
+        // Customers only (dealers + contractors all carry role "dealer").
+        // Admins / super-admins are staff, not buyers — keep them out of the
+        // quote customer list (".neq admin" let super_admin slip through).
+        supabase.from("profiles").select("*").eq("role", "dealer").order("full_name"),
         supabase.from("products").select("*").is("deleted_at", null).order("name_he"),
         supabase.from("quotes").select("*").order("created_at", { ascending: false }),
         supabase.from("quote_items").select("*"),
