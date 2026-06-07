@@ -31,18 +31,22 @@ export function ProductSearchSelect({
     [products, value]
   );
 
+  // All matching products (full list when no query) — the dropdown scrolls,
+  // so we never hide products; we only cap the rendered count for very large
+  // catalogues and nudge the user to refine the search.
   const matches = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const list = q
-      ? products.filter(
-          (p) =>
-            p.name_he.toLowerCase().includes(q) ||
-            (p.sku ?? "").toLowerCase().includes(q) ||
-            (p.barcode ?? "").toLowerCase().includes(q)
-        )
-      : products;
-    return list.slice(0, 8);
+    if (!q) return products;
+    return products.filter(
+      (p) =>
+        p.name_he.toLowerCase().includes(q) ||
+        (p.sku ?? "").toLowerCase().includes(q) ||
+        (p.barcode ?? "").toLowerCase().includes(q)
+    );
   }, [products, query]);
+
+  const MAX_SHOWN = 50;
+  const shown = matches.slice(0, MAX_SHOWN);
 
   // Close when clicking outside the widget.
   useEffect(() => {
@@ -94,21 +98,28 @@ export function ProductSearchSelect({
             {matches.length === 0 ? (
               <p className="px-3 py-3 text-center text-sm text-slate-400">לא נמצא מוצר</p>
             ) : (
-              matches.map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => pick(p.id)}
-                  className={`flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-right text-sm transition ${
-                    p.id === value ? "bg-gold-50 text-navy-dark" : "hover:bg-white/5"
-                  }`}
-                >
-                  <span className="truncate">{p.name_he}</span>
-                  {p.sku && (
-                    <span className="shrink-0 font-mono text-xs text-slate-400">{p.sku}</span>
-                  )}
-                </button>
-              ))
+              <>
+                {shown.map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => pick(p.id)}
+                    className={`flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-right text-sm transition ${
+                      p.id === value ? "bg-gold-50 text-navy-dark" : "hover:bg-white/5"
+                    }`}
+                  >
+                    <span className="truncate">{p.name_he}</span>
+                    {p.sku && (
+                      <span className="shrink-0 font-mono text-xs text-slate-400">{p.sku}</span>
+                    )}
+                  </button>
+                ))}
+                {matches.length > MAX_SHOWN && (
+                  <p className="px-3 py-2 text-center text-xs text-slate-400">
+                    מציג {MAX_SHOWN} מתוך {matches.length} — הקלידו לחיפוש מדויק
+                  </p>
+                )}
+              </>
             )}
           </div>
         </>
