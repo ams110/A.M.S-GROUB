@@ -7,6 +7,7 @@ import { formatPrice, QUOTE_STATUS_HE } from "@/lib/format";
 import { computeMargin, recommendPrice } from "@/lib/margin";
 import { quoteMessage, waMessageLink } from "@/lib/messages";
 import { WizardStepper } from "@/components/WizardStepper";
+import { ProductSearchSelect } from "@/components/ProductSearchSelect";
 import { ReviewCard, ReviewItem } from "@/components/ReviewSummary";
 import { BASE_PATH } from "@/lib/config";
 import type { Product, Profile, Quote, QuoteItem } from "@/lib/types";
@@ -53,7 +54,10 @@ export default function AdminQuotesPage() {
   const load = async () => {
     const [{ data: profs }, { data: prods }, { data: qs }, { data: qis }] =
       await Promise.all([
-        supabase.from("profiles").select("*").neq("role", "admin").order("full_name"),
+        // Customers only (dealers + contractors all carry role "dealer").
+        // Admins / super-admins are staff, not buyers — keep them out of the
+        // quote customer list (".neq admin" let super_admin slip through).
+        supabase.from("profiles").select("*").eq("role", "dealer").order("full_name"),
         supabase.from("products").select("*").is("deleted_at", null).order("name_he"),
         supabase.from("quotes").select("*").order("created_at", { ascending: false }),
         supabase.from("quote_items").select("*"),
@@ -310,71 +314,90 @@ export default function AdminQuotesPage() {
               const m = prod ? computeMargin(l.unit_price, prod.cost) : null;
               const rec = prod ? recommendFor(l.product_id) : null;
               const recOff = rec && Math.abs(rec.price - l.unit_price) > 0.5;
+              const lineTotal = l.unit_price * l.qty;
               return (
-              <div key={i}>
-                <div className="grid grid-cols-[1fr_90px_120px_auto] gap-2">
-                  <select
-                    className="input"
-                    value={l.product_id}
-                    onChange={(e) => onPickProduct(i, e.target.value)}
-                  >
-                    <option value="">— מוצר —</option>
-                    {products.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name_he}
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    type="number"
-                    min={1}
-                    className="input"
-                    placeholder="כמות"
-                    value={l.qty}
-                    onChange={(e) => setLine(i, { qty: Number(e.target.value) })}
-                  />
-                  <input
-                    type="number"
-                    step="0.01"
-                    className={`input ${m?.belowCost ? "border-rose-400" : ""}`}
-                    placeholder="מחיר יח׳"
-                    value={l.unit_price}
-                    onChange={(e) => setLine(i, { unit_price: Number(e.target.value) })}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setLines((ls) => ls.filter((_, j) => j !== i))}
-                    className="px-2 text-slate-400 hover:text-rose-600"
-                  >
-                    ✕
-                  </button>
+              <div key={i} className="space-y-3 rounded-xl border border-white/10 p-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-slate-400">שורה {i + 1}</span>
+                  {lines.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setLines((ls) => ls.filter((_, j) => j !== i))}
+                      className="text-xs text-slate-400 hover:text-rose-500"
+                    >
+                      הסרה ✕
+                    </button>
+                  )}
                 </div>
-                <div className="mt-0.5 flex flex-wrap items-center gap-2 pr-1 text-xs">
-                  {m && m.known && (
-                    <span>
-                      {m.belowCost ? (
+
+                <div>
+                  <label className="label">מוצר</label>
+                  <ProductSearchSelect
+                    products={products}
+                    value={l.product_id}
+                    onChange={(id) => onPickProduct(i, id)}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="label">כמות</label>
+                    <input
+                      type="number"
+                      min={1}
+                      className="input"
+                      value={l.qty}
+                      onChange={(e) => setLine(i, { qty: Number(e.target.value) })}
+                    />
+                  </div>
+                  <div>
+                    <label className="label">מחיר יחידה</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      className={`input ${m?.belowCost ? "border-rose-400" : ""}`}
+                      value={l.unit_price}
+                      onChange={(e) => setLine(i, { unit_price: Number(e.target.value) })}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {m && m.known && (
+                      m.belowCost ? (
                         <span className="font-bold text-rose-600">מתחת לעלות ({formatPrice(prod!.cost)}) ⚠</span>
                       ) : (
                         <span className={m.thin ? "text-amber-600" : "text-slate-400"}>
                           מרווח {m.marginPct.toFixed(0)}%{m.thin && " — נמוך ⚠"}
                         </span>
-                      )}
-                    </span>
-                  )}
-                  {rec && recOff && (
-                    <button
-                      type="button"
-                      onClick={() => setLine(i, { unit_price: rec.price })}
-                      title={rec.reason}
-                      className="rounded-full bg-gold-50 px-2 py-0.5 font-semibold text-gold-dark ring-1 ring-gold/30 hover:bg-gold-100"
-                    >
-                      💡 מומלץ {formatPrice(rec.price)}
-                    </button>
+                      )
+                    )}
+                    {rec && recOff && (
+                      <button
+                        type="button"
+                        onClick={() => setLine(i, { unit_price: rec.price })}
+                        title={rec.reason}
+                        className="rounded-full bg-gold-50 px-2 py-0.5 font-semibold text-gold-dark ring-1 ring-gold/30 hover:bg-gold-100"
+                      >
+                        💡 מומלץ {formatPrice(rec.price)}
+                      </button>
+                    )}
+                  </div>
+                  {prod && (
+                    <span className="font-semibold">סה״כ שורה: {formatPrice(lineTotal)}</span>
                   )}
                 </div>
               </div>
               );
             })}
+
+            {formValidLines.length > 0 && (
+              <div className="flex items-center justify-between border-t border-white/10 pt-3 text-sm font-bold">
+                <span>סה״כ ביניים</span>
+                <span>{formatPrice(formTotal)}</span>
+              </div>
+            )}
           </div>
           )}
 
