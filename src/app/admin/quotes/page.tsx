@@ -15,6 +15,8 @@ import type { Category, Product, Profile, Quote, QuoteItem } from "@/lib/types";
 type Line = { product_id: string; qty: number; unit_price: number };
 
 const QUOTE_STEPS = ["לקוח", "פריטים", "סיכום"];
+const DRAFT_KEY = "ams_quote_draft";
+const PAGE_SIZE = 50;
 
 export default function AdminQuotesPage() {
   const supabase = createClient();
@@ -36,6 +38,11 @@ export default function AdminQuotesPage() {
   const [lines, setLines] = useState<Line[]>([]);
   const [showPicker, setShowPicker] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // Quotes list: search + status filter + incremental paging.
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | Quote["status"]>("all");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const customerName = useMemo(() => {
     const m = new Map(customers.map((c) => [c.id, c]));
@@ -77,6 +84,28 @@ export default function AdminQuotesPage() {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Auto-save the in-progress quote so an accidental page close doesn't wipe it.
+  useEffect(() => {
+    if (!showForm) return;
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ customerId, validUntil, notes, lines }));
+    } catch {
+      /* storage unavailable — non-fatal */
+    }
+  }, [showForm, customerId, validUntil, notes, lines]);
+
+  // Filter (status + free text on number/customer) then page the quotes list.
+  const filteredQuotes = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    return quotes.filter((q) => {
+      if (statusFilter !== "all" && q.status !== statusFilter) return false;
+      if (!term) return true;
+      const name = customerName(q.customer_id).toLowerCase();
+      return q.quote_number.toLowerCase().includes(term) || name.includes(term);
+    });
+  }, [quotes, search, statusFilter, customerName]);
+  const shownQuotes = filteredQuotes.slice(0, visibleCount);
 
   const quoteTotal = (qid: string) =>
     (itemsByQuote.get(qid) ?? []).reduce((s, it) => s + Number(it.line_total), 0);
@@ -187,13 +216,23 @@ export default function AdminQuotesPage() {
     setSaving(false);
     if (iErr) return setError(`שמירת שורות נכשלה: ${iErr.message}`);
 
+    resetForm();
     setShowForm(false);
+    load();
+  };
+
+  // Clear all form fields + the saved draft.
+  const resetForm = () => {
     setFormStep(0);
     setCustomerId("");
     setValidUntil("");
     setNotes("");
     setLines([]);
-    load();
+    try {
+      localStorage.removeItem(DRAFT_KEY);
+    } catch {
+      /* non-fatal */
+    }
   };
 
   // Form total (valid lines) — shown in the review step.
@@ -217,10 +256,30 @@ export default function AdminQuotesPage() {
     }
   };
 
-  const openForm = () => {
+  const closeForm = () => {
+    resetForm();
+    setShowForm(false);
     setError(null);
+  };
+
+  const openForm = () => {
+    if (showForm) return closeForm();
+    setError(null);
+    // Restore an unfinished draft if one was saved.
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (raw) {
+        const d = JSON.parse(raw);
+        setCustomerId(d.customerId || "");
+        setValidUntil(d.validUntil || "");
+        setNotes(d.notes || "");
+        setLines(Array.isArray(d.lines) ? d.lines : []);
+      }
+    } catch {
+      /* ignore malformed draft */
+    }
     setFormStep(0);
-    setShowForm((v) => !v);
+    setShowForm(true);
   };
 
   const setStatus = async (q: Quote, status: Quote["status"]) => {
@@ -229,12 +288,30 @@ export default function AdminQuotesPage() {
   };
 
   const convert = async (q: Quote) => {
-    if (!confirm("להמיר את ההצעה להזמנה? המלאי יעודכן בהתאם.")) return;
+    const count = (itemsByQuote.get(q.id) ?? []).length;
+    if (
+      !confirm(
+        `להמיר את הצעה ${q.quote_number} (${count} פריטים · ${formatPrice(quoteTotal(q.id))}) להזמנה?\nהמלאי ינוכה בהתאם — פעולה זו אינה הפיכה.`
+      )
+    )
+      return;
     setBusyId(q.id);
     const { error } = await supabase.rpc("convert_quote_to_order", { p_quote_id: q.id });
     setBusyId(null);
     if (error) {
-      setError(`המרה נכשלה: ${error.message}`);
+      const msg = error.message || "";
+      // Structured guard error: INSUFFICIENT_STOCK:<name>:<available>:<requested>
+      if (msg.includes("INSUFFICIENT_STOCK:")) {
+        const segs = (msg.split("INSUFFICIENT_STOCK:")[1] || "").split(":");
+        const requested = segs.pop();
+        const available = segs.pop();
+        const name = segs.join(":");
+        setError(
+          `אין מספיק מלאי עבור "${name}" — במלאי ${available}, נדרש ${requested}. עדכנו את המלאי או את הכמות לפני ההמרה.`
+        );
+      } else {
+        setError(`המרה נכשלה: ${msg}`);
+      }
       return;
     }
     load();
@@ -340,7 +417,26 @@ export default function AdminQuotesPage() {
                 </div>
                 <div className="flex-1 space-y-2">
                   <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-medium">{prod?.name_he ?? "—"}</p>
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium">{prod?.name_he ?? "—"}</p>
+                      {prod && (
+                        <span
+                          className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                            prod.stock <= 0
+                              ? "bg-rose-100 text-rose-700"
+                              : prod.stock < l.qty
+                              ? "bg-amber-100 text-amber-700"
+                              : "bg-emerald-100 text-emerald-700"
+                          }`}
+                        >
+                          {prod.stock <= 0
+                            ? "אזל מהמלאי"
+                            : prod.stock < l.qty
+                            ? `במלאי ${prod.stock} — פחות מהכמות`
+                            : `במלאי: ${prod.stock}`}
+                        </span>
+                      )}
+                    </div>
                     <button
                       type="button"
                       onClick={() => setLines((ls) => ls.filter((_, j) => j !== i))}
@@ -355,10 +451,13 @@ export default function AdminQuotesPage() {
                       <input
                         type="number"
                         min={1}
-                        className="input"
+                        className={`input ${l.qty < 1 ? "border-rose-400" : ""}`}
                         value={l.qty}
                         onChange={(e) => setLine(i, { qty: Number(e.target.value) })}
                       />
+                      {l.qty < 1 && (
+                        <p className="mt-1 text-[11px] text-rose-600">כמות חייבת להיות 1 לפחות</p>
+                      )}
                     </div>
                     <div>
                       <label className="label">מחיר יחידה</label>
@@ -427,7 +526,7 @@ export default function AdminQuotesPage() {
           <div className="flex items-center justify-between border-t border-slate-100 pt-4">
             <button
               type="button"
-              onClick={() => (formStep === 0 ? setShowForm(false) : setFormStep((s) => s - 1))}
+              onClick={() => (formStep === 0 ? closeForm() : setFormStep((s) => s - 1))}
               className="btn-outline"
               disabled={saving}
             >
@@ -456,6 +555,36 @@ export default function AdminQuotesPage() {
         />
       )}
 
+      <div className="flex flex-wrap items-center gap-3">
+        <input
+          className="input flex-1 min-w-[180px]"
+          placeholder="חיפוש לפי מספר או לקוח…"
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setVisibleCount(PAGE_SIZE);
+          }}
+        />
+        <select
+          className="input w-auto"
+          value={statusFilter}
+          onChange={(e) => {
+            setStatusFilter(e.target.value as typeof statusFilter);
+            setVisibleCount(PAGE_SIZE);
+          }}
+        >
+          <option value="all">כל הסטטוסים</option>
+          {Object.entries(QUOTE_STATUS_HE).map(([k, v]) => (
+            <option key={k} value={k}>
+              {v}
+            </option>
+          ))}
+        </select>
+        <span className="text-xs text-slate-400">
+          {filteredQuotes.length} מתוך {quotes.length}
+        </span>
+      </div>
+
       <div className="card overflow-x-auto">
         <table className="w-full text-right text-sm">
           <thead className="border-b border-slate-200 text-slate-500">
@@ -470,7 +599,7 @@ export default function AdminQuotesPage() {
             </tr>
           </thead>
           <tbody>
-            {quotes.map((q) => (
+            {shownQuotes.map((q) => (
               <tr key={q.id} className="border-b border-slate-100">
                 <td className="p-3 font-mono">{q.quote_number}</td>
                 <td className="p-3">{customerName(q.customer_id)}</td>
@@ -507,7 +636,11 @@ export default function AdminQuotesPage() {
                         <a href={link} target="_blank" rel="noopener noreferrer" className="text-emerald-700 hover:underline">
                           וואטסאפ
                         </a>
-                      ) : null;
+                      ) : (
+                        <span className="text-slate-300" title="אין מספר טלפון ללקוח — עדכנו את הפרופיל">
+                          וואטסאפ
+                        </span>
+                      );
                     })()}
                     {q.status === "draft" && (
                       <button
@@ -538,16 +671,29 @@ export default function AdminQuotesPage() {
                 </td>
               </tr>
             ))}
-            {quotes.length === 0 && (
+            {filteredQuotes.length === 0 && (
               <tr>
                 <td colSpan={7} className="p-6 text-center text-slate-400">
-                  אין הצעות מחיר עדיין.
+                  {quotes.length === 0
+                    ? "אין הצעות מחיר עדיין."
+                    : "אין הצעות מחיר התואמות לחיפוש."}
                 </td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
+
+      {filteredQuotes.length > visibleCount && (
+        <div className="text-center">
+          <button
+            onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+            className="btn-outline"
+          >
+            טען עוד ({filteredQuotes.length - visibleCount})
+          </button>
+        </div>
+      )}
     </div>
   );
 }

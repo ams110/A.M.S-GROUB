@@ -153,6 +153,7 @@ supabase/migrations/
   20260604_multi_passkey.sql                  # جدول store.passkey_credentials (متعدد الأجهزة) + RPC list_passkeys/remove_passkey + ترحيل من profiles
   20260604_accept_my_quote.sql                # RPC accept_my_quote — التاجر يقبل عرض سعره ويحوّله لطلب (تحقق ملكية/صلاحية/مخزون) + wrapper public
   20260605_product_barcode.sql                # عمود store.products.barcode + فهرس + تحديث public.products view (لماسح الكاميرا)
+  20260607_quote_convert_stock_guard.sql      # convert_quote_to_order يفحص توفّر المخزون قبل الخصم (يمنع البيع الزائد/الرصيد السالب)
 ```
 
 > ⚠️ ميجريشن `20260605_product_barcode.sql` يجب تطبيقه على Supabase (عبر MCP `apply_migration`) قبل أن يحفظ محرّر المنتج حقل `barcode` — العميل يكتب `barcode` على `public.products` فإن لم يوجد العمود سيُرجِع PostgREST خطأ. حتى التطبيق: المطابقة تشتغل على sku/slug بدون مشكلة.
