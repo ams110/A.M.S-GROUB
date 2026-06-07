@@ -51,6 +51,26 @@ export function welcomeMessage(opts: {
   ].join("\n");
 }
 
+/** Message sent when an admin resets a customer's password. */
+export function passwordResetMessage(opts: {
+  name?: string;
+  loginUrl: string;
+  login: string;
+  password: string;
+}): string {
+  const hi = opts.name ? `שלום ${opts.name} 👋` : "שלום 👋";
+  return [
+    hi,
+    "סיסמת הכניסה שלך ל-Â.M.Ŝ GROUP אופסה.",
+    "",
+    `🔗 כניסה: ${opts.loginUrl}`,
+    `👤 שם משתמש: ${opts.login}`,
+    `🔑 סיסמה חדשה: ${opts.password}`,
+    "",
+    "מומלץ להחליף את הסיסמה לאחר הכניסה.",
+  ].join("\n");
+}
+
 /** Build a ready-to-open wa.me link with the welcome message pre-filled. */
 export function waLink(phone: string, message: string): string {
   return `https://wa.me/${waPhone(phone)}?text=${encodeURIComponent(message)}`;
