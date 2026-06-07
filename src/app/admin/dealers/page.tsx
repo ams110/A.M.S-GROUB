@@ -17,6 +17,7 @@ import {
   type Receivables,
 } from "@/lib/ar";
 import { paymentReminderMessage, waMessageLink } from "@/lib/messages";
+import { genPassword, passwordResetMessage, waLink } from "@/lib/onboarding";
 import { BASE_PATH } from "@/lib/config";
 import type { CustomerType, PaymentTerms, Profile } from "@/lib/types";
 
@@ -35,6 +36,9 @@ export default function AdminCustomersPage() {
   const [rows, setRows] = useState<Profile[]>([]);
   const [receivables, setReceivables] = useState<Record<string, Receivables>>({});
   const [loading, setLoading] = useState(true);
+  // New password per dealer after an admin reset (shown once, copyable).
+  const [resetPw, setResetPw] = useState<Record<string, string>>({});
+  const [resettingId, setResettingId] = useState<string | null>(null);
 
   // Create-account form.
   const [form, setForm] = useState({ ...EMPTY_NEW });
@@ -130,6 +134,63 @@ export default function AdminCustomersPage() {
     patchLocal(id, { payment_terms });
     await supabase.from("profiles").update({ payment_terms }).eq("id", id);
   };
+
+  // Reset a dealer's password to a freshly generated one (admin-only edge
+  // function). The new password is shown once so the admin can copy / WhatsApp it.
+  const resetPassword = async (p: Profile) => {
+    if (!confirm(`לאפס את הסיסמה של ${p.full_name || p.company || "הלקוח"}? תיווצר סיסמה חדשה.`)) return;
+    setResettingId(p.id);
+    const pw = genPassword();
+    const { data, error } = await supabase.functions.invoke("admin-reset-password", {
+      body: { user_id: p.id, password: pw },
+    });
+    setResettingId(null);
+    if (error || data?.error) {
+      toast("איפוס הסיסמה נכשל", "error");
+      return;
+    }
+    setResetPw((r) => ({ ...r, [p.id]: pw }));
+    toast("הסיסמה אופסה");
+  };
+
+  // The "new password" box shown after a reset — copyable + WhatsApp.
+  const resetBox = (p: Profile) =>
+    resetPw[p.id] ? (
+      <div className="mt-2 rounded-lg bg-amber-50 p-2 text-xs text-slate-700">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-slate-500">סיסמה חדשה:</span>
+          <code className="font-mono font-bold text-navy-dark">{resetPw[p.id]}</code>
+          <button
+            type="button"
+            onClick={() => {
+              navigator.clipboard?.writeText(resetPw[p.id]);
+              toast("הסיסמה הועתקה");
+            }}
+            className="text-brand hover:underline"
+          >
+            העתק
+          </button>
+          {p.phone && (
+            <a
+              href={waLink(
+                p.phone,
+                passwordResetMessage({
+                  name: p.full_name || p.company || undefined,
+                  loginUrl,
+                  login: p.username || "האימייל שלך",
+                  password: resetPw[p.id],
+                })
+              )}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-emerald-700 hover:underline"
+            >
+              שלח בוואטסאפ
+            </a>
+          )}
+        </div>
+      </div>
+    ) : null;
 
   const createCustomer = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -355,6 +416,7 @@ export default function AdminCustomersPage() {
                     </td>
                     <td className="p-3">
                       {p.role === "dealer" && (
+                        <>
                         <div className="flex flex-wrap gap-2">
                           {p.status !== "approved" && (
                             <button onClick={() => setStatus(p.id, "approved")} className="text-emerald-700 hover:underline">אישור</button>
@@ -364,6 +426,9 @@ export default function AdminCustomersPage() {
                           )}
                           <Link href={`/admin/customer?id=${p.id}`} className="font-semibold text-gold-dark hover:underline">תיק לקוח</Link>
                           <Link href={`/admin/customer-prices?customer=${p.id}`} className="text-brand hover:underline">מחירים</Link>
+                          <button onClick={() => resetPassword(p)} disabled={resettingId === p.id} className="text-amber-700 hover:underline">
+                            {resettingId === p.id ? "מאפס…" : "איפוס סיסמה"}
+                          </button>
                           {(() => {
                             const link = remindLink(p);
                             return link ? (
@@ -373,6 +438,8 @@ export default function AdminCustomersPage() {
                             ) : null;
                           })()}
                         </div>
+                        {resetBox(p)}
+                        </>
                       )}
                     </td>
                   </tr>
@@ -424,6 +491,7 @@ export default function AdminCustomersPage() {
                   ) : null;
                 })()}
                 {p.role === "dealer" && (
+                  <>
                   <div className="flex flex-wrap gap-2 border-t border-slate-100 pt-2">
                     {p.status !== "approved" && (
                       <button onClick={() => setStatus(p.id, "approved")} className="btn-outline py-1 text-xs text-emerald-700 border-emerald-300">אישור</button>
@@ -433,6 +501,9 @@ export default function AdminCustomersPage() {
                     )}
                     <Link href={`/admin/customer?id=${p.id}`} className="btn-outline py-1 text-xs text-gold-dark border-gold/40">תיק לקוח</Link>
                     <Link href={`/admin/customer-prices?customer=${p.id}`} className="btn-outline py-1 text-xs">מחירים</Link>
+                    <button onClick={() => resetPassword(p)} disabled={resettingId === p.id} className="btn-outline py-1 text-xs text-amber-700 border-amber-300">
+                      {resettingId === p.id ? "מאפס…" : "איפוס סיסמה"}
+                    </button>
                     {(() => {
                       const link = remindLink(p);
                       return link ? (
@@ -440,6 +511,8 @@ export default function AdminCustomersPage() {
                       ) : null;
                     })()}
                   </div>
+                  {resetBox(p)}
+                  </>
                 )}
               </div>
             ))}
