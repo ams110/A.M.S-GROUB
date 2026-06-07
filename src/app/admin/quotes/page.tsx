@@ -7,10 +7,10 @@ import { formatPrice, QUOTE_STATUS_HE } from "@/lib/format";
 import { computeMargin, recommendPrice } from "@/lib/margin";
 import { quoteMessage, waMessageLink } from "@/lib/messages";
 import { WizardStepper } from "@/components/WizardStepper";
-import { ProductSearchSelect } from "@/components/ProductSearchSelect";
+import { ProductPickerGrid } from "@/components/ProductPickerGrid";
 import { ReviewCard, ReviewItem } from "@/components/ReviewSummary";
-import { BASE_PATH } from "@/lib/config";
-import type { Product, Profile, Quote, QuoteItem } from "@/lib/types";
+import { BASE_PATH, productImage } from "@/lib/config";
+import type { Category, Product, Profile, Quote, QuoteItem } from "@/lib/types";
 
 type Line = { product_id: string; qty: number; unit_price: number };
 
@@ -20,6 +20,7 @@ export default function AdminQuotesPage() {
   const supabase = createClient();
   const [customers, setCustomers] = useState<Profile[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [items, setItems] = useState<QuoteItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,7 +33,8 @@ export default function AdminQuotesPage() {
   const [customerId, setCustomerId] = useState("");
   const [validUntil, setValidUntil] = useState("");
   const [notes, setNotes] = useState("");
-  const [lines, setLines] = useState<Line[]>([{ product_id: "", qty: 1, unit_price: 0 }]);
+  const [lines, setLines] = useState<Line[]>([]);
+  const [showPicker, setShowPicker] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const customerName = useMemo(() => {
@@ -52,7 +54,7 @@ export default function AdminQuotesPage() {
   }, [items]);
 
   const load = async () => {
-    const [{ data: profs }, { data: prods }, { data: qs }, { data: qis }] =
+    const [{ data: profs }, { data: prods }, { data: qs }, { data: qis }, { data: cats }] =
       await Promise.all([
         // Customers only (dealers + contractors all carry role "dealer").
         // Admins / super-admins are staff, not buyers — keep them out of the
@@ -61,11 +63,13 @@ export default function AdminQuotesPage() {
         supabase.from("products").select("*").is("deleted_at", null).order("name_he"),
         supabase.from("quotes").select("*").order("created_at", { ascending: false }),
         supabase.from("quote_items").select("*"),
+        supabase.from("categories").select("*").order("sort"),
       ]);
     setCustomers((profs as Profile[]) ?? []);
     setProducts((prods as Product[]) ?? []);
     setQuotes((qs as Quote[]) ?? []);
     setItems((qis as QuoteItem[]) ?? []);
+    setCategories((cats as Category[]) ?? []);
     setLoading(false);
   };
 
@@ -135,8 +139,14 @@ export default function AdminQuotesPage() {
   const setLine = (i: number, patch: Partial<Line>) =>
     setLines((l) => l.map((row, j) => (j === i ? { ...row, ...patch } : row)));
 
-  const onPickProduct = (i: number, productId: string) =>
-    setLine(i, { product_id: productId, unit_price: productId ? recommendFor(productId).price : 0 });
+  // Add a product from the visual picker (skip if already added), seeding the
+  // unit price with the smart recommendation.
+  const addProduct = (productId: string) =>
+    setLines((l) =>
+      l.some((x) => x.product_id === productId)
+        ? l
+        : [...l, { product_id: productId, qty: 1, unit_price: recommendFor(productId).price }]
+    );
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -182,7 +192,7 @@ export default function AdminQuotesPage() {
     setCustomerId("");
     setValidUntil("");
     setNotes("");
-    setLines([{ product_id: "", qty: 1, unit_price: 0 }]);
+    setLines([]);
     load();
   };
 
@@ -296,19 +306,26 @@ export default function AdminQuotesPage() {
           </div>
           )}
 
-          {/* Step 1 — line items */}
+          {/* Step 1 — line items (pick products visually, no SKU hunting) */}
           {formStep === 1 && (
-          <div className="space-y-2">
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-slate-600">שורות</span>
-              <button
-                type="button"
-                onClick={() => setLines((l) => [...l, { product_id: "", qty: 1, unit_price: 0 }])}
-                className="text-sm text-brand hover:underline"
-              >
-                + שורה
+              <span className="text-sm font-medium text-slate-500">מוצרים בהצעה</span>
+              <button type="button" onClick={() => setShowPicker(true)} className="btn-gold py-1.5 text-sm">
+                ➕ הוסף מוצרים
               </button>
             </div>
+
+            {lines.length === 0 && (
+              <button
+                type="button"
+                onClick={() => setShowPicker(true)}
+                className="w-full rounded-xl border border-dashed border-white/15 py-10 text-center text-sm text-slate-400 hover:border-gold/40 hover:text-slate-300"
+              >
+                עדיין אין מוצרים — לחצו לבחירה מהקטלוג בתמונות 🖼️
+              </button>
+            )}
+
             {lines.map((l, i) => {
               const prod = products.find((x) => x.id === l.product_id);
               const m = prod ? computeMargin(l.unit_price, prod.cost) : null;
@@ -316,77 +333,68 @@ export default function AdminQuotesPage() {
               const recOff = rec && Math.abs(rec.price - l.unit_price) > 0.5;
               const lineTotal = l.unit_price * l.qty;
               return (
-              <div key={i} className="space-y-3 rounded-xl border border-white/10 p-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-slate-400">שורה {i + 1}</span>
-                  {lines.length > 1 && (
+              <div key={i} className="flex gap-3 rounded-xl border border-white/10 p-3">
+                <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-slate-100">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={productImage(prod?.image_url)} alt="" className="h-full w-full object-cover" />
+                </div>
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-sm font-medium">{prod?.name_he ?? "—"}</p>
                     <button
                       type="button"
                       onClick={() => setLines((ls) => ls.filter((_, j) => j !== i))}
-                      className="text-xs text-slate-400 hover:text-rose-500"
+                      className="shrink-0 text-xs text-slate-400 hover:text-rose-500"
                     >
                       הסרה ✕
                     </button>
-                  )}
-                </div>
-
-                <div>
-                  <label className="label">מוצר</label>
-                  <ProductSearchSelect
-                    products={products}
-                    value={l.product_id}
-                    onChange={(id) => onPickProduct(i, id)}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="label">כמות</label>
-                    <input
-                      type="number"
-                      min={1}
-                      className="input"
-                      value={l.qty}
-                      onChange={(e) => setLine(i, { qty: Number(e.target.value) })}
-                    />
                   </div>
-                  <div>
-                    <label className="label">מחיר יחידה</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      className={`input ${m?.belowCost ? "border-rose-400" : ""}`}
-                      value={l.unit_price}
-                      onChange={(e) => setLine(i, { unit_price: Number(e.target.value) })}
-                    />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="label">כמות</label>
+                      <input
+                        type="number"
+                        min={1}
+                        className="input"
+                        value={l.qty}
+                        onChange={(e) => setLine(i, { qty: Number(e.target.value) })}
+                      />
+                    </div>
+                    <div>
+                      <label className="label">מחיר יחידה</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        className={`input ${m?.belowCost ? "border-rose-400" : ""}`}
+                        value={l.unit_price}
+                        onChange={(e) => setLine(i, { unit_price: Number(e.target.value) })}
+                      />
+                    </div>
                   </div>
-                </div>
-
-                <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <div className="flex flex-wrap items-center gap-2">
-                    {m && m.known && (
-                      m.belowCost ? (
-                        <span className="font-bold text-rose-600">מתחת לעלות ({formatPrice(prod!.cost)}) ⚠</span>
-                      ) : (
-                        <span className={m.thin ? "text-amber-600" : "text-slate-400"}>
-                          מרווח {m.marginPct.toFixed(0)}%{m.thin && " — נמוך ⚠"}
-                        </span>
-                      )
-                    )}
-                    {rec && recOff && (
-                      <button
-                        type="button"
-                        onClick={() => setLine(i, { unit_price: rec.price })}
-                        title={rec.reason}
-                        className="rounded-full bg-gold-50 px-2 py-0.5 font-semibold text-gold-dark ring-1 ring-gold/30 hover:bg-gold-100"
-                      >
-                        💡 מומלץ {formatPrice(rec.price)}
-                      </button>
-                    )}
-                  </div>
-                  {prod && (
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <div className="flex flex-wrap items-center gap-2">
+                      {m && m.known && (
+                        m.belowCost ? (
+                          <span className="font-bold text-rose-600">מתחת לעלות ({formatPrice(prod!.cost)}) ⚠</span>
+                        ) : (
+                          <span className={m.thin ? "text-amber-600" : "text-slate-400"}>
+                            מרווח {m.marginPct.toFixed(0)}%{m.thin && " — נמוך ⚠"}
+                          </span>
+                        )
+                      )}
+                      {rec && recOff && (
+                        <button
+                          type="button"
+                          onClick={() => setLine(i, { unit_price: rec.price })}
+                          title={rec.reason}
+                          className="rounded-full bg-gold-50 px-2 py-0.5 font-semibold text-gold-dark ring-1 ring-gold/30 hover:bg-gold-100"
+                        >
+                          💡 מומלץ {formatPrice(rec.price)}
+                        </button>
+                      )}
+                    </div>
                     <span className="font-semibold">סה״כ שורה: {formatPrice(lineTotal)}</span>
-                  )}
+                  </div>
                 </div>
               </div>
               );
@@ -436,6 +444,16 @@ export default function AdminQuotesPage() {
             )}
           </div>
         </form>
+      )}
+
+      {showPicker && (
+        <ProductPickerGrid
+          products={products}
+          categories={categories}
+          addedIds={lines.map((l) => l.product_id)}
+          onAdd={addProduct}
+          onClose={() => setShowPicker(false)}
+        />
       )}
 
       <div className="card overflow-x-auto">
