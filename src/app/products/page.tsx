@@ -13,6 +13,11 @@ import type { Category, Product } from "@/lib/types";
 
 type SortKey = "default" | "name" | "price-asc" | "price-desc";
 
+// Catalogue renders incrementally so a large product list (1000+ items) stays
+// snappy: we fetch the full set for client-side search/sort/filter, but only
+// paint PAGE_SIZE cards at a time and reveal more on demand.
+const PAGE_SIZE = 24;
+
 function Catalog() {
   const params = useSearchParams();
   const router = useRouter();
@@ -28,6 +33,7 @@ function Catalog() {
   const [search, setSearch] = useState(q ?? "");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
+  const [visible, setVisible] = useState(PAGE_SIZE);
 
   useEffect(() => {
     const supabase = createClient();
@@ -89,6 +95,15 @@ function Catalog() {
       if (sort === "price-desc") return (b.price ?? 0) - (a.price ?? 0);
       return 0;
     });
+
+  // Reset the visible window whenever the result set or its ordering changes,
+  // so a new search/filter always starts from the first page.
+  useEffect(() => {
+    setVisible(PAGE_SIZE);
+  }, [products, sort, inStockOnly]);
+
+  const shown = sorted.slice(0, visible);
+  const hasMore = sorted.length > visible;
 
   const navLinks = (
     <div className="space-y-1">
@@ -211,7 +226,11 @@ function Catalog() {
         {/* Grid */}
         <div>
           <p className="mb-4 text-sm text-slate-500">
-            {loading ? "טוען…" : `${sorted.length} מוצרים`}
+            {loading
+              ? "טוען…"
+              : hasMore
+                ? `מציג ${shown.length} מתוך ${sorted.length} מוצרים`
+                : `${sorted.length} מוצרים`}
           </p>
           {!loading && sorted.length === 0 && (
             <div className="rounded-xl border border-dashed border-slate-300 py-16 text-center text-slate-400">
@@ -219,10 +238,21 @@ function Catalog() {
             </div>
           )}
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {sorted.map((p) => (
+            {shown.map((p) => (
               <ProductCard key={p.id} product={p} showPrice={showPrice} />
             ))}
           </div>
+          {hasMore && (
+            <div className="mt-8 text-center">
+              <button
+                type="button"
+                onClick={() => setVisible((v) => v + PAGE_SIZE)}
+                className="btn-outline"
+              >
+                טען עוד מוצרים
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

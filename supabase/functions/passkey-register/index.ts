@@ -3,8 +3,8 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 import {
   generateRegistrationOptions,
   verifyRegistrationResponse,
-} from "npm:@simplewebauthn/server@9";
-import type { RegistrationResponseJSON } from "npm:@simplewebauthn/types@9";
+} from "npm:@simplewebauthn/server@10";
+import type { RegistrationResponseJSON } from "npm:@simplewebauthn/types@10";
 
 const RP_ID   = Deno.env.get("WEBAUTHN_RP_ID")   ?? "ams-groub.linko.services";
 const ORIGIN  = Deno.env.get("WEBAUTHN_ORIGIN")  ?? "https://ams-groub.linko.services";

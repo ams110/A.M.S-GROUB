@@ -144,10 +144,29 @@ export default function OpsCenter() {
     load(from, to);
   }, [from, to, load]);
 
-  // silent auto-refresh every 60s
+  // silent auto-refresh every 60s — fallback when realtime is unavailable
   useEffect(() => {
     const poll = setInterval(() => load(from, to), 60_000);
     return () => clearInterval(poll);
+  }, [from, to, load]);
+
+  // Live updates: refresh the dashboard the moment an order changes instead of
+  // waiting for the 60s poll. Requires store.orders in the supabase_realtime
+  // publication (see 20260608_realtime_orders.sql). The poll above stays as a
+  // safety net if realtime isn't enabled on the project.
+  useEffect(() => {
+    const supabase = createClient();
+    const channel = supabase
+      .channel("ops-orders")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "store", table: "orders" },
+        () => load(from, to),
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [from, to, load]);
 
   const applyPreset = (key: string) => {
