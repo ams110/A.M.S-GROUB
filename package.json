@@ -13,7 +13,7 @@
     "test:ci": "jest --ci --coverage"
   },
   "dependencies": {
-    "@simplewebauthn/browser": "^9.0.1",
+    "@simplewebauthn/browser": "^10.0.0",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.45.4",
     "@types/qrcode": "^1.5.6",

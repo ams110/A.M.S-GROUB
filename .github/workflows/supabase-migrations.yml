@@ -1,0 +1,50 @@
+# Apply Supabase database migrations automatically when they change on main.
+#
+# This closes the "migrations are applied manually" gap: any new file under
+# supabase/migrations/ is pushed to the production database on merge, so the DB
+# never drifts from the repo.
+#
+# ── One-time setup (repo Settings → Secrets and variables → Actions) ──────────
+#   Secret  SUPABASE_DB_URL  — the project's Postgres connection string
+#     (Supabase Dashboard → Project Settings → Database → Connection string →
+#      URI; use the pooler/"Session" URI and keep the password in it).
+#
+# The migrations are applied with `supabase db push`, which only runs files that
+# haven't been applied yet (tracked in the supabase_migrations schema), so the
+# job is safe to re-run.
+name: Apply Supabase migrations
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "supabase/migrations/**"
+  # Allow manual replay from the Actions tab.
+  workflow_dispatch:
+
+# Never run two migration jobs at once against the same database.
+concurrency:
+  group: "supabase-migrations"
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Push migrations
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "::error::SUPABASE_DB_URL secret is not set — add it in repo settings."
+            exit 1
+          fi
+          supabase db push --db-url "$SUPABASE_DB_URL"
