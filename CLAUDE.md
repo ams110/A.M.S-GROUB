@@ -74,7 +74,7 @@ public/          # logo.svg, placeholder.svg, icon-180/192/512.png, manifest.jso
 - الدخول: `passkey-auth` يبحث عن الـ credential بالجدول عبر كل الأجهزة، يتحقق، يحدّث `counter` + `last_used_at`، ثم يولّد **`email_otp`** (مش hashed_token) ويرجّعه؛ العميل يكمل بـ `verifyOtp({ email, token, type: "email" })`.
 - صفحة `/account/security` تعرض **قائمة الأجهزة المسجّلة** (اسم + تاريخ + آخر استخدام) مع إزالة فردية + زر "إضافة جهاز نוסף".
 - **مهم:** `WEBAUTHN_RP_ID`/`WEBAUTHN_ORIGIN` في الدالتين يجب أن يطابقا الدومين الفعلي **`ams-groub.linko.services`** (WebAuthn يفرض ذلك).
-- **مكتبة `@simplewebauthn/server@9` مثبّتة لكن الكود يستخدم API نسخة 10+** (`registrationInfo.credential` و`verifyAuthenticationResponse({credential})`). دالة register تدعم الشكلين دفاعياً. **لا تكتب `registrationInfo.credentialID` فقط** — استخدم النمط الدفاعي الموجود.
+- **نسخ `@simplewebauthn`:** `passkey-auth` مثبّتة على **`@simplewebauthn/server@13`** (تستخدم `credential` للإدخال والإخراج)؛ `passkey-register` على `@10` (تخرّج `registrationInfo.credential`). العميل `@simplewebauthn/browser@10`. **مهم:** `verifyAuthenticationResponse` يأخذ `credential:{id,publicKey,counter}` — نسخة `@10` كانت لسا تتوقّع `authenticator` فتنفجر بـ `reading 'counter' of undefined`؛ لذلك auth مثبّتة `@13`. دالة register تدعم شكلَي الإخراج دفاعياً — **لا تكتب `registrationInfo.credentialID` فقط**.
 - **حذف passkey من تطبيقنا يحذفها من قاعدة بياناتنا فقط — مش من Google Password Manager.** المستخدم لازم يحذف الـ passkey المعزولة من جوجل يدوياً (ما في API لذلك).
 - **prompt تفعيل البصمة (مثل البنوك):** `src/components/PasskeyPrompt.tsx` يُعرض من `AuthGuard` بعد الدخول — يظهر بطاقة "فعّل الدخول بالبصمة" مرة واحدة إذا الجهاز يدعمها ولا توجد passkey بعد (يفحص عبر `listPasskeys()`) ولم يُرفض سابقاً (`localStorage: ams_passkey_prompt_dismissed`). زر الدخول بالبصمة بصفحة الدخول يظهر فقط بعد التسجيل على الجهاز (hint محلي).
 
@@ -233,6 +233,7 @@ npm run lint     # فحص الكود
 | تسجيل البصمة يفشل بـ 401 unauthorized | توكن الجلسة منتهٍ (لا middleware على static export) | `registerPasskey` يجدّد الجلسة (`refreshSession`) قبل النداء | #61 |
 | passkey مكرّرة بجوجل + فشل دخول عشوائي | التصميم كان يخزّن passkey وحدة تُكتب فوق بعضها؛ إعادة التسجيل تيتّم القديمة | جدول `store.passkey_credentials` متعدد الأجهزة + `excludeCredentials` يمنع التكرار | #62 |
 | الدخول بالبصمة لا يكتمل رغم نجاح `passkey-auth` (200) | الدالة تُرجع `hashed_token` والعميل يمرّره كـ `token` لـ `verifyOtp` (يحتاج OTP فعلي) → الجلسة لا تُنشأ | إرجاع `email_otp` + `verifyOtp({email, token, type:"email"})` | #63 |
+| الدخول بالبصمة يفشل 400 `verification_error: Cannot read properties of undefined (reading 'counter')` | `passkey-auth` كان على `@simplewebauthn/server@10` (لسا يتوقّع `authenticator` بالإدخال) بينما الكود يمرّر `credential` → كائن غير معرّف داخل المكتبة | تثبيت `passkey-auth` على **`@simplewebauthn/server@13`** (يستخدم `credential` للإدخال والإخراج) + مطابقة التحدّي عبر `clientDataJSON` (يشيل سباق "أحدث تحدّي") | — |
 
 ## قرارات معمارية مهمة
 
